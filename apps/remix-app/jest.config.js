@@ -11,4 +11,5 @@ module.exports = {
             useESM: false,
         }],
     },
+    testPathIgnorePatterns: ["<rootDir>/tests/e2e/"],
 }; 

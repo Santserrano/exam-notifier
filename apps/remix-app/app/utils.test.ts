@@ -1,5 +1,3 @@
-import { describe, expect, test } from "vitest";
-
 import { nameInitials } from "./utils.ts";
 
 describe("utils", () => {

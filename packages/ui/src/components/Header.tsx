@@ -6,7 +6,7 @@ export interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onLogout, logoUrl }) => (
-  <header className="flex items-center justify-between p-4 border-b bg-white">
+  <header className="flex items-center justify-between p-2 border-b bg-white">
     <button
       className="text-sm font-semibold"
       onClick={onLogout}
@@ -15,9 +15,9 @@ export const Header: React.FC<HeaderProps> = ({ onLogout, logoUrl }) => (
       Cerrar sesión
     </button>
     {logoUrl ? (
-      <img src={logoUrl} alt="Logo" className="h-8 w-8" />
+      <img src={logoUrl} alt="Logo" className="h-12 w-12" />
     ) : (
-      <span className="inline-block h-8 w-8 bg-gray-200 rounded-full" />
+      <span className="inline-block h-2 w-2 bg-gray-200 rounded-full" />
     )}
   </header>
 );

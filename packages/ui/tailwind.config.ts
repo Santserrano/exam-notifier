@@ -1,7 +1,9 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  content: ["./app/**/*.{js,ts,jsx,tsx}"],
+  content: [
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
   theme: {
     extend: {
       colors: {
@@ -14,6 +16,16 @@ const config: Config = {
     },
   },
   plugins: [],
+  safelist: [
+    "bg-green-600",
+    "bg-blue-600",
+    "bg-green-100",
+    "bg-blue-100",
+    "border-green-300",
+    "border-blue-300",
+    "text-green-800",
+    "text-blue-800"
+  ],
 };
 
 export default config;
