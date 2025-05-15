@@ -12,9 +12,11 @@ import { ClerkApp } from "@clerk/remix";
 import { rootAuthLoader } from "@clerk/remix/ssr.server";
 import { dark } from "@clerk/themes";
 
+import tailwindStyles from "./styles/tailwind.css?url";
+import fontStyles from "./styles/font.css?url";
 export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: "/styles/fonts.css" },
-  { rel: "stylesheet", href: "/styles/tailwind.css" },
+  { rel: "stylesheet", href: tailwindStyles },
+  { rel: "stylesheet", href: fontStyles },
 ];
 
 export const loader = rootAuthLoader;
