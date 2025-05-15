@@ -68,3 +68,10 @@ Thumbs.db
 
 # Tailwind
 packages/**/styles/tailwind.css
+
+apps/**/public/**/*.html
+apps/**/build/**/*.html
+apps/**/.vercel/output/**/*.html
+.vercel/output/
+public/**/*.html
+
