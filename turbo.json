@@ -1,0 +1,161 @@
+{
+  "$schema": "https://turborepo.org/schema.json",
+  "globalDependencies": [
+    ".env"
+  ],
+  "globalEnv": [
+    "NODE_ENV",
+    "REMIX_APP_PORT",
+    "FLY_REGION",
+    "PRIMARY_REGION",
+    "CI",
+    "PORT",
+    "MOCKS",
+    "DATABASE_URL",
+    "DATABASE_PATH",
+    "LITEFS_DIR",
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        "public/build/**",
+        "build/**",
+        "app/styles/tailwind.css",
+        ".cache"
+      ]
+    },
+    "@remix-gospel-stack/remix-app#start": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "public/build/**"
+      ]
+    },
+    "start": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "public/build/**",
+        "dist/**"
+      ]
+    },
+    "db:migrate:deploy": {
+      "outputs": []
+    },
+    "db:migrate:dev": {
+      "outputs": []
+    },
+    "db:push": {
+      "outputs": []
+    },
+    "db:seed": {
+      "outputs": [],
+      "cache": false
+    },
+    "db:migrate:force": {
+      "outputs": []
+    },
+    "dev": {
+      "cache": false
+    },
+    "storybook": {
+      "outputs": []
+    },
+    "generate": {
+      "dependsOn": [
+        "^generate"
+      ]
+    },
+    "lint": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "node_modules/.cache/.eslintcache"
+      ]
+    },
+    "docker:build": {
+      "outputs": [],
+      "cache": false
+    },
+    "test": {
+      "outputs": [
+        "coverage/**"
+      ],
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "test:watch": {
+      "outputs": [],
+      "cache": false
+    },
+    "test:coverage": {
+      "outputs": [
+        "coverage/**"
+      ],
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "test:e2e": {
+      "outputs": [
+        "test-results/**"
+      ],
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "test:e2e:ui": {
+      "outputs": [],
+      "cache": false
+    },
+    "test:e2e:debug": {
+      "outputs": [],
+      "cache": false
+    },
+    "test:dev": {
+      "outputs": [],
+      "cache": false
+    },
+    "test:e2e:dev": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [],
+      "cache": false
+    },
+    "test:e2e:ci": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": []
+    },
+    "clean": {
+      "cache": false
+    },
+    "format": {
+      "outputs": [],
+      "cache": false
+    },
+    "format:check": {
+      "outputs": [],
+      "cache": false
+    }
+  }
+}

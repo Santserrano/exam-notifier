@@ -1,0 +1,91 @@
+# Dependencies
+node_modules
+.pnpm-store
+.npm
+.yarn
+.pnp.*
+
+# Testing
+coverage
+.nyc_output
+
+# Production
+build
+dist
+.next
+out
+
+# Misc
+.DS_Store
+*.pem
+.env
+.env.*
+!.env.example
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local env files
+.env*.local
+
+# Turbo
+.turbo
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# editor
+.idea
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# testing
+coverage
+
+# next.js
+.next/
+build
+
+# packages
+build
+dist
+packages/**/dist
+
+# misc
+.DS_Store
+*.pem
+
+.turbo
+.vercel
+.cache
+.output
+apps/**/public/build
+
+cypress/screenshots
+cypress/videos
+
+packages/**/styles/tailwind.css

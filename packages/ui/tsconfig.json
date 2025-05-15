@@ -1,0 +1,25 @@
+{
+  "extends": "../../config/tsconfig/react.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
+  },
+  "include": [
+    "eslint.config.js",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".storybook/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

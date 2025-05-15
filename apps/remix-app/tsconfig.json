@@ -1,0 +1,38 @@
+{
+  "include": ["types/env.d.ts", "**/*.ts", "**/*.tsx", "server.mjs"],
+  "ts-node": {
+    "swc": true
+  },
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "target": "ESNext",
+    "strict": true,
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./app/*"],
+      "@exam-notifier/ui": ["../../packages/ui/src"],
+      "@exam-notifier/ui/*": ["../../packages/ui/src/*"],
+      "@exam-notifier/database": ["../../packages/database/src"],
+      "@exam-notifier/database/*": ["../../packages/database/src/*"],
+      "@exam-notifier/internal-nobuild": [
+        "../../packages/internal-nobuild/src"
+      ],
+      "@exam-notifier/internal-nobuild/*": [
+        "../../packages/internal-nobuild/src/*"
+      ]
+    },
+    "noEmit": true
+  }
+}

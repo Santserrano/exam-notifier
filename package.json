@@ -1,0 +1,82 @@
+{
+  "name": "exam-notifier",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "config/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "clean": "turbo run clean && rimraf node_modules",
+    "clean:node_modules": "rimraf **/node_modules",
+    "db:migrate:deploy": "turbo run db:migrate:deploy",
+    "db:migrate:dev": "pnpm run --filter @exam-notifier/database db:migrate:dev",
+    "db:migrate:force": "turbo run db:migrate:force --no-cache",
+    "db:push": "turbo run db:push",
+    "db:seed": "turbo run db:seed --no-cache",
+    "dev": "concurrently \"pnpm run dev:remix-app\" \"pnpm run dev:express\" \"pnpm run dev:remix-vercel\" \"pnpm run dev:packages\"",
+    "dev:remix-app": "pnpm --filter @exam-notifier/remix-app dev",
+    "dev:express": "pnpm --filter express-backend dev",
+    "dev:remix-vercel": "pnpm --filter @exam-notifier/remix-vercel dev",
+    "dev:packages": "concurrently \"pnpm --filter @exam-notifier/ui dev\" \"pnpm --filter @exam-notifier/database dev\" \"pnpm --filter @exam-notifier/internal-nobuild dev\"",
+    "docker:build": "turbo run docker:build",
+    "docker:build:remix-app": "docker build -t exam-notifier-remix-app -f ./apps/remix-app/Dockerfile .",
+    "docker:db": "docker compose -f docker-compose.yml up -d",
+    "docker:run:remix-app": "docker run -it --init --rm -p 3000:3000 --env-file .env.docker --env DATABASE_URL='postgresql://postgres:postgres@db:5432/postgres' --network=app_network exam-notifier-remix-app",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "generate": "turbo run generate",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",
+    "setup": "pnpm run db:migrate:dev && turbo run db:migrate:force db:seed build",
+    "start": "turbo run start",
+    "start-remix-production": "pnpm run --filter @exam-notifier/remix-app start",
+    "storybook": "turbo run storybook",
+    "test": "turbo run test",
+    "test:dev": "turbo run test:dev",
+    "test:e2e:ci": "turbo run test:e2e:ci",
+    "test:e2e:dev": "turbo run test:e2e:dev",
+    "typecheck": "turbo run typecheck",
+    "validate": "turbo run lint typecheck test"
+  },
+  "dependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "^4.3.1",
+    "@remix-run/dev": "2.16.0",
+    "@turbo/gen": "^2.1.2",
+    "@types/glob": "8.1.0",
+    "glob": "^11.0.0",
+    "json5": "^2.2.3",
+    "magicast": "^0.3.5",
+    "prettier": "^3.2.5",
+    "prettier-plugin-tailwindcss": "^0.6.8",
+    "replace-in-file": "^8.2.0",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.6.2",
+    "web-push": "^3.6.7"
+  },
+  "packageManager": "pnpm@8.15.4",
+  "pnpm": {
+    "overrides": {
+      "@swc/core": "^1.6.7"
+    }
+  },
+  "prisma": {
+    "schema": "packages/database/prisma/schema.prisma",
+    "seed": "tsx packages/database/src/seed.ts"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "eslint": "^8.57.0",
+    "happy-dom": "^17.4.7",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.17",
+    "tsutils": "^3.21.0",
+    "turbo": "^2.5.3"
+  }
+}

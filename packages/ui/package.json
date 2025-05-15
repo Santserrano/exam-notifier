@@ -1,0 +1,88 @@
+{
+  "name": "@exam-notifier/ui",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "sideEffects": [
+    "*.css",
+    "**/*.css"
+  ],
+  "license": "MIT",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./tailwind": {
+      "import": "./dist/tailwind/index.js",
+      "types": "./dist/tailwind/index.d.ts",
+      "default": "./dist/tailwind/index.js"
+    },
+    "./styles.css": "./dist/tailwind.css",
+    "./components/checkbox": {
+      "import": "./dist/components/checkbox.js",
+      "types": "./dist/components/checkbox.d.ts"
+    },
+    "./components/button": {
+      "import": "./dist/components/button.js",
+      "types": "./dist/components/button.d.ts"
+    },
+    "./components/card": {
+      "import": "./dist/components/card.js",
+      "types": "./dist/components/card.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src/tailwind",
+    "src/components",
+    "src/tailwind.css"
+  ],
+  "scripts": {
+    "build": "tsup && pnpm run build:tailwind",
+    "clean": "rimraf .turbo node_modules dist",
+    "dev": "tsup --watch & tailwindcss -i ./src/tailwind.css -o ./dist/tailwind.css --watch & if not exist ..\\..\\apps\\remix-app\\public\\build mkdir ..\\..\\apps\\remix-app\\public\\build && copy .\\dist\\tailwind.css ..\\..\\apps\\remix-app\\public\\build\\styles.css",
+    "lint": "eslint \"src/**/*.ts*\"",
+    "typecheck": "tsc --noEmit",
+    "build:tailwind": "tailwindcss -i ./src/tailwind.css -o ../../apps/remix-app/public/styles/tailwind.css --config ../../apps/remix-app/tailwind.config.ts"
+  },
+  "devDependencies": {
+    "@exam-notifier/eslint-config": "workspace:*",
+    "@exam-notifier/tsconfig": "workspace:*",
+    "@radix-ui/react-checkbox": "^1.3.1",
+    "@radix-ui/react-slot": "^1.2.2",
+    "@storybook/react": "^8.6.12",
+    "@storybook/react-vite": "^8.6.12",
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/node": "^20.11.30",
+    "@types/react": "^18.2.67",
+    "@types/react-dom": "^18.2.22",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.510.0",
+    "react": "^18.2.0",
+    "rimraf": "^5.0.5",
+    "tailwind-merge": "^3.3.0",
+    "tailwindcss": "^3.4.13",
+    "tsup": "^8.0.2",
+    "typescript": "^5.6.2"
+  },
+  "typesVersions": {
+    "*": {
+      "components/checkbox": [
+        "dist/components/checkbox.d.ts"
+      ],
+      "components/button": [
+        "dist/components/button.d.ts"
+      ],
+      "components/card": [
+        "dist/components/card.d.ts"
+      ]
+    }
+  }
+}
