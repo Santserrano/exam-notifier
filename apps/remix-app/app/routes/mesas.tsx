@@ -20,6 +20,8 @@ import Modal from "@exam-notifier/ui/components/Modal";
 import { SearchBar } from "@exam-notifier/ui/components/SearchBar";
 import { clerkClient } from "~/utils/clerk.server";
 import HeaderClerk from "../components/HeaderClerk";
+import { ActivarNotificaciones } from '../components/ActivarNotificaciones';
+import { getEnv } from '../utils/env.server';
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
@@ -61,10 +63,20 @@ export const loader = async (args: LoaderFunctionArgs) => {
       };
     });
 
-    return json({ userId, role, mesas });
+    return json({ 
+      userId, 
+      role, 
+      mesas,
+      env: getEnv()
+    });
   } catch (error) {
     console.error("Error en el loader:", error);
-    return json({ userId, role, mesas: [] });
+    return json({ 
+      userId, 
+      role, 
+      mesas: [],
+      env: getEnv()
+    });
   }
 };
 
@@ -212,6 +224,8 @@ export default function MesasRoute() {
           onSedeChange={(val) => actualizarFiltro("sede", val)}
           showAddMesaButton={false}
         />
+
+        <ActivarNotificaciones />
 
         {/* Filtro Futuras/Pasadas */}
         <div className="flex items-center justify-center text-center gap-4 mb-4 pt-4">
