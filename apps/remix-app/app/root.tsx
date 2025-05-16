@@ -10,7 +10,7 @@ import {
 } from "@remix-run/react";
 import { ClerkApp } from "@clerk/remix";
 import { rootAuthLoader } from "@clerk/remix/ssr.server";
-import { dark } from "@clerk/themes";
+import { customEs } from './localizations/customEs';
 
 import tailwindStyles from "./styles/tailwind.css?url";
 import fontStyles from "./styles/font.css?url";
@@ -41,7 +41,5 @@ function App() {
 }
 
 export default ClerkApp(App, {
-  appearance: {
-    baseTheme: dark,
-  },
+  localization: customEs,
 });

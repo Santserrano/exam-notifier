@@ -9,8 +9,6 @@
     "dev": "tsup --watch",
     "clean": "rimraf .turbo node_modules",
     "lint": "eslint ./src",
-    "test": "vitest run",
-    "test:dev": "vitest",
     "typecheck": "tsc --project ./tsconfig.json --noEmit"
   },
   "devDependencies": {
@@ -20,8 +18,7 @@
     "tsup": "^8.4.0",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
-    "vite-tsconfig-paths": "^5.0.1",
-    "vitest": "^2.1.1"
+    "vite-tsconfig-paths": "^5.0.1"
   },
   "exports": {
     "./package.json": "./package.json",

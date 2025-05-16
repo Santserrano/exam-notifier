@@ -1,12 +1,11 @@
 import { createRemixStub } from "@remix-run/testing";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
 
 import MesasRoute, { loader } from "./mesas";
 
 // Mock de useLoaderData
-vi.mock("@remix-run/react", async () => {
-  const actual = await vi.importActual("@remix-run/react");
+jest.mock("@remix-run/react", () => {
+  const actual = jest.requireActual("@remix-run/react");
   return {
     ...actual,
     useLoaderData: () => ({
@@ -29,7 +28,7 @@ vi.mock("@remix-run/react", async () => {
 });
 
 // Mock de Clerk
-vi.mock("@clerk/remix", () => ({
+jest.mock("@clerk/remix", () => ({
   SignOutButton: () => null,
 }));
 

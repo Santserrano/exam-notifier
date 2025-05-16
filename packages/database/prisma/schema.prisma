@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
   binaryTargets = ["native", "windows"]
@@ -9,15 +12,31 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model Profesor {
+  id          String         @id // Este será el user_id de Clerk
+  nombre      String
+  apellido    String
+  carreras    String[]      // Array de carreras
+  materias    String[]      // Array de materias
+  mesasTitular MesaDeExamen[] @relation("ProfesorTitular")
+  mesasVocal  MesaDeExamen[] @relation("ProfesorVocal")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
 model MesaDeExamen {
   id          Int      @id @default(autoincrement())
-  profesor    String
-  vocal       String
+  profesorId  String   // ID del profesor titular
+  vocalId     String   // ID del profesor vocal
+  profesor    Profesor @relation("ProfesorTitular", fields: [profesorId], references: [id])
+  vocal       Profesor @relation("ProfesorVocal", fields: [vocalId], references: [id])
   carrera     String
   materia     String
   fecha       DateTime
   descripcion String
   cargo       String
-  verification Boolean
+  verification Boolean @default(false)
+  modalidad   String?  @default("Presencial")
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
