@@ -26,7 +26,7 @@ export const findById = (id: number): DiaryEntry | undefined => {
 }
 
 export const getEntrisWithoutSensitiveInfo = (): NoSensitiveInfoDiaryEntry[] => {
-  return diaries.map(({ profesor, vocal, carrera, materia, fecha, descripcion, cargo, verification, createdAt }) => {
+  return diaries.map(({ profesor, vocal, carrera, materia, fecha, descripcion, cargo, createdAt }) => {
     return {
       profesor,
       vocal,
@@ -35,9 +35,7 @@ export const getEntrisWithoutSensitiveInfo = (): NoSensitiveInfoDiaryEntry[] => 
       fecha,
       descripcion,
       cargo,
-      verification,
       createdAt
-
     }
   })
 }

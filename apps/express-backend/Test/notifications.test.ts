@@ -1,30 +1,42 @@
 // notifications.test.ts
-import { sendPushNotification } from '../src/service/notifications';
-import { notificationSubject } from '../src/Observers/Observer';
 import { NewNotification, Profesor, Carrera, Cargo, Materia } from '../src/interfaces/Interface';
-import webPush from 'web-push';
 
-// Mock de web-push con implementación completa
-jest.mock('web-push', () => ({
-  setVapidDetails: jest.fn().mockImplementation(() => {
-    console.log('VAPID details set');
-  }),
-  sendNotification: jest.fn().mockImplementation(() => {
-    console.log('Notification sent');
-    return Promise.resolve();
-  })
-}));
-
-// Mock del notificationSubject
-jest.mock('../src/Observers/Observer', () => ({
-  notificationSubject: {
-    notify: jest.fn().mockImplementation((notification) => {
-      console.log(`Observer notified: ${notification.profesor}`);
-    })
-  }
-}));
+// Mock de process.env
+const mockEnv = {
+  VAPID_PUBLIC_KEY: 'test-public-key',
+  VAPID_PRIVATE_KEY: 'test-private-key'
+};
+Object.assign(process.env, mockEnv);
 
 describe('Notifications Service', () => {
+  let sendPushNotification: any;
+  let notificationSubject: any;
+  let webPush: any;
+
+  beforeEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+    jest.doMock('web-push', () => ({
+      setVapidDetails: jest.fn().mockImplementation(() => {
+        console.log('VAPID details set');
+      }),
+      sendNotification: jest.fn().mockImplementation(() => {
+        console.log('Notification sent');
+        return Promise.resolve();
+      })
+    }));
+    jest.doMock('../src/Observers/Observer', () => ({
+      notificationSubject: {
+        notify: jest.fn().mockImplementation((notification) => {
+          console.log(`Observer notified: ${notification.profesor}`);
+        })
+      }
+    }));
+    webPush = require('web-push');
+    notificationSubject = require('../src/Observers/Observer').notificationSubject;
+    sendPushNotification = require('../src/service/notifications').sendPushNotification;
+  });
+
   const mockSubscription = {
     endpoint: 'https://fcm.googleapis.com/fcm/send/abc123',
     keys: {
@@ -45,23 +57,13 @@ describe('Notifications Service', () => {
     createAt: new Date()
   };
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    // Configurar mock para setVapidDetails
-    (webPush.setVapidDetails as jest.Mock).mockClear();
-    (webPush.sendNotification as jest.Mock).mockClear();
-    (notificationSubject.notify as jest.Mock).mockClear();
-  });
-
   describe('sendPushNotification', () => {
-    it('Debería llamar a setVapidDetails con los parámetros correctos', () => {
-      sendPushNotification(mockSubscription, mockNotification);
-      
-      expect(webPush.setVapidDetails).toHaveBeenCalledTimes(1);
+    it('Debería llamar a setVapidDetails con los parámetros correctos al inicializar', () => {
+      expect(webPush.setVapidDetails).toHaveBeenCalled();
       expect(webPush.setVapidDetails).toHaveBeenCalledWith(
         'mailto:tuemail@ejemplo.com',
-        '<TU_CLAVE_PUBLICA>',
-        '<TU_CLAVE_PRIVADA>'
+        mockEnv.VAPID_PUBLIC_KEY,
+        mockEnv.VAPID_PRIVATE_KEY
       );
     });
 
@@ -85,8 +87,8 @@ describe('Notifications Service', () => {
 
     it('Debería manejar el error cuando falla el envío de la notificación', async () => {
       const error = new Error('Error de red');
-      (webPush.sendNotification as jest.Mock).mockRejectedValueOnce(error);
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      webPush.sendNotification.mockRejectedValueOnce(error);
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
 
       sendPushNotification(mockSubscription, mockNotification);
       await new Promise(process.nextTick);
