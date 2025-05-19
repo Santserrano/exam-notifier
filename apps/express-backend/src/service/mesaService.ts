@@ -1,6 +1,8 @@
 import { PrismaClient, MesaDeExamen, Profesor } from '@prisma/client';
 import { sendPushToProfesor } from './SendPushNotification';
 import { notificacionService } from './NotificationService';
+import { enviarEmailNotificacion } from './emailService';
+import { enviarWhatsapp } from './whatsappService';
 // Singleton para el cliente Prisma
 const prisma = new PrismaClient();
 
@@ -90,6 +92,19 @@ export class MesaService {
                     `Se te asignó como vocal en una mesa de ${nuevaMesa.materia} (${nuevaMesa.carrera}) para el ${fechaFormateada} en modalidad ${nuevaMesa.modalidad || 'Presencial'}`
                 );
             }
+
+            const profesorData = await prisma.profesor.findUnique({ where: { id: profesor } });
+            if (profesorData) {
+                const fechaFormateada = new Date(data.fecha).toLocaleDateString();
+                const contenido = `Hola ${profesorData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia} el ${fechaFormateada}`;
+                if (profesorData.email) {
+                    await enviarEmailNotificacion(profesorData.email, contenido);
+                }
+                if (profesorData.telefono) {
+                    await enviarWhatsapp(profesorData.telefono, contenido);
+                }
+            }
+
             return nuevaMesa;
         } catch (error) {
             console.error('Error al crear mesa:', error);

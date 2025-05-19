@@ -80,28 +80,19 @@ export const loader = async (args: LoaderFunctionArgs) => {
       })
     ]);
 
-    console.log('Respuestas del backend:', {
-      mesasStatus: mesasResponse.status,
-      profesoresStatus: profesoresResponse.status
-    });
-
     const [mesas, profesores] = await Promise.all([
       mesasResponse.ok ? mesasResponse.json() : [],
       profesoresResponse.ok ? profesoresResponse.json() : []
     ]);
 
-    console.log('Datos recibidos del backend:', { 
-      mesas: Array.isArray(mesas) ? mesas.length : 'no es array',
-      profesores: Array.isArray(profesores) ? profesores.length : 'no es array',
-      profesoresData: profesores
-    });
-
-    return json({
+    const data = {
       userId,
       role,
       mesas: Array.isArray(mesas) ? mesas : [],
       profesores: Array.isArray(profesores) ? profesores : []
-    });
+    };
+
+    return json(data);
   } catch (error) {
     console.error("Error en el loader:", error);
     return json({
@@ -241,7 +232,7 @@ export default function AdminRoute() {
             >
               ←
             </button>
-            <h2 className="flex-1 text-center text-xl font-bold text-green-900">
+            <h2 className="flex-1 text-center text-xl font-bold">
               {isEdit ? "Editar mesa" : "Agregar mesa"}
             </h2>
           </div>
@@ -394,7 +385,7 @@ export default function AdminRoute() {
             mesa={mesaAEditar}
           />
         )}
-        <h2 className="my-4 text-center text-2xl font-bold text-green-900">
+        <h2 className="my-2 text-center text-lg font-bold">
           Mesas - Editar
         </h2>
         <div>

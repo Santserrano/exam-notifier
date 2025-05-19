@@ -1,4 +1,5 @@
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/remix";
+import { ActivarNotificaciones } from './ActivarNotificaciones';
 
 export function HeaderClerk() {
   return (
@@ -13,9 +14,14 @@ export function HeaderClerk() {
           </SignInButton>
         </SignedOut>
       </div>
-      <img src="/icon-ucp.png" alt="Logo" className="h-12 w-12" />
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-full overflow-hidden">
+          <ActivarNotificaciones />
+        </div>
+        <img src="/icon-ucp.png" alt="Logo" className="h-12 w-12" />
+      </div>
     </header>
   );
 }
-
 export default HeaderClerk;
+
