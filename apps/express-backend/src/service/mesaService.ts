@@ -1,5 +1,6 @@
 import { PrismaClient, MesaDeExamen, Profesor } from '@prisma/client';
-
+import { sendPushToProfesor } from './SendPushNotification';
+import { notificacionService } from './NotificationService';
 // Singleton para el cliente Prisma
 const prisma = new PrismaClient();
 
@@ -57,7 +58,7 @@ export class MesaService {
         try {
             // Extraer los IDs y el resto de los datos
             const { profesor, vocal, ...rest } = data as any;
-            return await prisma.mesaDeExamen.create({
+            const nuevaMesa = await prisma.mesaDeExamen.create({
                 data: {
                     ...rest,
                     profesor: { connect: { id: profesor } },
@@ -68,6 +69,28 @@ export class MesaService {
                     vocal: true
                 }
             });
+
+            const config = await notificacionService.getConfigByProfesor(profesor);
+            if (config?.webPushEnabled) {
+                const fechaFormateada = new Date(data.fecha).toLocaleDateString();
+                await sendPushToProfesor(
+                    profesor,
+                    'Nueva mesa asignada',
+                    `Se te asignó una mesa de ${nuevaMesa.materia} (${nuevaMesa.carrera}) para el ${fechaFormateada} en modalidad ${nuevaMesa.modalidad || 'Presencial'}`
+                );
+            }
+
+            // Enviar notificación al vocal
+            const configVocal = await notificacionService.getConfigByProfesor(vocal);
+            if (configVocal?.webPushEnabled) {
+                const fechaFormateada = new Date(data.fecha).toLocaleDateString();
+                await sendPushToProfesor(
+                    vocal,
+                    'Nueva mesa asignada',
+                    `Se te asignó como vocal en una mesa de ${nuevaMesa.materia} (${nuevaMesa.carrera}) para el ${fechaFormateada} en modalidad ${nuevaMesa.modalidad || 'Presencial'}`
+                );
+            }
+            return nuevaMesa;
         } catch (error) {
             console.error('Error al crear mesa:', error);
             throw new Error('Error al crear la mesa');

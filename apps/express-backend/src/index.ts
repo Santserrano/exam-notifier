@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import diaryRouter from './routes/diaries'
+import notificationsRouter from './routes/notifications'
 import { validateApiKey } from './middleware/apiKeyAuth'
 import dotenv from 'dotenv'
 
@@ -10,7 +11,10 @@ const app = express()
 const port = process.env.PORT || 3001
 
 // Middleware
-app.use(cors())
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}))
 app.use(express.json())
 
 app.get('/ping', (_req, res) => {
@@ -22,6 +26,7 @@ app.get('/ping', (_req, res) => {
 app.use('/api', validateApiKey)
 
 app.use('/api/diaries', diaryRouter)
+app.use('/api', notificationsRouter)
 
 // Manejo de errores
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

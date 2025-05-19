@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
   binaryTargets = ["native", "windows"]
@@ -13,16 +10,23 @@ datasource db {
 }
 
 model Profesor {
-  id          String         @id // Este será el user_id de Clerk
-  nombre      String
-  apellido    String
-  carreras    String[]      // Array de carreras
-  materias    String[]      // Array de materias
+  id           String         @id // clerk id
+  nombre       String
+  apellido     String
+  email        String         @unique
+  telefono     String?
+  carreras     String[]
+  materias     String[]
   mesasTitular MesaDeExamen[] @relation("ProfesorTitular")
-  mesasVocal  MesaDeExamen[] @relation("ProfesorVocal")
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  mesasVocal   MesaDeExamen[] @relation("ProfesorVocal")
+
+  notificacionConfig   NotificacionConfig?
+  webPushSubscriptions WebPushSubscription[]
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 }
+
 
 model MesaDeExamen {
   id          Int      @id @default(autoincrement())
@@ -39,4 +43,26 @@ model MesaDeExamen {
   modalidad   String?  @default("Presencial")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model NotificacionConfig {
+  id               String    @id @default(uuid())
+  profesorId       String   @unique
+  profesor         Profesor @relation(fields: [profesorId], references: [id])
+  webPushEnabled   Boolean  @default(false)
+  emailEnabled     Boolean  @default(false)
+  smsEnabled       Boolean  @default(false)
+  avisoPrevioHoras Int      @default(24)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model WebPushSubscription {
+  id           String    @id @default(uuid())
+  profesorId   String
+  profesor     Profesor  @relation(fields: [profesorId], references: [id])
+  endpoint     String
+  auth         String
+  p256dh       String
+  createdAt    DateTime  @default(now())
 }
