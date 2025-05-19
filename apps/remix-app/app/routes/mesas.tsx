@@ -20,7 +20,6 @@ import Modal from "@exam-notifier/ui/components/Modal";
 import { SearchBar } from "@exam-notifier/ui/components/SearchBar";
 import { clerkClient } from "~/utils/clerk.server";
 import HeaderClerk from "../components/HeaderClerk";
-import { ActivarNotificaciones } from '../components/ActivarNotificaciones';
 import { getEnv } from '../utils/env.server';
 
 export const loader = async (args: LoaderFunctionArgs) => {
@@ -44,31 +43,40 @@ export const loader = async (args: LoaderFunctionArgs) => {
     }
 
     const mesasRaw = await response.json();
+    console.log('Mesas raw del backend:', mesasRaw);
 
     const meses = ["ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sep.", "oct.", "nov.", "dic."];
     const mesas = mesasRaw.map((m: any, index: number) => {
+      console.log('Procesando mesa:', m);
       const fechaObj = new Date(m.fecha);
       const fechaFormateada = `${fechaObj.getDate()} ${meses[fechaObj.getMonth()]}`;
       const futura = fechaObj > new Date();
       const modalidad = m.modalidad || "Presencial";
-      return {
+      const mesaProcesada = {
         id: m.id || `mesa-${index}`,
-        ...m,
-        fechaOriginal: m.fecha,
+        materia: m.materia,
+        carrera: m.carrera,
         fecha: fechaFormateada,
+        fechaOriginal: m.fecha,
         futura,
         modalidad,
         color: modalidad === "Virtual" ? "blue" : "green",
-        sede: "Central",
+        sede: m.sede || "Central",
+        profesor: m.profesor,
+        vocal: m.vocal
       };
+      console.log('Mesa procesada:', mesaProcesada);
+      return mesaProcesada;
     });
 
-    return json({ 
+    const data = { 
       userId, 
       role, 
       mesas,
       env: getEnv()
-    });
+    };  
+
+    return json(data);
   } catch (error) {
     console.error("Error en el loader:", error);
     return json({ 
@@ -80,9 +88,9 @@ export const loader = async (args: LoaderFunctionArgs) => {
   }
 };
 
-const carreras = ["Ingeniería en sistemas", "Arquitectura"];
+const carreras = ["Ingeniería en sistemas", "Arquitectura", "Lic. en Nutrición", "Lic. en Publicidad"];
 const fechas = ["mar.", "abr."];
-const sedes = ["Central", "Virtual", "Sur"];
+const sedes = ["Corrientes", "Sáenz Peña", "Posadas", "Resistencia"];
 const alumnosMock = [
   { nombre: "Juan Pérez" },
   { nombre: "Ana Gómez" },
@@ -94,6 +102,8 @@ const alumnosMock = [
 export default function MesasRoute() {
   const { mesas } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  console.log('Mesas en el componente:', mesas); // Debug log
 
   const search = searchParams.get("search") ?? "";
   const carrera = searchParams.get("carrera") ?? "";
@@ -125,7 +135,16 @@ export default function MesasRoute() {
     (m: any) => m.id?.toString() === detalleId || m.id?.toString() === alumnosId
   );
 
+  console.log('Mesa detalle encontrada:', mesaDetalle); // Debug log
+
   function DetalleMesa({ mesa }: { mesa: any }) {
+    console.log('Renderizando DetalleMesa con mesa:', mesa); // Debug log
+    const fechaObj = new Date(mesa.fechaOriginal);
+    const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+    const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const fechaCompleta = `${diasSemana[fechaObj.getDay()]} ${fechaObj.getDate()} de ${meses[fechaObj.getMonth()]} ${fechaObj.getFullYear()}`;
+    const hora = fechaObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
     return (
       <div className="flex flex-col gap-6 p-2">
         <div className="flex items-center gap-2">
@@ -153,13 +172,13 @@ export default function MesasRoute() {
           Alumnos inscriptos
         </Button>
         <hr />
-        <div className="text-sm flex items-center gap-2"><User className="h-4 w-4" /> Titular: Gilda R. Romero</div>
-        <div className="text-sm flex items-center gap-2"><User className="h-4 w-4" /> Vocal: Gilda R. Romero</div>
+        <div className="text-sm flex items-center gap-2"><User className="h-4 w-4" /> Titular: {mesa.profesorNombre}</div>
+        <div className="text-sm flex items-center gap-2"><User className="h-4 w-4" /> Vocal: {mesa.vocalNombre}</div>
         <hr />
-        <div className="text-sm flex items-center gap-2"><Calendar className="h-4 w-4" /> Viernes 5 de Abril 2025</div>
-        <div className="text-sm flex items-center gap-2"><Clock className="h-4 w-4" /> 08:00 hs</div>
+        <div className="text-sm flex items-center gap-2"><Calendar className="h-4 w-4" /> {fechaCompleta}</div>
+        <div className="text-sm flex items-center gap-2"><Clock className="h-4 w-4" /> {hora} hs</div>
         <div className="text-sm flex items-center gap-2"><MapPin className="h-4 w-4" /> {mesa.modalidad}</div>
-        <div className="text-sm flex items-center gap-2"><Building2 className="h-4 w-4" /> Aula 23</div>
+        <div className="text-sm flex items-center gap-2"><Building2 className="h-4 w-4" /> {mesa.aula || 'Aula por confirmar'}</div>
         <hr />
         <div className="text-sm flex items-center gap-2"><Info className="h-4 w-4" /> Recibirás un recordatorio 1 día antes</div>
       </div>
@@ -225,8 +244,6 @@ export default function MesasRoute() {
           showAddMesaButton={false}
         />
 
-        <ActivarNotificaciones />
-
         {/* Filtro Futuras/Pasadas */}
         <div className="flex items-center justify-center text-center gap-4 mb-4 pt-4">
           <span className="text-lg font-semibold text-blue-900">Próximas mesas</span>
@@ -262,20 +279,23 @@ export default function MesasRoute() {
           ) : mesasFiltradas.length === 0 ? (
             <div className="text-center text-gray-500 py-8">No hay mesas para mostrar.</div>
           ) : (
-            mesasFiltradas.map((mesa: any) => (
-              <MesaCard
-                key={mesa.id}
-                fecha={mesa.fecha}
-                materia={mesa.materia}
-                carrera={mesa.carrera}
-                modalidad={mesa.modalidad}
-                color={mesa.color}
-                onClick={() => {
-                  searchParams.set("detalle", mesa.id);
-                  setSearchParams(searchParams);
-                }}
-              />
-            ))
+            mesasFiltradas.map((mesa: any) => {
+              console.log('Renderizando mesa:', mesa); // Debug log
+              return (
+                <MesaCard
+                  key={mesa.id}
+                  fecha={mesa.fecha}
+                  materia={mesa.materia}
+                  carrera={mesa.carrera}
+                  modalidad={mesa.modalidad}
+                  color={mesa.color}
+                  onClick={() => {
+                    searchParams.set("detalle", mesa.id);
+                    setSearchParams(searchParams);
+                  }}
+                />
+              );
+            })
           )}
         </div>
 

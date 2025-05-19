@@ -120,7 +120,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     {showAddMesaButton && onAddMesa && (
       <button
         onClick={onAddMesa}
-        className="bg-green-700 text-white rounded px-4 py-1 font-semibold hover:bg-green-800 transition mt-2"
+        className="bg-blue-900 text-white rounded-full px-4 py-1 font-semibold hover:bg-blue-800 transition mt-2"
       >
         Agregar Mesa
       </button>
