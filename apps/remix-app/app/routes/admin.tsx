@@ -169,6 +169,7 @@ export default function AdminRoute() {
   const actionData = useActionData<typeof action>();
   const [search, setSearch] = useState("");
   const [carrera, setCarrera] = useState("");
+  const [materia, setMateria] = useState("");
   const [fecha, setFecha] = useState("");
   const [sede, setSede] = useState("");
   const [showAddMesa, setShowAddMesa] = useState(false);
@@ -184,8 +185,18 @@ export default function AdminRoute() {
     "Ing. Software 3",
     "Mat. discreta",
   ];
-  const docentes = ["Juan Pérez", "Ana Gómez", "Carlos Ruiz", "María López"];
   const horas = ["08:00", "10:00", "12:00", "14:00", "16:00"];
+
+  // Filtrar profesores según carrera y materia
+  const profesoresFiltrados = React.useMemo(() => {
+    if (!Array.isArray(profesores)) return [];
+    
+    return profesores.filter((profesor: Profesor) => {
+      const cumpleCarrera = !carrera || profesor.carreras.includes(carrera);
+      const cumpleMateria = !materia || profesor.materias.includes(materia);
+      return cumpleCarrera && cumpleMateria;
+    });
+  }, [profesores, carrera, materia]);
 
   // Formatear las mesas para mostrarlas
   const mesasFormateadas = mesas.map((mesa: Mesa): MesaFormateada => {
@@ -218,7 +229,13 @@ export default function AdminRoute() {
   }) {
     const isEdit = !!mesa;
     const [modalidad, setModalidad] = useState<Modalidad>(mesa?.modalidad || "Presencial");
-    console.log('Profesores en MesaModal:', profesores); // Debug
+    const [carreraSeleccionada, setCarreraSeleccionada] = useState(mesa?.carrera || "");
+    const [materiaSeleccionada, setMateriaSeleccionada] = useState(mesa?.materia || "");
+
+    // Resetear materia cuando cambia la carrera
+    React.useEffect(() => {
+      setMateriaSeleccionada("");
+    }, [carreraSeleccionada]);
 
     return (
       <Modal open={open} onClose={onClose} title={""}>
@@ -249,29 +266,14 @@ export default function AdminRoute() {
             defaultValue={mesa?.fecha || ""}
           />
           <label className="text-sm font-semibold text-green-900">
-            Asignatura
-          </label>
-          <select
-            name="asignatura"
-            className="rounded border px-2 py-2"
-            required
-            defaultValue={mesa?.materia || ""}
-          >
-            <option value="">Seleccionar</option>
-            {asignaturas.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-          <label className="text-sm font-semibold text-green-900">
             Carrera
           </label>
           <select
             name="carrera"
             className="rounded border px-2 py-2"
             required
-            defaultValue={mesa?.carrera || ""}
+            value={carreraSeleccionada}
+            onChange={(e) => setCarreraSeleccionada(e.target.value)}
           >
             <option value="">Seleccionar</option>
             {carreras.map((c) => (
@@ -279,6 +281,32 @@ export default function AdminRoute() {
                 {c}
               </option>
             ))}
+          </select>
+          <label className="text-sm font-semibold text-green-900">
+            Asignatura
+          </label>
+          <select
+            name="asignatura"
+            className="rounded border px-2 py-2"
+            required
+            value={materiaSeleccionada}
+            onChange={(e) => setMateriaSeleccionada(e.target.value)}
+          >
+            <option value="">Seleccionar</option>
+            {asignaturas
+              .filter(materia => {
+                // Filtrar materias según la carrera seleccionada
+                if (!carreraSeleccionada) return true;
+                return profesores.some((profesor: Profesor) => 
+                  profesor.carreras.includes(carreraSeleccionada) && 
+                  profesor.materias.includes(materia)
+                );
+              })
+              .map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
           </select>
           <label className="text-sm font-semibold text-green-900">
             Docente Titular
@@ -290,7 +318,7 @@ export default function AdminRoute() {
             defaultValue={mesa?.profesor || ""}
           >
             <option value="">Seleccionar</option>
-            {Array.isArray(profesores) && profesores.map((profesor: Profesor) => (
+            {profesoresFiltrados.map((profesor: Profesor) => (
               <option key={profesor.id} value={profesor.id}>
                 {`${profesor.nombre} ${profesor.apellido}`}
               </option>
@@ -306,7 +334,7 @@ export default function AdminRoute() {
             defaultValue={mesa?.vocal || ""}
           >
             <option value="">Seleccionar</option>
-            {Array.isArray(profesores) && profesores.map((profesor: Profesor) => (
+            {profesoresFiltrados.map((profesor: Profesor) => (
               <option key={profesor.id} value={profesor.id}>
                 {`${profesor.nombre} ${profesor.apellido}`}
               </option>
