@@ -25,7 +25,6 @@
     "@clerk/remix": "^4.7.2",
     "@clerk/themes": "^2.2.43",
     "@exam-notifier/database": "workspace:*",
-    "@exam-notifier/internal-nobuild": "workspace:*",
     "@exam-notifier/ui": "workspace:*",
     "@remix-run/css-bundle": "^2.8.1",
     "@remix-run/node": "^2.8.1",

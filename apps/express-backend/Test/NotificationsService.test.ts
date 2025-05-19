@@ -34,7 +34,7 @@ describe('NotificationService', () => {
         createAt: new Date()
       }
 
-      await notificationService.sendNotification(mockSubscription, mockNotification)
+      notificationService.sendNotification(mockSubscription, mockNotification)
 
       expect(sendPushNotification).toHaveBeenCalledTimes(1)
       expect(sendPushNotification).toHaveBeenCalledWith(mockSubscription, mockNotification)
@@ -42,9 +42,9 @@ describe('NotificationService', () => {
 
     it('Debe manejar errores de sendPushNotification', async () => {
       const mockError = new Error('Error de prueba')
-      ;(sendPushNotification as jest.Mock).mockRejectedValue(mockError)
-      
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+        ; (sendPushNotification as jest.Mock).mockRejectedValue(mockError)
+
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { })
 
       const mockSubscription = { endpoint: 'test-endpoint' }
       const mockNotification: NewNotification = {
@@ -64,7 +64,7 @@ describe('NotificationService', () => {
 
       // Verificamos que se llamó al console.error
       expect(consoleSpy).toHaveBeenCalledWith('Error al enviar notificación:', mockError)
-      
+
       // Limpiamos el mock
       consoleSpy.mockRestore()
     })

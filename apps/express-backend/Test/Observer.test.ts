@@ -1,6 +1,9 @@
 import { notificationSubject } from '../src/Observers/Observer';
 import NotificationObserver from '../src/Observers/Observer';
-import { Observer } from '../src/Observers/Observer';
+
+interface Observer {
+  update: (data: any) => void;
+}
 
 describe('Observer Pattern Implementation', () => {
   let mockObserver: Observer;
@@ -11,7 +14,7 @@ describe('Observer Pattern Implementation', () => {
     mockObserver = {
       update: jest.fn()
     };
-    consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => { });
     notificationSubject['observers'] = []; // Resetear los observadores para cada prueba
   });
 
@@ -34,13 +37,13 @@ describe('Observer Pattern Implementation', () => {
 
     it('Debería notificar a todos los observadores adjuntos', () => {
       const secondObserver = { update: jest.fn() };
-      
+
       notificationSubject.attach(mockObserver);
       notificationSubject.attach(secondObserver);
-      
+
       const testData = { message: 'Test notification' };
       notificationSubject.notify(testData);
-      
+
       expect(mockObserver.update).toHaveBeenCalledWith(testData);
       expect(secondObserver.update).toHaveBeenCalledWith(testData);
     });
@@ -48,10 +51,10 @@ describe('Observer Pattern Implementation', () => {
     it('No debería notificar a los observadores desadjuntos', () => {
       notificationSubject.attach(mockObserver);
       notificationSubject.detach(mockObserver);
-      
+
       const testData = { message: 'Test notification' };
       notificationSubject.notify(testData);
-      
+
       expect(mockObserver.update).not.toHaveBeenCalled();
     });
   });
@@ -60,9 +63,9 @@ describe('Observer Pattern Implementation', () => {
     it('Debería registrar la notificación cuando se llama a update', () => {
       const observer = new NotificationObserver();
       const testData = { message: 'Test notification' };
-      
+
       observer.update(testData);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith('Notificación enviada:', testData);
     });
   });
