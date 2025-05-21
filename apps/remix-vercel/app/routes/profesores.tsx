@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { getAuth } from "@clerk/remix/ssr.server";
 import { json, redirect, type LoaderFunctionArgs, type ActionFunctionArgs } from "@remix-run/node";
 import { useLoaderData, useFetcher, Link } from "@remix-run/react";
-import { Button } from "@exam-notifier/ui/components/button";
-import Modal from "@exam-notifier/ui/components/Modal";
+import { Button, Modal } from "@exam-notifier/ui";
 import { clerkClient } from "~/utils/clerk.server";
 
 interface Profesor {
