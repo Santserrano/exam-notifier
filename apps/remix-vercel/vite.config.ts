@@ -20,10 +20,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "~": resolve(__dirname, "./app"),
-      "@exam-notifier/ui": resolve(__dirname, "../../packages/ui/src/index"),
-      "@exam-notifier/ui/": resolve(__dirname, "../../packages/ui/src/"),
-      "@exam-notifier/internal-nobuild": resolve(__dirname, "../../packages/internal-nobuild/src/index"),
-      "@exam-notifier/internal-nobuild/": resolve(__dirname, "../../packages/internal-nobuild/src/"),
+      "@exam-notifier/ui": resolve(__dirname, "../../packages/ui/src"),
+      "@exam-notifier/internal-nobuild": resolve(__dirname, "../../packages/internal-nobuild/src"),
     },
   },
 });
