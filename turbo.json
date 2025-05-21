@@ -1,7 +1,7 @@
 {
-  "$schema": "https://turborepo.org/schema.json",
+  "$schema": "https://turbo.build/schema.json",
   "globalDependencies": [
-    ".env"
+    "**/.env.*local"
   ],
   "globalEnv": [
     "NODE_ENV",
@@ -65,7 +65,8 @@
       "outputs": []
     },
     "dev": {
-      "cache": false
+      "cache": false,
+      "persistent": true
     },
     "storybook": {
       "outputs": []
@@ -88,11 +89,17 @@
       "cache": false
     },
     "test": {
+      "dependsOn": [
+        "build"
+      ],
       "outputs": [
         "coverage/**"
       ],
-      "dependsOn": [
-        "^build"
+      "inputs": [
+        "src/**/*.tsx",
+        "src/**/*.ts",
+        "test/**/*.ts",
+        "test/**/*.tsx"
       ]
     },
     "test:watch": {
