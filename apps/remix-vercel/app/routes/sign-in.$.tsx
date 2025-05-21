@@ -1,5 +1,5 @@
 import { SignIn } from "@clerk/remix";
 
-export default function SignInPage() {
-  return <SignIn />;
-} 
+export default function SignInCatchAll() {
+  return <SignIn afterSignInUrl="/" />;
+}

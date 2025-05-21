@@ -7,11 +7,11 @@ interface Command {
 }
 
 // Clase concreta que implementa el comando para enviar notificaciones
-class SendNotificationCommand implements Command {
+export class SendNotificationCommand implements Command {
   private readonly notification: Notification
   private readonly subscription: any
 
-  constructor (notification: Notification, subscription: any) {
+  constructor(notification: Notification, subscription: any) {
     this.notification = notification
     this.subscription = subscription
   }

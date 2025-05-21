@@ -3844,13 +3844,6 @@ packages:
       '@types/superagent': 8.1.9
     dev: true
 
-  /@types/supertest@6.0.3:
-    resolution: {integrity: sha512-8WzXq62EXFhJ7QsH3Ocb/iKQ/Ty9ZVWnVzoTKc9tyyFRRF3a74Tk2+TLFgaFFw364Ere+npzHKEJ6ga2LzIL7w==}
-    dependencies:
-      '@types/methods': 1.1.4
-      '@types/superagent': 8.1.9
-    dev: true
-
   /@types/through@0.0.33:
     resolution: {integrity: sha512-HsJ+z3QuETzP3cswwtzt2vEIiHBk/dCcHGhbmG5X3ecnwFD/lPrMpliGXxSCg03L9AhrdwA4Oz/qfspkDW+xGQ==}
     dependencies:

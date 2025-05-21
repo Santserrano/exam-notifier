@@ -38,10 +38,12 @@
     "test:e2e:ci": "turbo run test:e2e:ci",
     "test:e2e:dev": "turbo run test:e2e:dev",
     "typecheck": "turbo run typecheck",
-    "validate": "turbo run lint typecheck test"
+    "validate": "turbo run lint typecheck test",
+    "build:css": "tailwindcss -c tailwind.config.ts -i ./app/styles/tailwind.css -o ./app/styles/tailwind.css --minify"
   },
   "dependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.3.1",
+    "@prisma/client": "^5.20.0",
     "@remix-run/dev": "2.16.0",
     "@turbo/gen": "^2.1.2",
     "@types/glob": "8.1.0",
@@ -69,6 +71,8 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
+    "@types/supertest": "^6.0.3",
+    "@types/web-push": "^3.6.4",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.1.2",
     "cross-env": "^7.0.3",
