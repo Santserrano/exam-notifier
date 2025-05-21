@@ -1,7 +1,7 @@
 import { vitePlugin as remix } from "@remix-run/dev";
 import { vercelPreset } from "@vercel/remix/vite";
 import { defineConfig } from "vite";
-import { default as tsconfigPaths } from "vite-tsconfig-paths";
+import { resolve } from "path";
 
 export default defineConfig({
   plugins: [
@@ -16,6 +16,14 @@ export default defineConfig({
         v3_throwAbortReason: true,
       },
     }),
-    tsconfigPaths(),
   ],
+  resolve: {
+    alias: {
+      "~": resolve(__dirname, "./app"),
+      "@exam-notifier/ui": resolve(__dirname, "../../packages/ui/src/index"),
+      "@exam-notifier/ui/": resolve(__dirname, "../../packages/ui/src/"),
+      "@exam-notifier/internal-nobuild": resolve(__dirname, "../../packages/internal-nobuild/src/index"),
+      "@exam-notifier/internal-nobuild/": resolve(__dirname, "../../packages/internal-nobuild/src/"),
+    },
+  },
 });
