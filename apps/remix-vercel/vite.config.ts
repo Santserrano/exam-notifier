@@ -1,7 +1,7 @@
+import { resolve } from "path";
 import { vitePlugin as remix } from "@remix-run/dev";
 import { vercelPreset } from "@vercel/remix/vite";
 import { defineConfig } from "vite";
-import { resolve } from "path";
 
 export default defineConfig({
   plugins: [
@@ -30,7 +30,10 @@ export default defineConfig({
     alias: {
       "~": resolve(__dirname, "./app"),
       "@exam-notifier/ui": resolve(__dirname, "../../packages/ui/src"),
-      "@exam-notifier/internal-nobuild": resolve(__dirname, "../../packages/internal-nobuild/src"),
+      "@exam-notifier/internal-nobuild": resolve(
+        __dirname,
+        "../../packages/internal-nobuild/src",
+      ),
     },
   },
 });

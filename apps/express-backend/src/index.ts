@@ -5,15 +5,11 @@ import notificationsRouter from './routes/notifications'
 import { validateApiKey } from './middleware/apiKeyAuth'
 import dotenv from 'dotenv'
 import { notificacionService } from './service/NotificationService'
-import { mesaService } from './service/mesaService'
-import { SendPushNotification } from './service/SendPushNotification'
-import { profesorService } from './service/profesorService'
-import { carreraService } from './service/carreraService'
 
 dotenv.config()
 
 const app = express()
-const port = process.env.PORT || 3001
+const port = process.env.EXPRESS_PORT || 3001
 
 // Configuración de CORS
 app.use(cors({

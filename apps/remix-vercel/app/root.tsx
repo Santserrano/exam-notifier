@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import { ClerkApp } from "@clerk/remix";
+import { rootAuthLoader } from "@clerk/remix/ssr.server";
 import { cssBundleHref } from "@remix-run/css-bundle";
 import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
 import {
@@ -8,13 +11,10 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
-import { ClerkApp } from "@clerk/remix";
-import { rootAuthLoader } from "@clerk/remix/ssr.server";
-import { customEs } from './localizations/customEs';
-import { useEffect } from "react";
 
-import tailwindStyles from "./styles/tailwind.css?url";
+import { customEs } from "./localizations/customEs";
 import fontStyles from "./styles/font.css?url";
+import tailwindStyles from "./styles/tailwind.css?url";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: tailwindStyles },
@@ -25,13 +25,14 @@ export const loader = (args: LoaderFunctionArgs) => rootAuthLoader(args);
 
 function Root() {
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(registration => {
-          console.log('Service Worker registrado con éxito:', registration);
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((registration) => {
+          console.log("Service Worker registrado con éxito:", registration);
         })
-        .catch(error => {
-          console.error('Error al registrar el Service Worker:', error);
+        .catch((error) => {
+          console.error("Error al registrar el Service Worker:", error);
         });
     }
   }, []);

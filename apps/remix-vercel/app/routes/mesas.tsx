@@ -1,27 +1,22 @@
-import {
-  useLoaderData,
-  useSearchParams,
-  json,
-  redirect,
-} from "@remix-run/react";
 import { getAuth } from "@clerk/remix/ssr.server";
 import { LoaderFunctionArgs } from "@remix-run/node";
 import {
-  Building2,
-  Calendar,
-  Clock,
-  Info,
-  MapPin,
-  User,
-} from "lucide-react";
+  json,
+  redirect,
+  useLoaderData,
+  useSearchParams,
+} from "@remix-run/react";
+import { Building2, Calendar, Clock, Info, MapPin, User } from "lucide-react";
+
 import { Button } from "@exam-notifier/ui/components/button";
 import MesaCard from "@exam-notifier/ui/components/MesaCard";
 import Modal from "@exam-notifier/ui/components/Modal";
 import { SearchBar } from "@exam-notifier/ui/components/SearchBar";
+
 import { clerkClient } from "~/utils/clerk.server";
-import HeaderClerk from "../components/HeaderClerk";
-import { getEnv } from '../utils/env.server';
 import { ActivarNotificaciones } from "../components/ActivarNotificaciones";
+import HeaderClerk from "../components/HeaderClerk";
+import { getEnv } from "../utils/env.server";
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
@@ -32,21 +27,37 @@ export const loader = async (args: LoaderFunctionArgs) => {
   if (role !== "profesor") return redirect("/");
 
   try {
-    const response = await fetch(`http://localhost:3001/api/diaries/mesas/profesor/${userId}`, {
-      headers: {
-        "x-api-key": process.env.INTERNAL_API_KEY || "",
-        "Content-Type": "application/json"
-      }
-    });
+    const response = await fetch(
+      `http://localhost:3001/api/diaries/mesas/profesor/${userId}`,
+      {
+        headers: {
+          "x-api-key": process.env.INTERNAL_API_KEY || "",
+          "Content-Type": "application/json",
+        },
+      },
+    );
 
     if (!response.ok) {
       throw new Error(`Error al obtener mesas: ${response.statusText}`);
     }
 
     const mesasRaw = await response.json();
-    console.log('Mesas raw del backend:', mesasRaw);
+    console.log("Mesas raw del backend:", mesasRaw);
 
-    const meses = ["ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sep.", "oct.", "nov.", "dic."];
+    const meses = [
+      "ene.",
+      "feb.",
+      "mar.",
+      "abr.",
+      "may.",
+      "jun.",
+      "jul.",
+      "ago.",
+      "sep.",
+      "oct.",
+      "nov.",
+      "dic.",
+    ];
     const mesas = mesasRaw.map((m: any, index: number) => {
       const fechaObj = new Date(m.fecha);
       const fechaFormateada = `${fechaObj.getDate()} ${meses[fechaObj.getMonth()]}`;
@@ -55,43 +66,56 @@ export const loader = async (args: LoaderFunctionArgs) => {
       return {
         id: m.id || `mesa-${index}`,
         materia: m.materia?.nombre || m.materia,
-        carrera: m.materia?.carrera?.nombre || m.carrera?.nombre || m.carrera?.id || m.carrera,
+        carrera:
+          m.materia?.carrera?.nombre ||
+          m.carrera?.nombre ||
+          m.carrera?.id ||
+          m.carrera,
         fecha: fechaFormateada,
         fechaOriginal: m.fecha,
         futura,
         modalidad,
         color: modalidad === "Virtual" ? "blue" : "green",
         sede: m.sede || "Central",
-        profesorNombre: m.profesor?.nombre ? `${m.profesor.nombre} ${m.profesor.apellido}` : m.profesor,
-        vocalNombre: m.vocal?.nombre ? `${m.vocal.nombre} ${m.vocal.apellido}` : m.vocal,
-        aula: m.aula || "Aula por confirmar"
+        profesorNombre: m.profesor?.nombre
+          ? `${m.profesor.nombre} ${m.profesor.apellido}`
+          : m.profesor,
+        vocalNombre: m.vocal?.nombre
+          ? `${m.vocal.nombre} ${m.vocal.apellido}`
+          : m.vocal,
+        aula: m.aula || "Aula por confirmar",
       };
     });
 
-    return json({ 
-      userId, 
-      role, 
+    return json({
+      userId,
+      role,
       mesas,
       env: {
         VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
-        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY
-      }
+        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
+      },
     });
   } catch (error) {
     console.error("Error en el loader:", error);
-    return json({ 
-      userId, 
-      role, 
+    return json({
+      userId,
+      role,
       mesas: [],
       env: {
         VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
-        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY
-      }
+        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
+      },
     });
   }
 };
 
-const carreras = ["Ingeniería en sistemas", "Arquitectura", "Lic. en Nutrición", "Lic. en Publicidad"];
+const carreras = [
+  "Ingeniería en sistemas",
+  "Arquitectura",
+  "Lic. en Nutrición",
+  "Lic. en Publicidad",
+];
 const fechas = ["mar.", "abr."];
 const sedes = ["Corrientes", "Sáenz Peña", "Posadas", "Resistencia"];
 const alumnosMock = [
@@ -106,7 +130,7 @@ export default function MesasRoute() {
   const { mesas, userId } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  console.log('Mesas en el componente:', mesas); // Debug log
+  console.log("Mesas en el componente:", mesas); // Debug log
 
   const search = searchParams.get("search") ?? "";
   const carrera = searchParams.get("carrera") ?? "";
@@ -135,18 +159,43 @@ export default function MesasRoute() {
   });
 
   const mesaDetalle = mesas.find(
-    (m: any) => m.id?.toString() === detalleId || m.id?.toString() === alumnosId
+    (m: any) =>
+      m.id?.toString() === detalleId || m.id?.toString() === alumnosId,
   );
 
-  console.log('Mesa detalle encontrada:', mesaDetalle); // Debug log
+  console.log("Mesa detalle encontrada:", mesaDetalle); // Debug log
 
   function DetalleMesa({ mesa }: { mesa: any }) {
-    console.log('Renderizando DetalleMesa con mesa:', mesa); // Debug log
+    console.log("Renderizando DetalleMesa con mesa:", mesa); // Debug log
     const fechaObj = new Date(mesa.fechaOriginal);
-    const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-    const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    const diasSemana = [
+      "Domingo",
+      "Lunes",
+      "Martes",
+      "Miércoles",
+      "Jueves",
+      "Viernes",
+      "Sábado",
+    ];
+    const meses = [
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre",
+    ];
     const fechaCompleta = `${diasSemana[fechaObj.getDay()]} ${fechaObj.getDate()} de ${meses[fechaObj.getMonth()]} ${fechaObj.getFullYear()}`;
-    const hora = fechaObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    const hora = fechaObj.toLocaleTimeString("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
     return (
       <div className="flex flex-col gap-6 p-2">
@@ -160,9 +209,13 @@ export default function MesasRoute() {
           >
             ←
           </button>
-          <h2 className="text-xl font-bold text-green-900 text-center flex-1">Detalle de Mesa</h2>
+          <h2 className="flex-1 text-center text-xl font-bold text-green-900">
+            Detalle de Mesa
+          </h2>
         </div>
-        <div className="text-lg font-semibold text-green-900">{mesa.materia}</div>
+        <div className="text-lg font-semibold text-green-900">
+          {mesa.materia}
+        </div>
         <div className="text-sm text-gray-500">{mesa.carrera}</div>
         <Button
           className="bg-blue-800 text-white"
@@ -175,22 +228,36 @@ export default function MesasRoute() {
           Alumnos inscriptos
         </Button>
         <hr />
-        <div className="text-sm flex items-center gap-2"><User className="h-4 w-4" /> Titular: {mesa.profesorNombre}</div>
-        <div className="text-sm flex items-center gap-2"><User className="h-4 w-4" /> Vocal: {mesa.vocalNombre}</div>
+        <div className="flex items-center gap-2 text-sm">
+          <User className="h-4 w-4" /> Titular: {mesa.profesorNombre}
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <User className="h-4 w-4" /> Vocal: {mesa.vocalNombre}
+        </div>
         <hr />
-        <div className="text-sm flex items-center gap-2"><Calendar className="h-4 w-4" /> {fechaCompleta}</div>
-        <div className="text-sm flex items-center gap-2"><Clock className="h-4 w-4" /> {hora} hs</div>
-        <div className="text-sm flex items-center gap-2"><MapPin className="h-4 w-4" /> {mesa.modalidad}</div>
-        <div className="text-sm flex items-center gap-2"><Building2 className="h-4 w-4" /> {mesa.aula}</div>
+        <div className="flex items-center gap-2 text-sm">
+          <Calendar className="h-4 w-4" /> {fechaCompleta}
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <Clock className="h-4 w-4" /> {hora} hs
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <MapPin className="h-4 w-4" /> {mesa.modalidad}
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <Building2 className="h-4 w-4" /> {mesa.aula}
+        </div>
         <hr />
-        <div className="text-sm flex items-center gap-2"><Info className="h-4 w-4" /> Recibirás un recordatorio 1 día antes</div>
+        <div className="flex items-center gap-2 text-sm">
+          <Info className="h-4 w-4" /> Recibirás un recordatorio 1 día antes
+        </div>
       </div>
     );
   }
 
   function ListaAlumnos({ mesa }: { mesa: any }) {
     const alumnosFiltrados = alumnosMock.filter((a) =>
-      a.nombre.toLowerCase().includes(filtroAlumno.toLowerCase())
+      a.nombre.toLowerCase().includes(filtroAlumno.toLowerCase()),
     );
     return (
       <div className="flex flex-col gap-2 p-2">
@@ -204,7 +271,9 @@ export default function MesasRoute() {
           >
             ←
           </button>
-          <h2 className="text-xl font-bold text-green-900 text-center flex-1">Alumnos inscriptos</h2>
+          <h2 className="flex-1 text-center text-xl font-bold text-green-900">
+            Alumnos inscriptos
+          </h2>
         </div>
         <input
           type="text"
@@ -215,7 +284,9 @@ export default function MesasRoute() {
         />
         <div className="flex flex-col gap-1">
           {alumnosFiltrados.length === 0 ? (
-            <div className="text-center text-gray-500">No hay alumnos para mostrar.</div>
+            <div className="text-center text-gray-500">
+              No hay alumnos para mostrar.
+            </div>
           ) : (
             alumnosFiltrados.map((a, idx) => (
               <div key={idx} className="rounded border bg-gray-50 px-3 py-2">
@@ -231,8 +302,8 @@ export default function MesasRoute() {
   return (
     <div className="mx-auto max-w-md pb-8">
       <HeaderClerk />
-      <div className="px-4 mt-2">
-        <h2 className="text-lg font-bold text-green-900 mb-4">Mis Mesas</h2>
+      <div className="mt-2 px-4">
+        <h2 className="mb-4 text-lg font-bold text-green-900">Mis Mesas</h2>
         <SearchBar
           searchValue={search}
           onSearchChange={(val) => actualizarFiltro("search", val)}
@@ -249,12 +320,14 @@ export default function MesasRoute() {
         />
 
         {/* Filtro Futuras/Pasadas */}
-        <div className="flex items-center justify-center text-center gap-4 mb-4 pt-4">
-          <span className="text-lg font-semibold text-blue-900">Próximas mesas</span>
-          <div className="flex rounded-lg overflow-hidden border border-gray-300">
+        <div className="mb-4 flex items-center justify-center gap-4 pt-4 text-center">
+          <span className="text-lg font-semibold text-blue-900">
+            Próximas mesas
+          </span>
+          <div className="flex overflow-hidden rounded-lg border border-gray-300">
             <button
               type="button"
-              className={`px-4 py-1 text-sm font-semibold focus:outline-none transition-colors ${searchParams.get("tab") !== "pasadas" ? "bg-blue-900 text-white" : "bg-white text-blue-900"}`}
+              className={`px-4 py-1 text-sm font-semibold transition-colors focus:outline-none ${searchParams.get("tab") !== "pasadas" ? "bg-blue-900 text-white" : "bg-white text-blue-900"}`}
               onClick={() => {
                 searchParams.delete("tab");
                 setSearchParams(searchParams);
@@ -264,7 +337,7 @@ export default function MesasRoute() {
             </button>
             <button
               type="button"
-              className={`px-4 py-1 text-sm font-semibold focus:outline-none transition-colors border-l border-gray-300 ${searchParams.get("tab") === "pasadas" ? "bg-blue-900 text-white" : "bg-white text-blue-900"}`}
+              className={`border-l border-gray-300 px-4 py-1 text-sm font-semibold transition-colors focus:outline-none ${searchParams.get("tab") === "pasadas" ? "bg-blue-900 text-white" : "bg-white text-blue-900"}`}
               onClick={() => {
                 searchParams.set("tab", "pasadas");
                 setSearchParams(searchParams);
@@ -281,10 +354,12 @@ export default function MesasRoute() {
           ) : alumnosId && mesaDetalle ? (
             <ListaAlumnos mesa={mesaDetalle} />
           ) : mesasFiltradas.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">No hay mesas para mostrar.</div>
+            <div className="py-8 text-center text-gray-500">
+              No hay mesas para mostrar.
+            </div>
           ) : (
             mesasFiltradas.map((mesa: any) => {
-              console.log('Renderizando mesa:', mesa);
+              console.log("Renderizando mesa:", mesa);
               return (
                 <MesaCard
                   key={mesa.id}
@@ -303,11 +378,15 @@ export default function MesasRoute() {
           )}
         </div>
 
-        <div className="text-xs text-center w-full mt-4 px-2">
-          <div className="text-red-600 mb-1">
-            <span className="align-middle">¿Notás algún error en las mesas?</span>
+        <div className="mt-4 w-full px-2 text-center text-xs">
+          <div className="mb-1 text-red-600">
+            <span className="align-middle">
+              ¿Notás algún error en las mesas?
+            </span>
           </div>
-          <a href="#" className="underline text-blue-800">Contactar a oficina de docentes</a>
+          <a href="#" className="text-blue-800 underline">
+            Contactar a oficina de docentes
+          </a>
         </div>
       </div>
     </div>

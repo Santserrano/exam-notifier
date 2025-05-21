@@ -1,7 +1,17 @@
 import React, { useState } from "react";
 import { getAuth } from "@clerk/remix/ssr.server";
-import { json, redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData, useActionData, Link, useNavigation } from "@remix-run/react";
+import {
+  json,
+  redirect,
+  type ActionFunctionArgs,
+  type LoaderFunctionArgs,
+} from "@remix-run/node";
+import {
+  Link,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+} from "@remix-run/react";
 
 import { Button } from "@exam-notifier/ui/components/button";
 import Input from "@exam-notifier/ui/components/input";
@@ -72,40 +82,41 @@ export const loader = async (args: LoaderFunctionArgs) => {
 
   try {
     // Obtener las mesas y profesores del backend
-    const [mesasResponse, profesoresResponse, carrerasResponse] = await Promise.all([
-      fetch("http://localhost:3001/api/diaries/mesas", {
-        headers: {
-          "x-api-key": process.env.INTERNAL_API_KEY || "",
-          "Content-Type": "application/json"
-        }
-      }).catch(error => {
-        console.error("Error al obtener mesas:", error);
-        return { ok: false, status: 500, json: () => [] };
-      }),
-      fetch("http://localhost:3001/api/diaries/profesores", {
-        headers: {
-          "x-api-key": process.env.INTERNAL_API_KEY || "",
-          "Content-Type": "application/json"
-        }
-      }).catch(error => {
-        console.error("Error al obtener profesores:", error);
-        return { ok: false, status: 500, json: () => [] };
-      }),
-      fetch("http://localhost:3001/api/diaries/carreras", {
-        headers: {
-          "x-api-key": process.env.INTERNAL_API_KEY || "",
-          "Content-Type": "application/json"
-        }
-      }).catch(error => {
-        console.error("Error al obtener carreras:", error);
-        return { ok: false, status: 500, json: () => [] };
-      })
-    ]);
+    const [mesasResponse, profesoresResponse, carrerasResponse] =
+      await Promise.all([
+        fetch("http://localhost:3001/api/diaries/mesas", {
+          headers: {
+            "x-api-key": process.env.INTERNAL_API_KEY || "",
+            "Content-Type": "application/json",
+          },
+        }).catch((error) => {
+          console.error("Error al obtener mesas:", error);
+          return { ok: false, status: 500, json: () => [] };
+        }),
+        fetch("http://localhost:3001/api/diaries/profesores", {
+          headers: {
+            "x-api-key": process.env.INTERNAL_API_KEY || "",
+            "Content-Type": "application/json",
+          },
+        }).catch((error) => {
+          console.error("Error al obtener profesores:", error);
+          return { ok: false, status: 500, json: () => [] };
+        }),
+        fetch("http://localhost:3001/api/diaries/carreras", {
+          headers: {
+            "x-api-key": process.env.INTERNAL_API_KEY || "",
+            "Content-Type": "application/json",
+          },
+        }).catch((error) => {
+          console.error("Error al obtener carreras:", error);
+          return { ok: false, status: 500, json: () => [] };
+        }),
+      ]);
 
     const [mesas, profesores, carreras] = await Promise.all([
       mesasResponse.ok ? mesasResponse.json() : [],
       profesoresResponse.ok ? profesoresResponse.json() : [],
-      carrerasResponse.ok ? carrerasResponse.json() : []
+      carrerasResponse.ok ? carrerasResponse.json() : [],
     ]);
 
     const data = {
@@ -117,7 +128,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
       env: {
         INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
         VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
-      }
+      },
     };
 
     return json(data);
@@ -132,7 +143,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
       env: {
         INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
         VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
-      }
+      },
     });
   }
 };
@@ -171,7 +182,7 @@ export const action = async (args: ActionFunctionArgs) => {
       method: "POST",
       headers: {
         "x-api-key": process.env.INTERNAL_API_KEY || "",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         profesor: profesorId,
@@ -184,8 +195,8 @@ export const action = async (args: ActionFunctionArgs) => {
         verification: true,
         modalidad,
         aula: modalidad === "Presencial" ? aula : undefined,
-        webexLink: modalidad === "Virtual" ? webexLink : undefined
-      })
+        webexLink: modalidad === "Virtual" ? webexLink : undefined,
+      }),
     });
 
     if (!response.ok) {
@@ -196,13 +207,20 @@ export const action = async (args: ActionFunctionArgs) => {
     return redirect("/admin");
   } catch (error) {
     console.error("Error en el action:", error);
-    return json({ error: error instanceof Error ? error.message : "Error al crear la mesa" }, { status: 400 });
+    return json(
+      {
+        error:
+          error instanceof Error ? error.message : "Error al crear la mesa",
+      },
+      { status: 400 },
+    );
   }
 };
 
 export default function AdminRoute() {
-  const { userId, role, mesas, profesores, carreras } = useLoaderData<typeof loader>();
-  console.log('Profesores cargados:', profesores);
+  const { userId, role, mesas, profesores, carreras } =
+    useLoaderData<typeof loader>();
+  console.log("Profesores cargados:", profesores);
   const actionData = useActionData<typeof action>();
   const [search, setSearch] = useState("");
   const [carrera, setCarrera] = useState("");
@@ -214,17 +232,42 @@ export default function AdminRoute() {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
-  const fechas = ["ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sep.", "oct.", "nov.", "dic."];
-  const sedes = ["Corrientes", "Resistencia", "Posadas", "Formosa", "Paso de los Libres", "Curuzú Cuatiá", "Sáenz Peña", "Goya", "Leando N. Alem"];
+  const fechas = [
+    "ene.",
+    "feb.",
+    "mar.",
+    "abr.",
+    "may.",
+    "jun.",
+    "jul.",
+    "ago.",
+    "sep.",
+    "oct.",
+    "nov.",
+    "dic.",
+  ];
+  const sedes = [
+    "Corrientes",
+    "Resistencia",
+    "Posadas",
+    "Formosa",
+    "Paso de los Libres",
+    "Curuzú Cuatiá",
+    "Sáenz Peña",
+    "Goya",
+    "Leando N. Alem",
+  ];
   const horas = ["08:00", "10:00", "12:00", "14:00", "16:00"];
-  
+
   // Filtrar profesores según carrera y materia
   const profesoresFiltrados = React.useMemo(() => {
     if (!Array.isArray(profesores)) return [];
-    
+
     return profesores.filter((profesor: Profesor) => {
-      const cumpleCarrera = !carrera || profesor.carreras.some(c => c.id === carrera);
-      const cumpleMateria = !materia || profesor.materias.some(m => m.id === materia);
+      const cumpleCarrera =
+        !carrera || profesor.carreras.some((c) => c.id === carrera);
+      const cumpleMateria =
+        !materia || profesor.materias.some((m) => m.id === materia);
       return cumpleCarrera && cumpleMateria;
     });
   }, [profesores, carrera, materia]);
@@ -232,12 +275,25 @@ export default function AdminRoute() {
   // Formatear las mesas para mostrarlas
   const mesasFormateadas = mesas.map((mesa: Mesa): MesaFormateada => {
     const fechaObj = new Date(mesa.fecha);
-    const meses = ["ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sep.", "oct.", "nov.", "dic."];
+    const meses = [
+      "ene.",
+      "feb.",
+      "mar.",
+      "abr.",
+      "may.",
+      "jun.",
+      "jul.",
+      "ago.",
+      "sep.",
+      "oct.",
+      "nov.",
+      "dic.",
+    ];
     return {
       ...mesa,
       fecha: `${fechaObj.getDate()} ${meses[fechaObj.getMonth()]}`,
       modalidad: (mesa.modalidad || "Presencial") as Modalidad,
-      color: mesa.modalidad === "Virtual" ? "blue" : "green"
+      color: mesa.modalidad === "Virtual" ? "blue" : "green",
     };
   });
 
@@ -246,7 +302,7 @@ export default function AdminRoute() {
     (m: MesaFormateada) =>
       (!search || m.materia.toLowerCase().includes(search.toLowerCase())) &&
       (!carrera || m.carrera === carrera) &&
-      (!fecha || m.fecha.includes(fecha))
+      (!fecha || m.fecha.includes(fecha)),
   );
 
   function MesaModal({
@@ -261,9 +317,15 @@ export default function AdminRoute() {
     const isEdit = !!mesa;
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
-    const [modalidad, setModalidad] = useState<Modalidad>(mesa?.modalidad || "Presencial");
-    const [carreraSeleccionada, setCarreraSeleccionada] = useState(mesa?.carrera || "");
-    const [materiaSeleccionada, setMateriaSeleccionada] = useState(mesa?.materia || "");
+    const [modalidad, setModalidad] = useState<Modalidad>(
+      mesa?.modalidad || "Presencial",
+    );
+    const [carreraSeleccionada, setCarreraSeleccionada] = useState(
+      mesa?.carrera || "",
+    );
+    const [materiaSeleccionada, setMateriaSeleccionada] = useState(
+      mesa?.materia || "",
+    );
     const [aula, setAula] = useState(mesa?.aula || "");
     const [webexLink, setWebexLink] = useState(mesa?.webexLink || "");
 
@@ -275,18 +337,25 @@ export default function AdminRoute() {
     // Filtrar profesores según carrera y materia seleccionada
     const profesoresFiltrados = React.useMemo(() => {
       if (!Array.isArray(profesores)) return [];
-      
+
       return profesores.filter((profesor: Profesor) => {
-        const cumpleCarrera = !carreraSeleccionada || profesor.carreras.some(c => c.id === carreraSeleccionada);
-        const cumpleMateria = !materiaSeleccionada || profesor.materias.some(m => m.id === materiaSeleccionada);
+        const cumpleCarrera =
+          !carreraSeleccionada ||
+          profesor.carreras.some((c) => c.id === carreraSeleccionada);
+        const cumpleMateria =
+          !materiaSeleccionada ||
+          profesor.materias.some((m) => m.id === materiaSeleccionada);
         return cumpleCarrera && cumpleMateria;
       });
     }, [profesores, carreraSeleccionada, materiaSeleccionada]);
 
     return (
       <Modal open={open} onClose={onClose} title={""}>
-        <form method="post" className="flex flex-col gap-3 max-h-[80vh] overflow-y-auto pr-2">
-          <div className="mb-2 flex items-center gap-2 sticky top-0 bg-white pb-2">
+        <form
+          method="post"
+          className="flex max-h-[80vh] flex-col gap-3 overflow-y-auto pr-2"
+        >
+          <div className="sticky top-0 mb-2 flex items-center gap-2 bg-white pb-2">
             <button
               type="button"
               onClick={onClose}
@@ -340,13 +409,14 @@ export default function AdminRoute() {
             disabled={!carreraSeleccionada}
           >
             <option value="">Seleccionar</option>
-            {carreraSeleccionada && carreras
-              .find((c: Carrera) => c.id === carreraSeleccionada)
-              ?.materias.map((m: { id: string; nombre: string }) => (
-                <option key={m.id} value={m.id}>
-                  {m.nombre}
-                </option>
-              ))}
+            {carreraSeleccionada &&
+              carreras
+                .find((c: Carrera) => c.id === carreraSeleccionada)
+                ?.materias.map((m: { id: string; nombre: string }) => (
+                  <option key={m.id} value={m.id}>
+                    {m.nombre}
+                  </option>
+                ))}
           </select>
           <label className="text-sm font-semibold text-green-900">
             Docente Titular
@@ -452,21 +522,39 @@ export default function AdminRoute() {
             </div>
           )}
 
-          <Button 
-            type="submit" 
-            className="mt-2 w-full bg-green-700 text-white flex items-center justify-center gap-2"
+          <Button
+            type="submit"
+            className="mt-2 flex w-full items-center justify-center gap-2 bg-green-700 text-white"
             disabled={isSubmitting}
           >
             {isSubmitting ? (
               <>
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="h-5 w-5 animate-spin text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 {isEdit ? "Guardando..." : "Creando..."}
               </>
+            ) : isEdit ? (
+              "Guardar Cambios"
             ) : (
-              isEdit ? "Guardar Cambios" : "Añadir Mesa"
+              "Añadir Mesa"
             )}
           </Button>
         </form>
@@ -478,14 +566,12 @@ export default function AdminRoute() {
     <div className="mx-auto max-w-md pb-8">
       <HeaderClerk />
       <div className="mt-2 px-4">
-        <div className="mb-4 flex justify-between items-center">
+        <div className="mb-4 flex items-center justify-between">
           <h2 className="text-center text-lg font-bold">
             Mesas - Administración
           </h2>
           <Link to="/profesores">
-            <Button variant="outline">
-              Gestionar Profesores
-            </Button>
+            <Button variant="outline">Gestionar Profesores</Button>
           </Link>
         </div>
         <SearchBar
