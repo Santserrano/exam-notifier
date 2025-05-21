@@ -1,16 +1,7 @@
 {
-  "include": [
-    "env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "tailwind.config.ts"
-  ],
+  "include": ["env.d.ts", "**/*.ts", "**/*.tsx", "tailwind.config.ts"],
   "compilerOptions": {
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ES2022"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "isolatedModules": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
@@ -25,21 +16,15 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "~/*": [
-        "./app/*"
-      ],
-      "@exam-notifier/ui/*": [
-        "../../packages/ui/src/*"
-      ],
-      "@exam-notifier/ui": [
-        "../../packages/ui/src/index"
-      ],
+      "~/*": ["./app/*"],
+      "@exam-notifier/ui/*": ["../../packages/ui/src/*"],
+      "@exam-notifier/ui": ["../../packages/ui/src/index"],
       "@exam-notifier/internal-nobuild": [
         "../../packages/internal-nobuild/src/index"
       ],
       "@exam-notifier/internal-nobuild/*": [
         "../../packages/internal-nobuild/src/*"
-      ],
+      ]
     },
     // Remix takes care of building everything in `remix build`.
     "noEmit": true

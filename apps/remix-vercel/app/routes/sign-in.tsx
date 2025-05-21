@@ -12,17 +12,18 @@ export default function SignInPage() {
           elements: {
             formButtonPrimary: {
               fontSize: 14,
-              textTransform: 'none',
-              backgroundColor: '##00b521',
-              '&:hover, &:focus, &:active': {
-                backgroundColor: '#1d4ed8',
+              textTransform: "none",
+              backgroundColor: "##00b521",
+              "&:hover, &:focus, &:active": {
+                backgroundColor: "#1d4ed8",
               },
             },
             signIn: {
               start: {
-                title: 'Acceso a la Plataforma UCP',
-                subtitle: '¡Bienvenido de nuevo! Por favor, inicia sesión para continuar',
-                actionText: 'O usa tu correo electrónico',
+                title: "Acceso a la Plataforma UCP",
+                subtitle:
+                  "¡Bienvenido de nuevo! Por favor, inicia sesión para continuar",
+                actionText: "O usa tu correo electrónico",
               },
             },
           },

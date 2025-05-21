@@ -1,12 +1,6 @@
 import { getAuth } from "@clerk/remix/ssr.server";
-import {
-  redirect,
-  type LoaderFunctionArgs,
-} from "@remix-run/node";
-import {
-  isRouteErrorResponse,
-  useRouteError,
-} from "@remix-run/react";
+import { redirect, type LoaderFunctionArgs } from "@remix-run/node";
+import { isRouteErrorResponse, useRouteError } from "@remix-run/react";
 
 import { clerkClient } from "~/utils/clerk.server";
 
