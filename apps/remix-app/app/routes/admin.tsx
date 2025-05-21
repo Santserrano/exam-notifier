@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { getAuth } from "@clerk/remix/ssr.server";
 import { json, redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData, useActionData } from "@remix-run/react";
+import { useLoaderData, useActionData, Link } from "@remix-run/react";
 
 import { Button } from "@exam-notifier/ui/components/button";
 import Input from "@exam-notifier/ui/components/input";
@@ -27,6 +27,8 @@ interface Mesa {
   modalidad?: Modalidad;
   color?: string;
   hora?: string;
+  aula?: string;
+  webexLink?: string;
 }
 
 interface MesaFormateada extends Mesa {
@@ -35,12 +37,23 @@ interface MesaFormateada extends Mesa {
   color: string;
 }
 
+interface Carrera {
+  id: string;
+  nombre: string;
+}
+
+interface Materia {
+  id: string;
+  nombre: string;
+  carreraId: string;
+}
+
 interface Profesor {
   id: string;
   nombre: string;
   apellido: string;
-  carreras: string[];
-  materias: string[];
+  carreras: Carrera[];
+  materias: Materia[];
 }
 
 export const loader = async (args: LoaderFunctionArgs) => {
@@ -58,8 +71,8 @@ export const loader = async (args: LoaderFunctionArgs) => {
   }
 
   try {
-    // Obtener las mesas del backend
-    const [mesasResponse, profesoresResponse] = await Promise.all([
+    // Obtener las mesas y profesores del backend
+    const [mesasResponse, profesoresResponse, carrerasResponse] = await Promise.all([
       fetch("http://localhost:3001/api/diaries/mesas", {
         headers: {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
@@ -77,19 +90,34 @@ export const loader = async (args: LoaderFunctionArgs) => {
       }).catch(error => {
         console.error("Error al obtener profesores:", error);
         return { ok: false, status: 500, json: () => [] };
+      }),
+      fetch("http://localhost:3001/api/diaries/carreras", {
+        headers: {
+          "x-api-key": process.env.INTERNAL_API_KEY || "",
+          "Content-Type": "application/json"
+        }
+      }).catch(error => {
+        console.error("Error al obtener carreras:", error);
+        return { ok: false, status: 500, json: () => [] };
       })
     ]);
 
-    const [mesas, profesores] = await Promise.all([
+    const [mesas, profesores, carreras] = await Promise.all([
       mesasResponse.ok ? mesasResponse.json() : [],
-      profesoresResponse.ok ? profesoresResponse.json() : []
+      profesoresResponse.ok ? profesoresResponse.json() : [],
+      carrerasResponse.ok ? carrerasResponse.json() : []
     ]);
 
     const data = {
       userId,
       role,
       mesas: Array.isArray(mesas) ? mesas : [],
-      profesores: Array.isArray(profesores) ? profesores : []
+      profesores: Array.isArray(profesores) ? profesores : [],
+      carreras: Array.isArray(carreras) ? carreras : [],
+      env: {
+        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
+        VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
+      }
     };
 
     return json(data);
@@ -99,7 +127,12 @@ export const loader = async (args: LoaderFunctionArgs) => {
       userId,
       role,
       mesas: [],
-      profesores: []
+      profesores: [],
+      carreras: [],
+      env: {
+        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
+        VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
+      }
     });
   }
 };
@@ -127,6 +160,8 @@ export const action = async (args: ActionFunctionArgs) => {
   const vocalId = formData.get("docenteVocal") as string;
   const modalidad = formData.get("modalidad") as Modalidad;
   const hora = formData.get("hora") as string;
+  const aula = formData.get("aula") as string;
+  const webexLink = formData.get("webexLink") as string;
 
   // Combinar fecha y hora
   const fechaHora = new Date(`${fecha}T${hora}`);
@@ -147,7 +182,9 @@ export const action = async (args: ActionFunctionArgs) => {
         descripcion: "Mesa de examen",
         cargo: "Titular",
         verification: true,
-        modalidad
+        modalidad,
+        aula: modalidad === "Presencial" ? aula : undefined,
+        webexLink: modalidad === "Virtual" ? webexLink : undefined
       })
     });
 
@@ -164,7 +201,7 @@ export const action = async (args: ActionFunctionArgs) => {
 };
 
 export default function AdminRoute() {
-  const { userId, role, mesas, profesores } = useLoaderData<typeof loader>();
+  const { userId, role, mesas, profesores, carreras } = useLoaderData<typeof loader>();
   console.log('Profesores cargados:', profesores);
   const actionData = useActionData<typeof action>();
   const [search, setSearch] = useState("");
@@ -175,25 +212,17 @@ export default function AdminRoute() {
   const [showAddMesa, setShowAddMesa] = useState(false);
   const [mesaAEditar, setMesaAEditar] = useState<Mesa | null>(null);
 
-  const carreras = ["Ingeniería en sistemas", "Arquitectura"];
-  const fechas = ["mar.", "abr."];
-  const sedes = ["Central", "Virtual", "Sur"];
-  const asignaturas = [
-    "Base de datos",
-    "Paradigmas 3",
-    "Redes",
-    "Ing. Software 3",
-    "Mat. discreta",
-  ];
+  const fechas = ["ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sep.", "oct.", "nov.", "dic."];
+  const sedes = ["Corrientes", "Resistencia", "Posadas", "Formosa", "Paso de los Libres", "Curuzú Cuatiá", "Sáenz Peña", "Goya", "Leando N. Alem"];
   const horas = ["08:00", "10:00", "12:00", "14:00", "16:00"];
-
+  
   // Filtrar profesores según carrera y materia
   const profesoresFiltrados = React.useMemo(() => {
     if (!Array.isArray(profesores)) return [];
     
     return profesores.filter((profesor: Profesor) => {
-      const cumpleCarrera = !carrera || profesor.carreras.includes(carrera);
-      const cumpleMateria = !materia || profesor.materias.includes(materia);
+      const cumpleCarrera = !carrera || profesor.carreras.some(c => c.id === carrera);
+      const cumpleMateria = !materia || profesor.materias.some(m => m.id === materia);
       return cumpleCarrera && cumpleMateria;
     });
   }, [profesores, carrera, materia]);
@@ -231,16 +260,29 @@ export default function AdminRoute() {
     const [modalidad, setModalidad] = useState<Modalidad>(mesa?.modalidad || "Presencial");
     const [carreraSeleccionada, setCarreraSeleccionada] = useState(mesa?.carrera || "");
     const [materiaSeleccionada, setMateriaSeleccionada] = useState(mesa?.materia || "");
+    const [aula, setAula] = useState(mesa?.aula || "");
+    const [webexLink, setWebexLink] = useState(mesa?.webexLink || "");
 
     // Resetear materia cuando cambia la carrera
     React.useEffect(() => {
       setMateriaSeleccionada("");
     }, [carreraSeleccionada]);
 
+    // Filtrar profesores según carrera y materia seleccionada
+    const profesoresFiltrados = React.useMemo(() => {
+      if (!Array.isArray(profesores)) return [];
+      
+      return profesores.filter((profesor: Profesor) => {
+        const cumpleCarrera = !carreraSeleccionada || profesor.carreras.some(c => c.id === carreraSeleccionada);
+        const cumpleMateria = !materiaSeleccionada || profesor.materias.some(m => m.id === materiaSeleccionada);
+        return cumpleCarrera && cumpleMateria;
+      });
+    }, [profesores, carreraSeleccionada, materiaSeleccionada]);
+
     return (
       <Modal open={open} onClose={onClose} title={""}>
-        <form method="post" className="flex flex-col gap-3">
-          <div className="mb-2 flex items-center gap-2">
+        <form method="post" className="flex flex-col gap-3 max-h-[80vh] overflow-y-auto pr-2">
+          <div className="mb-2 flex items-center gap-2 sticky top-0 bg-white pb-2">
             <button
               type="button"
               onClick={onClose}
@@ -276,9 +318,9 @@ export default function AdminRoute() {
             onChange={(e) => setCarreraSeleccionada(e.target.value)}
           >
             <option value="">Seleccionar</option>
-            {carreras.map((c) => (
-              <option key={c} value={c}>
-                {c}
+            {carreras.map((c: Carrera) => (
+              <option key={c.id} value={c.id}>
+                {c.nombre}
               </option>
             ))}
           </select>
@@ -291,20 +333,14 @@ export default function AdminRoute() {
             required
             value={materiaSeleccionada}
             onChange={(e) => setMateriaSeleccionada(e.target.value)}
+            disabled={!carreraSeleccionada}
           >
             <option value="">Seleccionar</option>
-            {asignaturas
-              .filter(materia => {
-                // Filtrar materias según la carrera seleccionada
-                if (!carreraSeleccionada) return true;
-                return profesores.some((profesor: Profesor) => 
-                  profesor.carreras.includes(carreraSeleccionada) && 
-                  profesor.materias.includes(materia)
-                );
-              })
-              .map((a) => (
-                <option key={a} value={a}>
-                  {a}
+            {carreraSeleccionada && carreras
+              .find((c: Carrera) => c.id === carreraSeleccionada)
+              ?.materias.map((m: { id: string; nombre: string }) => (
+                <option key={m.id} value={m.id}>
+                  {m.nombre}
                 </option>
               ))}
           </select>
@@ -316,6 +352,7 @@ export default function AdminRoute() {
             className="rounded border px-2 py-2"
             required
             defaultValue={mesa?.profesor || ""}
+            disabled={!materiaSeleccionada}
           >
             <option value="">Seleccionar</option>
             {profesoresFiltrados.map((profesor: Profesor) => (
@@ -332,6 +369,7 @@ export default function AdminRoute() {
             className="rounded border px-2 py-2"
             required
             defaultValue={mesa?.vocal || ""}
+            disabled={!materiaSeleccionada}
           >
             <option value="">Seleccionar</option>
             {profesoresFiltrados.map((profesor: Profesor) => (
@@ -379,6 +417,37 @@ export default function AdminRoute() {
               Virtual
             </label>
           </div>
+
+          {modalidad === "Presencial" ? (
+            <div>
+              <label className="text-sm font-semibold text-green-900">
+                Aula
+              </label>
+              <Input
+                type="text"
+                name="aula"
+                required
+                value={aula}
+                onChange={(e) => setAula(e.target.value)}
+                placeholder="Ej: 101, Laboratorio 2"
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="text-sm font-semibold text-green-900">
+                Link de Webex
+              </label>
+              <Input
+                type="url"
+                name="webexLink"
+                required
+                value={webexLink}
+                onChange={(e) => setWebexLink(e.target.value)}
+                placeholder="https://webex.com/..."
+              />
+            </div>
+          )}
+
           <Button type="submit" className="mt-2 w-full bg-green-700 text-white">
             {isEdit ? "Guardar Cambios" : "Añadir Mesa"}
           </Button>
@@ -391,11 +460,21 @@ export default function AdminRoute() {
     <div className="mx-auto max-w-md pb-8">
       <HeaderClerk />
       <div className="mt-2 px-4">
+        <div className="mb-4 flex justify-between items-center">
+          <h2 className="text-center text-lg font-bold">
+            Mesas - Administración
+          </h2>
+          <Link to="/profesores">
+            <Button variant="outline">
+              Gestionar Profesores
+            </Button>
+          </Link>
+        </div>
         <SearchBar
           searchValue={search}
           onSearchChange={setSearch}
           onAddMesa={() => setShowAddMesa(true)}
-          carreras={carreras}
+          carreras={carreras.map((c: Carrera) => c.nombre)}
           carreraSeleccionada={carrera}
           onCarreraChange={setCarrera}
           fechas={fechas}
@@ -405,6 +484,9 @@ export default function AdminRoute() {
           sedeSeleccionada={sede}
           onSedeChange={setSede}
         />
+        <style>{`
+          select { max-height: 200px; overflow-y: auto; }
+        `}</style>
         <MesaModal open={showAddMesa} onClose={() => setShowAddMesa(false)} />
         {mesaAEditar && (
           <MesaModal
@@ -413,9 +495,6 @@ export default function AdminRoute() {
             mesa={mesaAEditar}
           />
         )}
-        <h2 className="my-2 text-center text-lg font-bold">
-          Mesas - Editar
-        </h2>
         <div>
           {mesasFiltradas.map((mesa: MesaFormateada) => (
             <MesaCard

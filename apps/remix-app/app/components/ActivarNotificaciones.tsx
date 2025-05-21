@@ -26,21 +26,72 @@ export function ActivarNotificaciones() {
   useEffect(() => {
     const checkSubscription = async () => {
       try {
+        if (!('serviceWorker' in navigator)) {
+          throw new Error('Service Workers no soportados en este navegador');
+        }
+
+        if (!env?.API_URL || !env?.INTERNAL_API_KEY) {
+          console.error('Variables de entorno no disponibles:', { env });
+          return;
+        }
+
+        console.log('Verificando suscripción con:', {
+          apiUrl: env.API_URL,
+          userId: user?.id
+        });
+
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
-        setIsSubscribed(!!subscription);
+        
+        if (subscription) {
+          // Verificar si la suscripción está activa en el backend
+          const url = `${env.API_URL}/api/notificaciones/config/${user?.id}`;
+          console.log('Consultando configuración en:', url);
+
+          const response = await fetch(url, {
+            headers: {
+              'x-api-key': env.INTERNAL_API_KEY,
+              'Content-Type': 'application/json'
+            }
+          }).catch(error => {
+            console.error('Error en la petición:', error);
+            throw new Error(`Error de conexión: ${error.message}`);
+          });
+          
+          if (response.ok) {
+            const config = await response.json();
+            console.log('Configuración recibida:', config);
+            setIsSubscribed(config.webPushEnabled);
+          } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Error en la respuesta:', {
+              status: response.status,
+              statusText: response.statusText,
+              error: errorData
+            });
+            throw new Error(`Error del servidor: ${response.statusText}`);
+          }
+        } else {
+          console.log('No hay suscripción activa');
+          setIsSubscribed(false);
+        }
       } catch (err) {
         console.error('Error al verificar suscripción:', err);
+        setError(err instanceof Error ? err.message : 'Error al verificar suscripción');
+        setIsSubscribed(false);
       }
     };
 
-    checkSubscription();
-  }, []);
+    if (user && env?.API_URL && env?.INTERNAL_API_KEY) {
+      checkSubscription();
+    }
+  }, [user, env?.API_URL, env?.INTERNAL_API_KEY]);
 
   const showNotification = (message: string, type: 'success' | 'error') => {
     setToastMessage(message);
     setToastType(type);
     setShowToast(true);
+    setTimeout(() => setShowToast(false), 5000);
   };
 
   const activarNotificaciones = async () => {
@@ -49,13 +100,18 @@ export function ActivarNotificaciones() {
       return;
     }
 
-    if (!env.VAPID_PUBLIC_KEY) {
+    if (!env?.VAPID_PUBLIC_KEY) {
       setError('Error de configuración: VAPID_PUBLIC_KEY no está definida');
       return;
     }
 
-    if (!env.INTERNAL_API_KEY) {
+    if (!env?.INTERNAL_API_KEY) {
       setError('Error de configuración: INTERNAL_API_KEY no está definida');
+      return;
+    }
+
+    if (!env?.API_URL) {
+      setError('Error de configuración: API_URL no está definida');
       return;
     }
 
@@ -68,17 +124,38 @@ export function ActivarNotificaciones() {
     setError(null);
 
     try {
-      // 1. Solicitar permisos
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        throw new Error('Permiso de notificación denegado');
+      // Verificar soporte de Service Worker
+      if (!('serviceWorker' in navigator)) {
+        throw new Error('Tu navegador no soporta notificaciones push');
       }
 
-      // 2. Registrar service worker
+      // Verificar permisos
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        throw new Error('Permiso de notificaciones denegado');
+      }
+
+      // Registrar Service Worker
+      console.log('Registrando Service Worker...');
       const registration = await navigator.serviceWorker.register('/sw.js');
       console.log('Service Worker registrado:', registration);
 
-      // 3. Obtener suscripción push
+      // Esperar a que el Service Worker esté activo
+      if (registration.active) {
+        console.log('Service Worker ya está activo');
+      } else {
+        console.log('Esperando a que el Service Worker esté activo...');
+        await new Promise((resolve) => {
+          if (registration.active) {
+            resolve(true);
+          } else {
+            registration.addEventListener('activate', () => resolve(true));
+          }
+        });
+      }
+
+      // Obtener suscripción
+      console.log('Intentando obtener suscripción...');
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: env.VAPID_PUBLIC_KEY
@@ -86,55 +163,51 @@ export function ActivarNotificaciones() {
 
       console.log('Suscripción obtenida:', subscription);
 
-      // 4. Enviar suscripción al backend
+      // Enviar suscripción al backend
       const response = await fetch(`${env.API_URL}/api/notificaciones/push-subscription`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': env.INTERNAL_API_KEY
+          'x-api-key': env.INTERNAL_API_KEY || ''
         },
         body: JSON.stringify({
-          profesorId: user.id,
+          profesorId: user?.id,
           subscription
         })
       });
 
-      const responseData = await response.json();
+      const data = await response.json();
+      console.log('Respuesta del servidor:', data);
 
       if (!response.ok) {
-        throw new Error(responseData.error || responseData.details || 'Error al guardar la suscripción');
+        throw new Error(data.error || data.details || 'Error al guardar la suscripción');
       }
 
-      // 5. Actualizar configuración del profesor
-      const configResponse = await fetch(`${env.API_URL}/api/notificaciones/config`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': env.INTERNAL_API_KEY
-        },
-        body: JSON.stringify({
-          profesorId: user.id,
-          webPushEnabled: true
-        })
-      });
+      if (!data.success) {
+        throw new Error('La operación no fue exitosa');
+      }
 
-      const configData = await configResponse.json();
-
-      if (!configResponse.ok) {
-        throw new Error(configData.error || configData.details || 'Error al actualizar la configuración');
+      if (!data.config || !data.config.webPushEnabled) {
+        throw new Error('La configuración no se activó correctamente');
       }
 
       setIsSubscribed(true);
       showNotification('¡Notificaciones activadas con éxito!', 'success');
-    } catch (err) {
-      console.error('Error al activar notificaciones:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Error al activar notificaciones';
+    } catch (error) {
+      console.error('Error al activar notificaciones:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error al activar notificaciones';
       setError(errorMessage);
       showNotification(errorMessage, 'error');
+      setIsSubscribed(false);
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (!env?.API_URL || !env?.INTERNAL_API_KEY || !env?.VAPID_PUBLIC_KEY) {
+    console.error('Variables de entorno faltantes:', { env });
+    return null;
+  }
 
   return (
     <div className="relative">
@@ -144,12 +217,16 @@ export function ActivarNotificaciones() {
         className={`w-10 h-10 rounded-full p-0 flex items-center justify-center ${
           isSubscribed 
             ? 'bg-green-600 hover:bg-green-700' 
-            : 'bg-blue-600 hover:bg-blue-700'
+            : isLoading
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-700'
         }`}
-        title={isSubscribed ? 'Notificaciones activadas' : 'Activar notificaciones'}
+        title={isSubscribed ? 'Notificaciones activadas' : isLoading ? 'Activando...' : 'Activar notificaciones'}
       >
         {isSubscribed ? (
           <Bell className="h-5 w-5 text-white" />
+        ) : isLoading ? (
+          <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
         ) : (
           <BellOff className="h-5 w-5 text-white" />
         )}
