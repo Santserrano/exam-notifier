@@ -19,7 +19,6 @@ export const MesaCard: React.FC<MesaCardProps> = ({
 }) => {
   const [dia, mes] = fecha.split(" ");
 
-  const isPresencial = modalidad === "Presencial";
   type ColorType = "green" | "blue";
   const colorStyles: Record<ColorType, { bg: string; dot: string; text: string }> = {
     green: {
