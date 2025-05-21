@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { getAuth } from "@clerk/remix/ssr.server";
 import { json, redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData, useActionData, Link } from "@remix-run/react";
+import { useLoaderData, useActionData, Link, useNavigation } from "@remix-run/react";
 
 import { Button } from "@exam-notifier/ui/components/button";
 import Input from "@exam-notifier/ui/components/input";
@@ -211,6 +211,8 @@ export default function AdminRoute() {
   const [sede, setSede] = useState("");
   const [showAddMesa, setShowAddMesa] = useState(false);
   const [mesaAEditar, setMesaAEditar] = useState<Mesa | null>(null);
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === "submitting";
 
   const fechas = ["ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sep.", "oct.", "nov.", "dic."];
   const sedes = ["Corrientes", "Resistencia", "Posadas", "Formosa", "Paso de los Libres", "Curuzú Cuatiá", "Sáenz Peña", "Goya", "Leando N. Alem"];
@@ -257,6 +259,8 @@ export default function AdminRoute() {
     mesa?: Mesa;
   }) {
     const isEdit = !!mesa;
+    const navigation = useNavigation();
+    const isSubmitting = navigation.state === "submitting";
     const [modalidad, setModalidad] = useState<Modalidad>(mesa?.modalidad || "Presencial");
     const [carreraSeleccionada, setCarreraSeleccionada] = useState(mesa?.carrera || "");
     const [materiaSeleccionada, setMateriaSeleccionada] = useState(mesa?.materia || "");
@@ -448,8 +452,22 @@ export default function AdminRoute() {
             </div>
           )}
 
-          <Button type="submit" className="mt-2 w-full bg-green-700 text-white">
-            {isEdit ? "Guardar Cambios" : "Añadir Mesa"}
+          <Button 
+            type="submit" 
+            className="mt-2 w-full bg-green-700 text-white flex items-center justify-center gap-2"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {isEdit ? "Guardando..." : "Creando..."}
+              </>
+            ) : (
+              isEdit ? "Guardar Cambios" : "Añadir Mesa"
+            )}
           </Button>
         </form>
       </Modal>

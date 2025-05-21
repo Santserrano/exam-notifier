@@ -18,42 +18,49 @@ export class NotificacionService {
         console.log('Actualizando configuración para profesor:', profesorId, 'con config:', config);
 
         try {
-            // Primero verificamos si el profesor existe
-            const profesor = await prisma.profesor.findUnique({
-                where: { id: profesorId }
+            // Verificamos si ya existe la configuración
+            const existing = await prisma.notificacionConfig.findUnique({
+                where: { profesorId }
             });
 
-            if (!profesor) {
-                throw new Error('Profesor no encontrado');
+            // Armamos los datos de actualización/creación
+            const data: any = {};
+            if (typeof config.webPushEnabled !== 'undefined') data.webPushEnabled = config.webPushEnabled;
+            if (typeof config.emailEnabled !== 'undefined') data.emailEnabled = config.emailEnabled;
+            if (typeof config.smsEnabled !== 'undefined') data.smsEnabled = config.smsEnabled;
+            if (typeof config.reminderMinutes !== 'undefined') {
+                data.avisoPrevioHoras = Math.floor(config.reminderMinutes / 60);
             }
+            data.updatedAt = new Date();
 
-            const result = await prisma.notificacionConfig.upsert({
-                where: { profesorId },
-                update: {
-                    webPushEnabled: config.webPushEnabled ?? true,
-                    emailEnabled: config.emailEnabled ?? false,
-                    smsEnabled: config.smsEnabled ?? false,
-                    avisoPrevioHoras: config.reminderMinutes ? Math.floor(config.reminderMinutes / 60) : 24,
-                    updatedAt: new Date()
-                },
-                create: {
-                    profesorId,
-                    webPushEnabled: config.webPushEnabled ?? true,
-                    emailEnabled: config.emailEnabled ?? false,
-                    smsEnabled: config.smsEnabled ?? false,
-                    avisoPrevioHoras: config.reminderMinutes ? Math.floor(config.reminderMinutes / 60) : 24,
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                },
-            });
-
-            console.log('Configuración actualizada/creada:', result);
-            return result;
+            // Si ya existe, actualizamos solo los campos enviados
+            if (existing) {
+                const result = await prisma.notificacionConfig.update({
+                    where: { profesorId },
+                    data,
+                });
+                return result;
+            } else {
+                // Si no existe, creamos con valores por defecto para los que no se envíen
+                const result = await prisma.notificacionConfig.create({
+                    data: {
+                        profesorId,
+                        webPushEnabled: config.webPushEnabled ?? false,
+                        emailEnabled: config.emailEnabled ?? false,
+                        smsEnabled: config.smsEnabled ?? false,
+                        avisoPrevioHoras: config.reminderMinutes ? Math.floor(config.reminderMinutes / 60) : 24,
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    }
+                });
+                return result;
+            }
         } catch (error) {
             console.error('Error al actualizar configuración:', error);
             throw error;
         }
     }
+
 
     async saveWebPushSubscription(profesorId: string, endpoint: string, keys: any) {
         console.log('Guardando suscripción push para profesor:', profesorId);

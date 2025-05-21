@@ -1,36 +1,20 @@
-import { SignOutButton } from "@clerk/remix";
-import { getAuth } from "@clerk/remix/ssr.server";
-import { json, LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import React from "react";
 
-import { Button } from "@exam-notifier/ui/components/button";
-
-export const loader = async (args: LoaderFunctionArgs) => {
-  const { userId } = await getAuth(args);
-
-  if (!userId) {
-    return json({ userId: null });
-  }
-
-  return json({ userId });
-};
-
+//pequeña ruta de error para cuando no hay rol (por las dudas)
 export default function SinRolPage() {
-  const { userId } = useLoaderData<typeof loader>();
-
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
-      <h1 className="text-2xl font-bold text-green-900">
-        No tienes un rol asignado
-      </h1>
-      <p className="text-center text-gray-600">
-        Por favor, contacta al administrador para que te asigne un rol.
-      </p>
-      {userId && (
-        <SignOutButton>
-          <Button>Cerrar sesión</Button>
-        </SignOutButton>
-      )}
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="rounded bg-white p-8 text-center shadow">
+        <h1 className="mb-4 text-2xl font-bold text-red-600">
+          Sin rol asignado
+        </h1>
+        <p className="mb-2 text-gray-700">
+          Tu cuenta no tiene un rol asignado.
+        </p>
+        <p className="text-gray-500">
+          Por favor, contacta al administrador para que te asigne un rol.
+        </p>
+      </div>
     </div>
   );
-} 
+}

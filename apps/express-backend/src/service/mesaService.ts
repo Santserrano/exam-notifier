@@ -141,8 +141,10 @@ export class MesaService {
 
             const profesorData = await this.prisma.profesor.findUnique({ where: { id: mesaData.profesor } });
             if (profesorData) {
-                const fechaFormateada = new Date(mesaData.fecha).toLocaleDateString();
-                const contenido = `Hola ${profesorData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada}`;
+                const fechaObj = new Date(mesaData.fecha);
+                const fechaFormateada = fechaObj.toLocaleDateString();
+                const horaFormateada = fechaObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const contenido = `Hola ${profesorData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada} a las ${horaFormateada}`;
                 if (profesorData.email) {
                     await enviarEmailNotificacion(profesorData.email, contenido);
                 }

@@ -1,29 +1,16 @@
-import React from "react";
 import { getAuth } from "@clerk/remix/ssr.server";
 import {
-  LoaderFunction,
   redirect,
   type LoaderFunctionArgs,
 } from "@remix-run/node";
 import {
   isRouteErrorResponse,
-  useLoaderData,
   useRouteError,
 } from "@remix-run/react";
-
-import { Button } from "@exam-notifier/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@exam-notifier/ui/components/card";
 
 import { clerkClient } from "~/utils/clerk.server";
 
 export async function loader(args: LoaderFunctionArgs) {
-  //SSR
   const { userId } = await getAuth(args);
 
   if (!userId) {
@@ -34,13 +21,14 @@ export async function loader(args: LoaderFunctionArgs) {
   const user = await clerkClient.users.getUser(userId);
   const role = user.publicMetadata.role;
 
+  let redirectUrl = "/sin-rol";
   if (role === "admin") {
-    return redirect("/admin");
+    redirectUrl = "/admin";
   } else if (role === "profesor") {
-    return redirect("/mesas");
+    redirectUrl = "/mesas";
   }
 
-  return redirect("/sin-rol");
+  return redirect(redirectUrl);
 }
 
 export default function Index() {
@@ -61,8 +49,6 @@ export function ErrorBoundary() {
     );
   }
 
-  // Don't forget to typecheck with your own logic.
-  // Any value can be thrown, not just errors!
   let errorMessage = "Unknown error";
   if (error instanceof Error) {
     errorMessage = error.message;
