@@ -2,7 +2,6 @@
   "private": true,
   "name": "@exam-notifier/remix-vercel",
   "sideEffects": false,
-  "type": "module",
   "scripts": {
     "build": "remix vite:build",
     "dev": "cross-env PORT=3002 remix vite:dev",
