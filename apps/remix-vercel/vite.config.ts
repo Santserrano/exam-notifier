@@ -17,6 +17,15 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    target: "esnext",
+    modulePreload: true,
+    rollupOptions: {
+      output: {
+        format: "esm",
+      },
+    },
+  },
   resolve: {
     alias: {
       "~": resolve(__dirname, "./app"),
