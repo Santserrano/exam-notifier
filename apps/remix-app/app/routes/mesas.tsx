@@ -21,6 +21,7 @@ import { SearchBar } from "@exam-notifier/ui/components/SearchBar";
 import { clerkClient } from "~/utils/clerk.server";
 import HeaderClerk from "../components/HeaderClerk";
 import { getEnv } from '../utils/env.server';
+import { ActivarNotificaciones } from "../components/ActivarNotificaciones";
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
@@ -47,43 +48,45 @@ export const loader = async (args: LoaderFunctionArgs) => {
 
     const meses = ["ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sep.", "oct.", "nov.", "dic."];
     const mesas = mesasRaw.map((m: any, index: number) => {
-      console.log('Procesando mesa:', m);
       const fechaObj = new Date(m.fecha);
       const fechaFormateada = `${fechaObj.getDate()} ${meses[fechaObj.getMonth()]}`;
       const futura = fechaObj > new Date();
       const modalidad = m.modalidad || "Presencial";
-      const mesaProcesada = {
+      return {
         id: m.id || `mesa-${index}`,
-        materia: m.materia,
-        carrera: m.carrera,
+        materia: m.materia?.nombre || m.materia,
+        carrera: m.materia?.carrera?.nombre || m.carrera?.nombre || m.carrera?.id || m.carrera,
         fecha: fechaFormateada,
         fechaOriginal: m.fecha,
         futura,
         modalidad,
         color: modalidad === "Virtual" ? "blue" : "green",
         sede: m.sede || "Central",
-        profesor: m.profesor,
-        vocal: m.vocal
+        profesorNombre: m.profesor?.nombre ? `${m.profesor.nombre} ${m.profesor.apellido}` : m.profesor,
+        vocalNombre: m.vocal?.nombre ? `${m.vocal.nombre} ${m.vocal.apellido}` : m.vocal,
+        aula: m.aula || "Aula por confirmar"
       };
-      console.log('Mesa procesada:', mesaProcesada);
-      return mesaProcesada;
     });
 
-    const data = { 
+    return json({ 
       userId, 
       role, 
       mesas,
-      env: getEnv()
-    };  
-
-    return json(data);
+      env: {
+        VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
+        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY
+      }
+    });
   } catch (error) {
     console.error("Error en el loader:", error);
     return json({ 
       userId, 
       role, 
       mesas: [],
-      env: getEnv()
+      env: {
+        VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
+        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY
+      }
     });
   }
 };
@@ -100,7 +103,7 @@ const alumnosMock = [
 ];
 
 export default function MesasRoute() {
-  const { mesas } = useLoaderData<typeof loader>();
+  const { mesas, userId } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
 
   console.log('Mesas en el componente:', mesas); // Debug log
@@ -178,7 +181,7 @@ export default function MesasRoute() {
         <div className="text-sm flex items-center gap-2"><Calendar className="h-4 w-4" /> {fechaCompleta}</div>
         <div className="text-sm flex items-center gap-2"><Clock className="h-4 w-4" /> {hora} hs</div>
         <div className="text-sm flex items-center gap-2"><MapPin className="h-4 w-4" /> {mesa.modalidad}</div>
-        <div className="text-sm flex items-center gap-2"><Building2 className="h-4 w-4" /> {mesa.aula || 'Aula por confirmar'}</div>
+        <div className="text-sm flex items-center gap-2"><Building2 className="h-4 w-4" /> {mesa.aula}</div>
         <hr />
         <div className="text-sm flex items-center gap-2"><Info className="h-4 w-4" /> Recibirás un recordatorio 1 día antes</div>
       </div>
@@ -229,6 +232,7 @@ export default function MesasRoute() {
     <div className="mx-auto max-w-md pb-8">
       <HeaderClerk />
       <div className="px-4 mt-2">
+        <h2 className="text-lg font-bold text-green-900 mb-4">Mis Mesas</h2>
         <SearchBar
           searchValue={search}
           onSearchChange={(val) => actualizarFiltro("search", val)}
@@ -280,7 +284,7 @@ export default function MesasRoute() {
             <div className="text-center text-gray-500 py-8">No hay mesas para mostrar.</div>
           ) : (
             mesasFiltradas.map((mesa: any) => {
-              console.log('Renderizando mesa:', mesa); // Debug log
+              console.log('Renderizando mesa:', mesa);
               return (
                 <MesaCard
                   key={mesa.id}

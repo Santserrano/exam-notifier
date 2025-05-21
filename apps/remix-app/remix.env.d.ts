@@ -9,4 +9,11 @@ declare global {
     }
 }
 
+declare module '@remix-run/node' {
+    interface ProcessEnv {
+        INTERNAL_API_KEY: string;
+        VAPID_PUBLIC_KEY: string;
+    }
+}
+
 export { }; 
