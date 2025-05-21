@@ -1,3 +1,5 @@
-import { clerkClient } from "@clerk/remix/ssr.server";
+import { createClerkClient } from "@clerk/backend";
 
-export { clerkClient }; 
+export const clerkClient = createClerkClient({
+  secretKey: process.env.CLERK_SECRET_KEY!,
+});
