@@ -15,7 +15,7 @@ interface LoaderData {
 
 interface NotificationConfig {
   webPushEnabled: boolean;
-  whatsappEnabled: boolean;
+  smsEnabled: boolean;
   emailEnabled: boolean;
 }
 
@@ -29,7 +29,7 @@ export function HeaderClerk() {
   const [showConfig, setShowConfig] = useState(false);
   const [config, setConfig] = useState<NotificationConfig>({
     webPushEnabled: false,
-    whatsappEnabled: false,
+    smsEnabled: false,
     emailEnabled: false
   });
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -52,7 +52,7 @@ export function HeaderClerk() {
           const data = await response.json();
           setConfig({
             webPushEnabled: data.webPushEnabled || false,
-            whatsappEnabled: data.smsEnabled || false,
+            smsEnabled: data.smsEnabled || false,
             emailEnabled: data.emailEnabled || false
           });
           setIsSubscribed(data.webPushEnabled || false);
@@ -72,6 +72,18 @@ export function HeaderClerk() {
     setTimeout(() => setShowToast(false), 5000);
   };
 
+  const updateNotificationConfig = async (fields: Partial<NotificationConfig>) => {
+    if (!user?.id) return;
+    await fetch(`http://localhost:3001/api/notificaciones/config/${user.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': env.INTERNAL_API_KEY
+      },
+      body: JSON.stringify(fields)
+    });
+  };
+
   const handleToggleNotification = async (type: keyof NotificationConfig) => {
     if (!user?.id) return;
 
@@ -81,6 +93,23 @@ export function HeaderClerk() {
       const newConfig = {
         ...config,
         [type]: !config[type]
+      };
+
+      const getNotificationMessage = (type: keyof NotificationConfig, enabled: boolean) => {
+        switch (type) {
+          case 'webPushEnabled':
+            return `Notificaciones del navegador ${enabled ? 'activadas' : 'desactivadas'}`;
+          case 'emailEnabled':
+            return enabled 
+              ? 'Notificaciones por email activadas. Recibirás un email 24 horas antes de cada mesa.'
+              : 'Notificaciones por email desactivadas';
+          case 'smsEnabled':
+            return enabled 
+              ? 'Notificaciones por WhatsApp activadas. Recibirás un mensaje 24 horas antes de cada mesa.'
+              : 'Notificaciones por WhatsApp desactivadas';
+          default:
+            return '';
+        }
       };
 
       if (type === 'webPushEnabled' && newConfig.webPushEnabled) {
@@ -117,55 +146,30 @@ export function HeaderClerk() {
           }
         } catch (error) {
           console.error('Error al registrar suscripción:', error);
-          // Si falla la suscripción, revertimos el estado
           newConfig.webPushEnabled = false;
           throw new Error('No se pudo registrar la suscripción. Por favor, intenta nuevamente.');
         }
       }
 
       try {
-        const response = await fetch(`http://localhost:3001/api/notificaciones/config/${user.id}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': env.INTERNAL_API_KEY
-          },
-          body: JSON.stringify({
-            webPushEnabled: newConfig.webPushEnabled,
-            emailEnabled: newConfig.emailEnabled,
-            smsEnabled: newConfig.whatsappEnabled
-          })
-        });
-
-        if (!response.ok) {
-          // Si falla la actualización de configuración pero la suscripción fue exitosa,
-          // actualizamos la UI de todos modos
-          if (type === 'webPushEnabled' && newConfig.webPushEnabled) {
-            setConfig(newConfig);
-            setIsSubscribed(true);
-            showNotification('Notificaciones activadas con éxito', 'success');
-            return;
-          }
-          throw new Error('Error al actualizar la configuración');
-        }
+        await updateNotificationConfig({ [type]: newConfig[type] });
 
         setConfig(newConfig);
         setIsSubscribed(newConfig.webPushEnabled);
-        showNotification(
-          `Notificaciones ${type === 'webPushEnabled' ? 'del navegador' : type === 'whatsappEnabled' ? 'de WhatsApp' : 'por email'} ${newConfig[type] ? 'activadas' : 'desactivadas'}`,
-          'success'
-        );
+        showNotification(getNotificationMessage(type, newConfig[type]), 'success');
       } catch (error) {
         console.error('Error al actualizar configuración:', error);
-        throw new Error('No se pudo actualizar la configuración. Por favor, intenta nuevamente.');
+        const errorMessage = error instanceof Error ? error.message : 'Error al actualizar configuración';
+        setError(errorMessage);
+        showNotification(errorMessage, 'error');
+      } finally {
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error al actualizar configuración';
       setError(errorMessage);
       showNotification(errorMessage, 'error');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -362,10 +366,10 @@ export function HeaderClerk() {
             <div className="flex items-center gap-2">
               <Button
                 onClick={() => handleToggleNotification('webPushEnabled')}
-                disabled={isLoading}
+                disabled={isLoading || config.webPushEnabled}
                 className={`w-10 h-10 rounded-full p-0 flex items-center justify-center ${
                   config.webPushEnabled 
-                    ? 'bg-green-600 hover:bg-green-700' 
+                    ? 'bg-green-600 cursor-not-allowed' 
                     : isLoading
                       ? 'bg-gray-400 cursor-not-allowed'
                       : 'bg-blue-600 hover:bg-blue-700'
@@ -419,13 +423,13 @@ export function HeaderClerk() {
                       <span className="text-xs text-gray-500">Recibe alertas en tu WhatsApp</span>
                     </div>
                     <button
-                      onClick={() => handleToggleNotification('whatsappEnabled')}
+                      onClick={() => handleToggleNotification('smsEnabled')}
                       className={`w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${
-                        config.whatsappEnabled ? 'bg-green-500' : 'bg-gray-300'
+                        config.smsEnabled ? 'bg-green-500' : 'bg-gray-300'
                       }`}
                     >
                       <div className={`w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ease-in-out ${
-                        config.whatsappEnabled ? 'translate-x-6' : 'translate-x-1'
+                        config.smsEnabled ? 'translate-x-6' : 'translate-x-1'
                       }`} />
                     </button>
                   </div>

@@ -18,16 +18,33 @@ router.use(validateApiKey);
 // PATCH /notificaciones/config/:profesorId
 router.patch('/notificaciones/config/:profesorId', async (req, res) => {
   const { profesorId } = req.params;
-  const config = req.body;
+  const { webPushEnabled, smsEnabled, emailEnabled } = req.body;
 
   try {
-    const updated = await notificacionService.updateConfig(profesorId, config);
+    // Validar que al menos uno de los campos se envíe
+    if (
+      typeof webPushEnabled === 'undefined' &&
+      typeof smsEnabled === 'undefined' &&
+      typeof emailEnabled === 'undefined'
+    ) {
+      return res.status(400).json({ error: 'No se enviaron campos para actualizar' });
+    }
+
+    // Construir objeto con los campos proporcionados
+    const dataToUpdate: any = {};
+    if (typeof webPushEnabled !== 'undefined') dataToUpdate.webPushEnabled = webPushEnabled;
+    if (typeof smsEnabled !== 'undefined') dataToUpdate.smsEnabled = smsEnabled;
+    if (typeof emailEnabled !== 'undefined') dataToUpdate.emailEnabled = emailEnabled;
+
+    const updated = await notificacionService.updateConfig(profesorId, dataToUpdate);
+
     res.json(updated);
   } catch (error) {
     console.error('Error actualizando configuración:', error);
     res.status(500).json({ error: 'Error al actualizar configuración' });
   }
 });
+
 
 // POST /notificaciones/push-subscription
 router.post('/notificaciones/push-subscription', async (req, res) => {
@@ -76,6 +93,21 @@ router.post('/notificaciones/config', async (req, res) => {
       error: 'Error al actualizar configuración',
       details: error instanceof Error ? error.message : 'Error desconocido'
     });
+  }
+});
+
+// GET /notificaciones/config/:profesorId
+router.get('/notificaciones/config/:profesorId', async (req, res) => {
+  const { profesorId } = req.params;
+  try {
+    const config = await notificacionService.getConfigByProfesor(profesorId);
+    if (!config) {
+      return res.status(404).json({ error: 'Configuración no encontrada' });
+    }
+    res.json(config);
+  } catch (error) {
+    console.error('Error obteniendo configuración:', error);
+    res.status(500).json({ error: 'Error al obtener configuración' });
   }
 });
 

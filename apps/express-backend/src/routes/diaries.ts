@@ -6,6 +6,8 @@ import { Router } from 'express'
 import { MesaService } from '../service/mesaService'
 import { ProfesorService } from '../service/profesorService'
 import { PrismaClient } from '@prisma/client'
+import { enviarWhatsapp } from '../service/whatsappService'
+import { enviarEmailNotificacion } from '../service/emailService'
 
 const router = express.Router()
 const mesaService = new MesaService()
@@ -185,6 +187,7 @@ router.post('/mesas', async (req, res) => {
     }
 
     const nuevaMesa = await mesaService.createMesa(mesaData);
+
     res.status(201).json(nuevaMesa);
   } catch (error) {
     console.error("Error al crear mesa:", error);
