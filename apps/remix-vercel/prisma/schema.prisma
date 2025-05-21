@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "windows"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Aquí irán tus modelos de base de datos 
+
+model Carrera {
+  id          String    @id @default(uuid())
+  nombre      String    @unique
+  materias    Materia[]
+  profesores  Profesor[]
+  mesas       MesaDeExamen[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Materia {
+  id          String    @id @default(uuid())
+  nombre      String
+  carreraId   String
+  carrera     Carrera   @relation(fields: [carreraId], references: [id])
+  profesores  Profesor[]
+  mesas       MesaDeExamen[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([nombre, carreraId])
+}
+
+model Profesor {
+  id           String         @id // clerk id
+  nombre       String
+  apellido     String
+  email        String         @unique
+  telefono     String?
+  carreras     Carrera[]      // Relación muchos a muchos con Carrera
+  materias     Materia[]      // Relación muchos a muchos con Materia
+  mesasTitular MesaDeExamen[] @relation("ProfesorTitular")
+  mesasVocal   MesaDeExamen[] @relation("ProfesorVocal")
+
+  notificacionConfig   NotificacionConfig?
+  webPushSubscriptions WebPushSubscription[]
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model MesaDeExamen {
+  id           Int        @id @default(autoincrement())
+  profesorId   String
+  vocalId      String
+  profesor     Profesor   @relation("ProfesorTitular", fields: [profesorId], references: [id])
+  vocal        Profesor   @relation("ProfesorVocal", fields: [vocalId], references: [id])
+  carreraId    String
+  carrera      Carrera    @relation(fields: [carreraId], references: [id])
+  materiaId    String
+  materia      Materia    @relation(fields: [materiaId], references: [id])
+  fecha        DateTime
+  descripcion  String
+  cargo        String
+  verification Boolean    @default(false)
+  modalidad    String?    @default("Presencial")
+  aula         String?    // solo si modalidad es Presencial
+  webexLink    String?    // solo si modalidad es Virtual
+  alumnos      Alumno[]   @relation("AlumnosEnMesa")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model NotificacionConfig {
+  id               String    @id @default(uuid())
+  profesorId       String   @unique
+  profesor         Profesor @relation(fields: [profesorId], references: [id])
+  webPushEnabled   Boolean  @default(false)
+  emailEnabled     Boolean  @default(false)
+  smsEnabled       Boolean  @default(false)
+  avisoPrevioHoras Int      @default(24)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model WebPushSubscription {
+  id           String    @id @default(uuid())
+  profesorId   String
+  profesor     Profesor  @relation(fields: [profesorId], references: [id])
+  endpoint     String
+  auth         String
+  p256dh       String
+  createdAt    DateTime  @default(now())
+}
+
+model Alumno {
+  id        Int            @id @default(autoincrement())
+  nombre    String
+  apellido  String
+  carrera   String
+  dni       String         @unique
+  mesas     MesaDeExamen[] @relation("AlumnosEnMesa")
+} 
