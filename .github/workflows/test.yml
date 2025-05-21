@@ -1,13 +1,13 @@
-name: Test
+name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
-  test:
+  ci:
     runs-on: ubuntu-latest
 
     steps:
@@ -40,11 +40,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build packages
-        run: pnpm run build
+      - name: Lint
+        run: pnpm run lint
 
-      - name: Run tests
+      - name: Type Check
+        run: pnpm run typecheck
+
+      - name: Run Tests
         run: pnpm run test
 
-      - name: Run type check
-        run: pnpm run typecheck 
+      - name: Build
+        run: pnpm run build
