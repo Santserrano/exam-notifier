@@ -1,38 +1,103 @@
-# Welcome to Remix!
+# Exam Notifier - Aplicación Remix
 
-- [Remix Docs](https://remix.run/docs)
+Esta es la aplicación principal de Exam Notifier construida con Remix. Proporciona una interfaz web moderna y responsive para gestionar y notificar sobre exámenes.
 
-This Remix app lives inside a Monorepo powered by turborepo, the scripts should be launched
-from the root of your Monorepo.
+## 🚀 Características
 
-## Development
+- Autenticación con Clerk
+- Interfaz de usuario moderna con Tailwind CSS
+- Pruebas unitarias con Jest
+- Pruebas end-to-end con Playwright
+- TypeScript para tipo seguro
+- Integración con base de datos personalizada
 
-> **Warning**
-> All the following commands should be launched from the **monorepo root directory**
+## 📋 Prerrequisitos
 
-Start the Remix development asset server and the Express server by running:
+- Node.js >= 18.0.0
+- pnpm (recomendado) o npm
 
-```sh
-pnpm run dev --filter=@exam-notifier/remix-app...
+## 🛠️ Instalación
+
+1. Clona el repositorio
+2. Instala las dependencias:
+```bash
+pnpm install
 ```
 
-This starts your app in development mode, which will purge the server require cache when Remix rebuilds assets so you don't need a process manager restarting the express server.
+## 🏃‍♂️ Desarrollo
 
-## Deployment
+Para iniciar el servidor de desarrollo:
 
-> **Warning**
-> All the following commands should be launched from the **monorepo root directory**
-
-Build App for production:
-
-```sh
-pnpm run build --filter=@exam-notifier/remix-app...
+```bash
+pnpm dev
 ```
 
-Then run the app in production mode:
+La aplicación estará disponible en `http://localhost:3000`
 
-```sh
-pnpm run start --filter=@exam-notifier/remix-app
+## 🧪 Testing
+
+### Pruebas Unitarias
+```bash
+# Ejecutar todas las pruebas
+pnpm test
+
+# Ejecutar pruebas en modo watch
+pnpm test:watch
+
+# Ver cobertura de pruebas
+pnpm test:coverage
 ```
 
-Now you'll need to pick a host to deploy it to.
+### Pruebas E2E
+```bash
+# Ejecutar pruebas E2E
+pnpm test:e2e
+
+# Ejecutar pruebas E2E con UI
+pnpm test:e2e:ui
+
+# Ejecutar pruebas E2E en modo debug
+pnpm test:e2e:debug
+```
+
+## 🏗️ Construcción
+
+Para construir la aplicación para producción:
+
+```bash
+pnpm build
+```
+
+## 🚀 Producción
+
+Para iniciar la aplicación en producción:
+
+```bash
+pnpm start
+```
+
+## 📦 Dependencias Principales
+
+- Remix v2.8.1
+- React v18.2.0
+- Clerk para autenticación
+- Tailwind CSS para estilos
+- Jest y Playwright para testing
+
+## 🔧 Scripts Disponibles
+
+- `dev`: Inicia el servidor de desarrollo
+- `build`: Construye la aplicación
+- `start`: Inicia la aplicación en producción
+- `test`: Ejecuta pruebas unitarias
+- `test:e2e`: Ejecuta pruebas end-to-end
+- `format`: Formatea el código
+- `typecheck`: Verifica tipos TypeScript
+
+## 📝 Licencia
+
+Este proyecto es privado y está protegido por derechos de autor.
+
+## 👥 Contribución
+
+Por favor, asegúrate de seguir las guías de contribución del proyecto antes de enviar un pull request.
