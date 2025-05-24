@@ -21,11 +21,6 @@ app.use(cors({
 
 app.use(express.json())
 
-app.get('/ping', (_req, res) => {
-  console.log('someine pinged here!!')
-  res.send('pong')
-})
-
 // Protección de rutas para /api
 app.use('/api', validateApiKey)
 
@@ -38,7 +33,7 @@ const checkApiKey = (req: express.Request, res: express.Response, next: express.
   if (!apiKey || apiKey !== process.env.INTERNAL_API_KEY) {
     return res.status(401).json({ error: 'API key inválida' })
   }
-  next()
+  return next()
 }
 
 // Rutas de notificaciones
@@ -90,14 +85,14 @@ app.post('/api/notificaciones/push-subscription', checkApiKey, async (req, res) 
       throw new Error('La configuración no se guardó correctamente');
     }
 
-    res.json({
+    return res.json({
       success: true,
       pushSubscription,
       config: verifyConfig
     });
   } catch (error) {
     console.error('Error al guardar suscripción:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Error al guardar la suscripción',
       details: error instanceof Error ? error.message : 'Error desconocido'
     });
@@ -105,9 +100,9 @@ app.post('/api/notificaciones/push-subscription', checkApiKey, async (req, res) 
 });
 
 // Manejo de errores
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error(err.stack)
-  res.status(500).json({ error: 'Error interno del servidor' })
+  return res.status(500).json({ error: 'Error interno del servidor' })
 })
 
 app.listen(port, () => {
@@ -117,5 +112,5 @@ app.listen(port, () => {
 app.get('/api/notifications', (req, res) => {
   const subscription = req.body
   console.log('Subscription received:', subscription)
-  res.status(201).json({ message: 'Subscription received' })
+  return res.status(201).json({ message: 'Subscription received' })
 })

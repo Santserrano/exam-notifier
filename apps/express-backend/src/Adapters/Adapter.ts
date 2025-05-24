@@ -6,65 +6,65 @@ const parseComent = (comemtFromRequest: any): Carrera => {
   return comemtFromRequest
 }
 
-const parseProfesor = (comemtFromRequest: any): Profesor => {
+const parseProfesor = (comemtFromRequest: Profesor): Profesor => {
   if (!isString(comemtFromRequest) || !isProfesor(comemtFromRequest)) {
     throw new Error('Incorrect or missing comment')
   }
   return comemtFromRequest
 }
 
-const parseMaterias = (comemtFromRequest: any): Materia => {
+const parseMaterias = (comemtFromRequest: Materia): Materia => {
   if (!isString(comemtFromRequest) || !isMaterias(comemtFromRequest)) {
     throw new Error('Incorrect or missing comment')
   }
   return comemtFromRequest
 }
 
-const parseDescripcion = (comemtFromRequest: any): Descripcion => {
+const parseDescripcion = (comemtFromRequest: Descripcion): Descripcion => {
   if (!isString(comemtFromRequest) || !isDescripcion(comemtFromRequest)) {
     throw new Error('Incorrect or missing comment')
   }
   return comemtFromRequest
 }
 
-const parsePosicion = (comemtFromRequest: any): Cargo => {
+const parsePosicion = (comemtFromRequest: Cargo): Cargo => {
   if (!isString(comemtFromRequest) || !isPosicion(comemtFromRequest)) {
     throw new Error('Incorrect or missing comment')
   }
   return comemtFromRequest
 }
 
-const parseDate = (comemtFromRequest: any): Date => {
+const parseDate = (comemtFromRequest: Date): Date => {
   if (!isDate(comemtFromRequest)) {
     throw new Error('Incorrect or missing comment')
   }
   return comemtFromRequest
 }
 
-const parseVerification = (comemtFromRequest: any): boolean => {
+const parseVerification = (comemtFromRequest: boolean): boolean => {
   if (!isBoolean(comemtFromRequest)) {
     throw new Error('Incorrect or missing comment')
   }
   return comemtFromRequest
 }
 
-const isCarrera = (params: any): boolean => {
+const isCarrera = (params: Carrera): boolean => {
   return Object.values(Carrera).includes(params)
 }
 
-const isMaterias = (params: any): boolean => {
+const isMaterias = (params: Materia): boolean => {
   return Object.values(Materia).includes(params)
 }
 
-const isProfesor = (params: any): boolean => {
+const isProfesor = (params: Profesor): boolean => {
   return Object.values(Profesor).includes(params)
 }
 
-const isDescripcion = (params: any): boolean => {
+const isDescripcion = (params: Descripcion): boolean => {
   return Object.values(Descripcion).includes(params)
 }
 
-const isPosicion = (params: any): boolean => {
+const isPosicion = (params: Cargo): boolean => {
   return Object.values(Cargo).includes(params)
 }
 

@@ -1,4 +1,4 @@
-import { notificationSubject } from '../Observers/Observer'
+import { notificationSubject } from '../Observers/observer'
 import { NewNotification } from '../interfaces/Interface'
 // @ts-ignore: No type definitions for 'web-push'
 import webPush from 'web-push'
@@ -25,7 +25,7 @@ if (publicKey && privateKey && publicKey.length > 0 && privateKey.length > 0) {
 export const sendPushNotification = (subscription: any, notification: NewNotification): void => {
   const payload = {
     title: `Notificación para ${notification.profesor}`,
-    // body: `Mensaje: ${notification.mensage}\nFecha: ${notification.fechaMesa}`,
+    body: `Mensaje: ${notification.mensage}\nFecha: ${notification.fechaMesa}`,
     data: {
       carrera: notification.carrera,
       cargo: notification.cargo,
