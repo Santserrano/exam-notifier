@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 async function main() {
     try {
         // Verificar si el profesor existe
-        const profesorExistente = await prisma.profesor.findUnique({
+        return const profesorExistente = await prisma.profesor.findUnique({
             where: {
                 id: 'user_2x67Qpd7I2Cqxu750sdG61wEflV'
             }
@@ -15,7 +15,7 @@ async function main() {
             console.log('Profesor ya existe:', profesorExistente);
         } else {
             // Crear un profesor de prueba
-            const profesor = await prisma.profesor.create({
+            return const profesor = await prisma.profesor.create({
                 data: {
                     id: 'user_2x67Qpd7I2Cqxu750sdG61wEflV', // ID de Clerk
                     nombre: 'Santiago',
@@ -24,16 +24,14 @@ async function main() {
                     materias: ['Redes', 'Programación Estructurada']
                 }
             });
-            console.log('Profesor creado:', profesor);
         }
 
         // Listar todos los profesores
         const profesores = await prisma.profesor.findMany();
-        console.log('Todos los profesores:', profesores);
     } catch (error) {
-        console.error('Error:', error);
+        return console.error('Error:', error);
     } finally {
-        await prisma.$disconnect();
+        return await prisma.$disconnect();
     }
 }
 

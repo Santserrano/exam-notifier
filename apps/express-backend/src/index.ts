@@ -48,9 +48,6 @@ app.post('/api/notificaciones/push-subscription', checkApiKey, async (req, res) 
       });
     }
 
-    // Primero verificamos si ya existe una configuración
-    const existingConfig = await notificacionService.getConfigByProfesor(profesorId);
-
     // Guardar la suscripción push
     const pushSubscription = await notificacionService.saveWebPushSubscription(
       profesorId,
@@ -94,12 +91,10 @@ app.post('/api/notificaciones/push-subscription', checkApiKey, async (req, res) 
 });
 
 // Manejo de errores
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((_err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   return res.status(500).json({ error: 'Error interno del servidor' })
 })
 
-
-app.get('/api/notifications', (req, res) => {
-  const subscription = req.body
-  return res.status(201).json({ message: 'Subscription received' })
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`)
 })
