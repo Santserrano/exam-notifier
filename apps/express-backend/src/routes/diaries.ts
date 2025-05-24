@@ -1,6 +1,5 @@
 import express from 'express'
-import * as diariesServi from '../service/diariesServi'
-import { toNewDaiaryEntry, toNewNotification } from '../Adapters/adapter'
+import { toNewNotification } from '../Adapters/adapter'
 import { sendPushNotification } from '../service/notifications'
 import { MesaService } from '../service/mesaService'
 import { ProfesorService } from '../service/profesorService'
@@ -46,44 +45,6 @@ router.get('/profesores', async (_req, res) => {
     res.status(500).json({ error: 'Error al obtener los profesores' });
   }
 });
-
-router.get('/', (_req, res) => {
-  return res.json(diariesServi.getEntrisWithoutSensitiveInfo())
-})
-
-router.get('/:id', (req, res) => {
-  const diary = diariesServi.findById(+req.params.id)
-  if (diary != null) {
-    return res.json(diary)
-  } else {
-    return res.status(404).json({ error: 'Diary not found' })
-  }
-})
-
-router.post('/', (req, res) => {
-  try {
-    const newDiaryEntry = toNewDaiaryEntry(req.body)
-    const addDiaryEntry = diariesServi.addDiary(newDiaryEntry)
-    return res.json(addDiaryEntry)
-  } catch (e) {
-    return res.status(400).json({ error: 'malformed data' })
-  }
-})
-
-router.put('/:id', (req, res) => {
-  try {
-    const id = +req.params.id
-    const updatedEntry = toNewDaiaryEntry(req.body)
-    const diaryEntry = diariesServi.updateDiaryEntry(id, updatedEntry)
-    if (diaryEntry != null) {
-      return res.json(diaryEntry)
-    } else {
-      return res.status(404).json({ error: 'Diary entry not found' })
-    }
-  } catch (e) {
-    return res.status(400).json({ error: 'Malformed data or validation error' })
-  }
-})
 
 router.post('/notifications', (req, res) => {
   try {
@@ -177,7 +138,6 @@ router.post('/mesas', async (req, res) => {
     const nuevaMesa = await mesaService.createMesa(mesaData);
     return res.status(201).json(nuevaMesa);
   } catch (error) {
-    console.error("Error al crear mesa:", error);
     return res.status(500).json({
       error: error instanceof Error ? error.message : 'Error al crear la mesa'
     });
@@ -210,7 +170,6 @@ router.delete('/mesas/:id', async (req, res) => {
     }
     return res.json(mesa)
   } catch (error) {
-    console.error("Error al eliminar mesa:", error)
     return res.status(500).json({ error: 'Error al eliminar la mesa' })
   }
 })
@@ -219,15 +178,10 @@ router.delete('/mesas/:id', async (req, res) => {
 router.get('/mesas/profesor/:profesorId', async (req, res) => {
   try {
     const { profesorId } = req.params;
-    console.log('Buscando mesas para profesor:', profesorId);
-    console.log('API Key recibida:', req.headers["x-api-key"]);
-
     const mesas = await mesaService.getMesasByProfesorId(profesorId);
-    console.log('Mesas encontradas:', mesas);
 
     res.json(mesas);
   } catch (error) {
-    console.error("Error al obtener mesas del profesor:", error);
     res.status(500).json({ error: 'Error al obtener las mesas del profesor' });
   }
 });
@@ -302,7 +256,6 @@ router.put('/profesores/:profesorId/config', async (req, res) => {
       profesor: updatedProfesor
     });
   } catch (error) {
-    console.error("Error al actualizar configuración del profesor:", error);
     return res.status(500).json({
       error: 'Error al actualizar la configuración del profesor',
       details: error instanceof Error ? error.message : 'Error desconocido'

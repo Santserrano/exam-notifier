@@ -39,7 +39,6 @@ router.patch('/notificaciones/config/:profesorId', async (req, res) => {
     const updated = await notificacionService.updateConfig(profesorId, dataToUpdate);
     return res.json(updated);
   } catch (error) {
-    console.error('Error actualizando configuración:', error);
     return res.status(500).json({ error: 'Error al actualizar configuración' });
   }
 });
@@ -67,7 +66,6 @@ router.post('/notificaciones/push-subscription', async (req, res) => {
     const saved = await notificacionService.saveWebPushSubscription(profesorId, endpoint, keys);
     return res.status(201).json(saved);
   } catch (error) {
-    console.error('Error guardando suscripción:', error);
     return res.status(500).json({
       error: 'Error al guardar suscripción',
       details: error instanceof Error ? error.message : 'Error desconocido'
@@ -87,7 +85,6 @@ router.post('/notificaciones/config', async (req, res) => {
     const config = await notificacionService.updateConfig(profesorId, { webPushEnabled });
     return res.status(200).json(config);
   } catch (error) {
-    console.error('Error actualizando configuración:', error);
     return res.status(500).json({
       error: 'Error al actualizar configuración',
       details: error instanceof Error ? error.message : 'Error desconocido'
@@ -105,7 +102,6 @@ router.get('/notificaciones/config/:profesorId', async (req, res) => {
     }
     return res.json(config);
   } catch (error) {
-    console.error('Error obteniendo configuración:', error);
     return res.status(500).json({ error: 'Error al obtener configuración' });
   }
 });
