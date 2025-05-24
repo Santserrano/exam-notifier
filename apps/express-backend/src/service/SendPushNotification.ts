@@ -19,7 +19,6 @@ export async function sendPushToProfesor(profesorId: string, title: string, body
         const subs = await notificacionService.getWebPushSubscriptions(profesorId);
 
         if (!subs || subs.length === 0) {
-            console.log(`No hay suscripciones push para el profesor ${profesorId}`);
             return;
         }
 
@@ -45,7 +44,6 @@ export async function sendPushToProfesor(profesorId: string, title: string, body
                 },
                 payload
             ).catch(error => {
-                console.error(`Error enviando push a ${sub.endpoint}:`, error);
                 // Si la suscripción ya no es válida, eliminarla
                 if (error.statusCode === 410) {
                     return notificacionService.deleteWebPushSubscription(sub.id);
@@ -55,7 +53,6 @@ export async function sendPushToProfesor(profesorId: string, title: string, body
         });
 
         await Promise.all(notifications);
-        console.log(`Notificaciones push enviadas al profesor ${profesorId}`);
     } catch (error) {
         console.error('Error al enviar notificaciones push:', error);
         throw error;

@@ -1,34 +1,36 @@
-import { Profesor, Carrera, Descripcion, Materia, NewDiaryEntry, Cargo, NewNotification, DiaryEntry, Notification } from '../interfaces/Interface'
-const parseComent = (comemtFromRequest: any): Carrera => {
-  if (!isString(comemtFromRequest) || !isCarrera(comemtFromRequest)) {
+import { NewDiaryEntry, NewNotification, DiaryEntry, Notification } from '../interfaces/Interface'
+
+
+const parseComent = (comemtFromRequest: any): string => {
+  if (!isString(comemtFromRequest)) {
     throw new Error('Incorrect or missing comment')
   }
   return comemtFromRequest
 }
 
-const parseProfesor = (comemtFromRequest: Profesor): Profesor => {
-  if (!isString(comemtFromRequest) || !isProfesor(comemtFromRequest)) {
+const parseProfesor = (comemtFromRequest: any): number => {
+  if (!isNumber(comemtFromRequest)) {
     throw new Error('Incorrect or missing comment')
   }
   return comemtFromRequest
 }
 
-const parseMaterias = (comemtFromRequest: Materia): Materia => {
-  if (!isString(comemtFromRequest) || !isMaterias(comemtFromRequest)) {
+const parseMaterias = (comemtFromRequest: any): string => {
+  if (!isString(comemtFromRequest)) {
     throw new Error('Incorrect or missing comment')
   }
   return comemtFromRequest
 }
 
-const parseDescripcion = (comemtFromRequest: Descripcion): Descripcion => {
-  if (!isString(comemtFromRequest) || !isDescripcion(comemtFromRequest)) {
+const parseDescripcion = (comemtFromRequest: any): string => {
+  if (!isString(comemtFromRequest)) {
     throw new Error('Incorrect or missing comment')
   }
   return comemtFromRequest
 }
 
-const parsePosicion = (comemtFromRequest: Cargo): Cargo => {
-  if (!isString(comemtFromRequest) || !isPosicion(comemtFromRequest)) {
+const parsePosicion = (comemtFromRequest: any): string => {
+  if (!isString(comemtFromRequest)) {
     throw new Error('Incorrect or missing comment')
   }
   return comemtFromRequest
@@ -48,24 +50,8 @@ const parseVerification = (comemtFromRequest: boolean): boolean => {
   return comemtFromRequest
 }
 
-const isCarrera = (params: Carrera): boolean => {
-  return Object.values(Carrera).includes(params)
-}
-
-const isMaterias = (params: Materia): boolean => {
-  return Object.values(Materia).includes(params)
-}
-
-const isProfesor = (params: Profesor): boolean => {
-  return Object.values(Profesor).includes(params)
-}
-
-const isDescripcion = (params: Descripcion): boolean => {
-  return Object.values(Descripcion).includes(params)
-}
-
-const isPosicion = (params: Cargo): boolean => {
-  return Object.values(Cargo).includes(params)
+const isNumber =(Number: number): boolean =>{
+  return typeof Number === 'number' && !isNaN(Number)
 }
 
 const isString = (string: String): boolean => {

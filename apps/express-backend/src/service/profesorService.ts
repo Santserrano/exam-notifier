@@ -17,7 +17,6 @@ export class ProfesorService {
 
     async getAllProfesores(): Promise<Profesor[]> {
         try {
-            console.log('Obteniendo profesores de la base de datos...');
             const profesores = await this.prisma.profesor.findMany({
                 include: {
                     carreras: {
@@ -34,7 +33,6 @@ export class ProfesorService {
                     }
                 }
             });
-            console.log('Profesores encontrados:', profesores);
             return profesores;
         } catch (error) {
             console.error('Error al obtener profesores:', error);
@@ -128,4 +126,4 @@ export class ProfesorService {
             throw new Error('Error al obtener los profesores por materia');
         }
     }
-} 
+}

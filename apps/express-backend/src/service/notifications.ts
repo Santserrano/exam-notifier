@@ -41,7 +41,6 @@ export const sendPushNotification = (subscription: any, notification: NewNotific
   webPush
     .sendNotification(subscription, JSON.stringify(payload))
     .then(() => {
-      console.log('Notificación enviada con éxito')
       // Notificar a los observadores
       notificationSubject.notify(notification)
     })

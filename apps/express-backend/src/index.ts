@@ -48,11 +48,8 @@ app.post('/api/notificaciones/push-subscription', checkApiKey, async (req, res) 
       });
     }
 
-    console.log('Guardando suscripción para profesor:', profesorId);
-
     // Primero verificamos si ya existe una configuración
     const existingConfig = await notificacionService.getConfigByProfesor(profesorId);
-    console.log('Configuración existente:', existingConfig);
 
     // Guardar la suscripción push
     const pushSubscription = await notificacionService.saveWebPushSubscription(
@@ -71,7 +68,6 @@ app.post('/api/notificaciones/push-subscription', checkApiKey, async (req, res) 
       reminderMinutes: 1440 // 24 horas en minutos
     });
 
-    console.log('Configuración actualizada:', config);
 
     if (!config) {
       throw new Error('No se pudo crear/actualizar la configuración');
@@ -79,7 +75,6 @@ app.post('/api/notificaciones/push-subscription', checkApiKey, async (req, res) 
 
     // Verificar que la configuración se haya guardado correctamente
     const verifyConfig = await notificacionService.getConfigByProfesor(profesorId);
-    console.log('Verificación de configuración:', verifyConfig);
 
     if (!verifyConfig || !verifyConfig.webPushEnabled) {
       throw new Error('La configuración no se guardó correctamente');
@@ -91,7 +86,6 @@ app.post('/api/notificaciones/push-subscription', checkApiKey, async (req, res) 
       config: verifyConfig
     });
   } catch (error) {
-    console.error('Error al guardar suscripción:', error);
     return res.status(500).json({
       error: 'Error al guardar la suscripción',
       details: error instanceof Error ? error.message : 'Error desconocido'
@@ -101,16 +95,11 @@ app.post('/api/notificaciones/push-subscription', checkApiKey, async (req, res) 
 
 // Manejo de errores
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error(err.stack)
   return res.status(500).json({ error: 'Error interno del servidor' })
 })
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`)
-})
 
 app.get('/api/notifications', (req, res) => {
   const subscription = req.body
-  console.log('Subscription received:', subscription)
   return res.status(201).json({ message: 'Subscription received' })
 })
