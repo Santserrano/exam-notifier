@@ -6,6 +6,7 @@
             "es2017",
             "esnext.asynciterable"
         ],
+        "skipLibCheck": true,
         "sourceMap": true,
         "outDir": "./dist",
         "moduleResolution": "node",
@@ -20,7 +21,6 @@
         "rootDir": "./src",
         "strict": true,
         "esModuleInterop": true,
-        "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "resolveJsonModule": true,
         "isolatedModules": true,
