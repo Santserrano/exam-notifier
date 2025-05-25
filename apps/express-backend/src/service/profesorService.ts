@@ -15,8 +15,9 @@ export class ProfesorService {
         this.prisma = new PrismaClient();
     }
 
-    async getAllProfesores(): Promise<Profesor[]> {
+    async getAllProfesores() {
         try {
+            console.log('Iniciando getAllProfesores...');
             const profesores = await this.prisma.profesor.findMany({
                 include: {
                     carreras: {
@@ -28,39 +29,30 @@ export class ProfesorService {
                     materias: {
                         select: {
                             id: true,
-                            nombre: true
+                            nombre: true,
+                            carreraId: true
                         }
                     }
                 }
             });
+            console.log('Profesores encontrados:', profesores);
             return profesores;
         } catch (error) {
-            console.error('Error al obtener profesores:', error);
+            console.error('Error en getAllProfesores:', error);
             throw new Error('Error al obtener los profesores');
         }
     }
 
-    async getProfesorById(id: string): Promise<Profesor | null> {
+    async getProfesorById(id: string) {
         try {
-            return await this.prisma.profesor.findUnique({
-                where: { id },
-                include: {
-                    carreras: {
-                        select: {
-                            id: true,
-                            nombre: true
-                        }
-                    },
-                    materias: {
-                        select: {
-                            id: true,
-                            nombre: true
-                        }
-                    }
-                }
+            console.log('Buscando profesor con ID:', id);
+            const profesor = await this.prisma.profesor.findUnique({
+                where: { id }
             });
+            console.log('Profesor encontrado:', profesor);
+            return profesor;
         } catch (error) {
-            console.error('Error al obtener profesor:', error);
+            console.error('Error en getProfesorById:', error);
             throw new Error('Error al obtener el profesor');
         }
     }
@@ -127,3 +119,5 @@ export class ProfesorService {
         }
     }
 }
+
+export const profesorService = new ProfesorService();

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { getAuth } from "@clerk/remix/ssr.server";
 import { json, redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData, useActionData, Link, useNavigation } from "@remix-run/react";
+import type { SerializeFrom } from "@remix-run/node";
 
 import { Button } from "@exam-notifier/ui/components/button";
 import Input from "@exam-notifier/ui/components/input";
@@ -24,11 +25,11 @@ interface Mesa {
   descripcion: string;
   cargo: string;
   verification: boolean;
-  modalidad?: Modalidad;
-  color?: string;
-  hora?: string;
-  aula?: string;
-  webexLink?: string;
+  modalidad: Modalidad;
+  color: string;
+  hora: string;
+  aula: string;
+  webexLink: string;
 }
 
 interface MesaFormateada extends Mesa {
@@ -40,6 +41,7 @@ interface MesaFormateada extends Mesa {
 interface Carrera {
   id: string;
   nombre: string;
+  materias: { id: string; nombre: string; }[];
 }
 
 interface Materia {
@@ -52,9 +54,40 @@ interface Profesor {
   id: string;
   nombre: string;
   apellido: string;
-  carreras: Carrera[];
-  materias: Materia[];
+  carreras: { id: string; nombre: string; }[];
+  materias: { id: string; nombre: string; carreraId: string; }[];
 }
+
+type MesaProcesada = {
+  id: number;
+  profesor: string;
+  vocal: string;
+  carrera: string;
+  materia: string;
+  fecha: string;
+  descripcion: string;
+  cargo: string;
+  verification: boolean;
+  modalidad?: Modalidad;
+  color?: string;
+  hora?: string;
+  aula?: string;
+  webexLink?: string;
+};
+
+type ProfesorProcesado = {
+  id: string;
+  nombre: string;
+  apellido: string;
+  carreras: { id: string; nombre: string; }[];
+  materias: { id: string; nombre: string; carreraId: string; }[];
+};
+
+type CarreraProcesada = {
+  id: string;
+  nombre: string;
+  materias: { id: string; nombre: string; }[];
+};
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
@@ -73,7 +106,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
   try {
     // Obtener las mesas y profesores del backend
     const [mesasResponse, profesoresResponse, carrerasResponse] = await Promise.all([
-      fetch("http://localhost:3001/api/diaries/mesas", {
+      fetch("http://localhost:3005/api/diaries/mesas", {
         headers: {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
           "Content-Type": "application/json"
@@ -82,7 +115,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
         console.error("Error al obtener mesas:", error);
         return { ok: false, status: 500, json: () => [] };
       }),
-      fetch("http://localhost:3001/api/diaries/profesores", {
+      fetch("http://localhost:3005/api/diaries/profesores", {
         headers: {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
           "Content-Type": "application/json"
@@ -91,7 +124,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
         console.error("Error al obtener profesores:", error);
         return { ok: false, status: 500, json: () => [] };
       }),
-      fetch("http://localhost:3001/api/diaries/carreras", {
+      fetch("http://localhost:3005/api/diaries/carreras", {
         headers: {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
           "Content-Type": "application/json"
@@ -102,18 +135,87 @@ export const loader = async (args: LoaderFunctionArgs) => {
       })
     ]);
 
-    const [mesas, profesores, carreras] = await Promise.all([
+    const [mesasRaw, profesores, carreras] = await Promise.all([
       mesasResponse.ok ? mesasResponse.json() : [],
       profesoresResponse.ok ? profesoresResponse.json() : [],
       carrerasResponse.ok ? carrerasResponse.json() : []
     ]);
 
+    console.log('Mesas raw del backend:', mesasRaw);
+
+    const meses = ["ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sep.", "oct.", "nov.", "dic."];
+    const mesas = mesasRaw.map((m: {
+      id?: number;
+      materia?: { nombre: string; carrera?: { nombre: string; id: string } } | string;
+      carrera?: { nombre: string; id: string } | string;
+      fecha: string;
+      modalidad?: Modalidad;
+      sede?: string;
+      profesor?: { nombre: string; apellido: string } | string;
+      vocal?: { nombre: string; apellido: string } | string;
+      aula?: string;
+      webexLink?: string;
+    }, index: number) => {
+      const fechaObj = new Date(m.fecha);
+      const fechaFormateada = `${fechaObj.getDate()} ${meses[fechaObj.getMonth()]}`;
+      const modalidad = m.modalidad || "Presencial";
+      
+      const materiaNombre = typeof m.materia === 'string' ? m.materia : m.materia?.nombre || '';
+      const carreraNombre = typeof m.carrera === 'string' ? m.carrera : m.carrera?.nombre || m.carrera?.id || '';
+      const materiaCarreraNombre = typeof m.materia === 'object' && m.materia?.carrera?.nombre ? m.materia.carrera.nombre : '';
+      
+      return {
+        id: m.id || `mesa-${index}`,
+        materia: materiaNombre,
+        carrera: materiaCarreraNombre || carreraNombre,
+        fecha: fechaFormateada,
+        fechaOriginal: m.fecha,
+        modalidad,
+        color: modalidad === "Virtual" ? "blue" : "green",
+        sede: m.sede || "Central",
+        profesorNombre: typeof m.profesor === 'string' ? m.profesor : m.profesor?.nombre ? `${m.profesor.nombre} ${m.profesor.apellido}` : '',
+        vocalNombre: typeof m.vocal === 'string' ? m.vocal : m.vocal?.nombre ? `${m.vocal.nombre} ${m.vocal.apellido}` : '',
+        aula: m.aula || "Aula por confirmar",
+        webexLink: m.webexLink
+      };
+    });
+
+    const profesoresProcesados = Array.isArray(profesores) ? profesores.map((profesor: { 
+      id: string; 
+      nombre: string; 
+      apellido: string; 
+      carreras?: Array<{ id: string; nombre: string }>; 
+      materias?: Array<{ id: string; nombre: string; carreraId: string }> 
+    }) => ({
+      id: profesor.id,
+      nombre: profesor.nombre,
+      apellido: profesor.apellido,
+      carreras: Array.isArray(profesor.carreras) ? profesor.carreras.map((c: { id: string; nombre: string }) => ({
+        id: c.id,
+        nombre: c.nombre
+      })) : [],
+      materias: Array.isArray(profesor.materias) ? profesor.materias.map((m: { id: string; nombre: string; carreraId: string }) => ({
+        id: m.id,
+        nombre: m.nombre,
+        carreraId: m.carreraId
+      })) : []
+    })) : [];
+
+    const carrerasProcesadas = Array.isArray(carreras) ? carreras.map((carrera: { id: string; nombre: string; materias?: Array<{ id: string; nombre: string }> }) => ({
+      id: carrera.id,
+      nombre: carrera.nombre,
+      materias: Array.isArray(carrera.materias) ? carrera.materias.map((m: { id: string; nombre: string }) => ({
+        id: m.id,
+        nombre: m.nombre
+      })) : []
+    })) : [];
+
     const data = {
       userId,
       role,
-      mesas: Array.isArray(mesas) ? mesas : [],
-      profesores: Array.isArray(profesores) ? profesores : [],
-      carreras: Array.isArray(carreras) ? carreras : [],
+      mesas,
+      profesores: profesoresProcesados as SerializeFrom<ProfesorProcesado>[],
+      carreras: carrerasProcesadas as SerializeFrom<CarreraProcesada>[],
       env: {
         INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
         VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
@@ -167,7 +269,7 @@ export const action = async (args: ActionFunctionArgs) => {
   const fechaHora = new Date(`${fecha}T${hora}`);
 
   try {
-    const response = await fetch("http://localhost:3001/api/diaries/mesas", {
+    const response = await fetch("http://localhost:3005/api/diaries/mesas", {
       method: "POST",
       headers: {
         "x-api-key": process.env.INTERNAL_API_KEY || "",
@@ -222,28 +324,16 @@ export default function AdminRoute() {
   const profesoresFiltrados = React.useMemo(() => {
     if (!Array.isArray(profesores)) return [];
     
-    return profesores.filter((profesor: Profesor) => {
-      const cumpleCarrera = !carrera || profesor.carreras.some(c => c.id === carrera);
-      const cumpleMateria = !materia || profesor.materias.some(m => m.id === materia);
+    return profesores.filter((profesor) => {
+      const cumpleCarrera = !carrera || profesor.carreras.some((c: { id: string; nombre: string }) => c.id === carrera);
+      const cumpleMateria = !materia || profesor.materias.some((m: { id: string; nombre: string; carreraId: string }) => m.id === materia);
       return cumpleCarrera && cumpleMateria;
     });
   }, [profesores, carrera, materia]);
 
-  // Formatear las mesas para mostrarlas
-  const mesasFormateadas = mesas.map((mesa: Mesa): MesaFormateada => {
-    const fechaObj = new Date(mesa.fecha);
-    const meses = ["ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sep.", "oct.", "nov.", "dic."];
-    return {
-      ...mesa,
-      fecha: `${fechaObj.getDate()} ${meses[fechaObj.getMonth()]}`,
-      modalidad: (mesa.modalidad || "Presencial") as Modalidad,
-      color: mesa.modalidad === "Virtual" ? "blue" : "green"
-    };
-  });
-
   // Filtro simple
-  const mesasFiltradas = mesasFormateadas.filter(
-    (m: MesaFormateada) =>
+  const mesasFiltradas = mesas.filter(
+    (m: Mesa) =>
       (!search || m.materia.toLowerCase().includes(search.toLowerCase())) &&
       (!carrera || m.carrera === carrera) &&
       (!fecha || m.fecha.includes(fecha))
@@ -276,7 +366,7 @@ export default function AdminRoute() {
     const profesoresFiltrados = React.useMemo(() => {
       if (!Array.isArray(profesores)) return [];
       
-      return profesores.filter((profesor: Profesor) => {
+      return profesores.filter((profesor) => {
         const cumpleCarrera = !carreraSeleccionada || profesor.carreras.some(c => c.id === carreraSeleccionada);
         const cumpleMateria = !materiaSeleccionada || profesor.materias.some(m => m.id === materiaSeleccionada);
         return cumpleCarrera && cumpleMateria;
@@ -322,7 +412,7 @@ export default function AdminRoute() {
             onChange={(e) => setCarreraSeleccionada(e.target.value)}
           >
             <option value="">Seleccionar</option>
-            {carreras.map((c: Carrera) => (
+            {carreras.map((c: CarreraProcesada) => (
               <option key={c.id} value={c.id}>
                 {c.nombre}
               </option>
@@ -341,7 +431,7 @@ export default function AdminRoute() {
           >
             <option value="">Seleccionar</option>
             {carreraSeleccionada && carreras
-              .find((c: Carrera) => c.id === carreraSeleccionada)
+              .find((c: CarreraProcesada) => c.id === carreraSeleccionada)
               ?.materias.map((m: { id: string; nombre: string }) => (
                 <option key={m.id} value={m.id}>
                   {m.nombre}
@@ -359,7 +449,7 @@ export default function AdminRoute() {
             disabled={!materiaSeleccionada}
           >
             <option value="">Seleccionar</option>
-            {profesoresFiltrados.map((profesor: Profesor) => (
+            {profesoresFiltrados.map((profesor) => (
               <option key={profesor.id} value={profesor.id}>
                 {`${profesor.nombre} ${profesor.apellido}`}
               </option>
@@ -376,7 +466,7 @@ export default function AdminRoute() {
             disabled={!materiaSeleccionada}
           >
             <option value="">Seleccionar</option>
-            {profesoresFiltrados.map((profesor: Profesor) => (
+            {profesoresFiltrados.map((profesor) => (
               <option key={profesor.id} value={profesor.id}>
                 {`${profesor.nombre} ${profesor.apellido}`}
               </option>
@@ -492,7 +582,7 @@ export default function AdminRoute() {
           searchValue={search}
           onSearchChange={setSearch}
           onAddMesa={() => setShowAddMesa(true)}
-          carreras={carreras.map((c: Carrera) => c.nombre)}
+          carreras={carreras.map((c: { id: string; nombre: string; materias: { id: string; nombre: string; }[] }) => c.nombre)}
           carreraSeleccionada={carrera}
           onCarreraChange={setCarrera}
           fechas={fechas}
@@ -513,14 +603,22 @@ export default function AdminRoute() {
             mesa={mesaAEditar}
           />
         )}
-        <div>
-          {mesasFiltradas.map((mesa: MesaFormateada) => (
-            <MesaCard
-              key={mesa.id}
-              {...mesa}
-              onClick={() => setMesaAEditar(mesa)}
-            />
-          ))}
+        <div className="space-y-4 rounded-3xl">
+          {mesasFiltradas.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">No hay mesas para mostrar.</div>
+          ) : (
+            mesasFiltradas.map((mesa: Mesa) => (
+              <MesaCard
+                key={mesa.id}
+                fecha={mesa.fecha}
+                materia={mesa.materia}
+                carrera={mesa.carrera}
+                modalidad={mesa.modalidad}
+                color={mesa.color}
+                onClick={() => setMesaAEditar(mesa)}
+              />
+            ))
+          )}
         </div>
       </div>
     </div>

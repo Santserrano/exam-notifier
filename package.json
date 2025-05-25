@@ -29,6 +29,7 @@
     "generate": "turbo run generate",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint --continue -- --fix --cache --cache-location node_modules/.cache/.eslintcache",
+    "lint:fix:watch": "turbo run lint:fix:watch",
     "setup": "pnpm run db:migrate:dev && turbo run db:migrate:force db:seed build",
     "start": "turbo run start",
     "start-remix-production": "pnpm run --filter @exam-notifier/remix-app start",

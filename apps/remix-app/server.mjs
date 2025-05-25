@@ -81,28 +81,11 @@ app.all(
 );
 
 const desiredPort = Number(process.env.PORT || 3000);
-const portToUse = await getPort({
-  port: [desiredPort, desiredPort + 100],
-});
+const portToUse = desiredPort;
 
 const server = app.listen(portToUse, () => {
-  const addy = server.address();
-  const portUsed =
-    desiredPort === portToUse
-      ? desiredPort
-      : addy && typeof addy === "object"
-        ? addy.port
-        : 0;
-
-  if (portUsed !== desiredPort) {
-    console.warn(
-      chalk.yellow(
-        `⚠️  Port ${desiredPort} is not available, using ${portUsed} instead.`,
-      ),
-    );
-  }
   console.log(`🎹 Server ready! - ${process.env.NODE_ENV} mode`);
-  const localUrl = `http://localhost:${portUsed}`;
+  const localUrl = `http://localhost:${portToUse}`;
   let lanUrl = null;
   const localIp = ip();
   // Check if the address is a private ip
@@ -112,7 +95,7 @@ const server = app.listen(portToUse, () => {
     localIp &&
     /^10[.]|^172[.](1[6-9]|2[0-9]|3[0-1])[.]|^192[.]168[.]/.test(localIp)
   ) {
-    lanUrl = `http://${localIp}:${portUsed}`;
+    lanUrl = `http://${localIp}:${portToUse}`;
   }
 
   console.log(
@@ -125,18 +108,15 @@ ${chalk.bold("Press Ctrl+C to stop")}
 });
 
 closeWithGrace(async ({ err }) => {
-  // log the error early
   if (err) {
     console.error(chalk.red(err));
     console.error(chalk.red(err.stack));
   }
 
-  // close up things
   await new Promise((resolve, reject) => {
     server.close((e) => (e ? reject(e) : resolve("ok")));
   });
 
-  // if there was an error, then exit with a failure code
   if (err) {
     process.exit(1);
   }

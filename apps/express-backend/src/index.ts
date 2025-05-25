@@ -1,100 +1,64 @@
-import express from 'express'
 import cors from 'cors'
-import diaryRouter from './routes/diaries'
-import notificationsRouter from './routes/notifications'
-import { validateApiKey } from './middleware/apiKeyAuth'
 import dotenv from 'dotenv'
-import { notificacionService } from './service/NotificationService'
+import express from 'express'
+
+import diaryRouter from './routes/diaries.js'
 
 dotenv.config()
 
 const app = express()
-const port = process.env.EXPRESS_PORT || 3001
+const port = 3005
 
 // Configuración de CORS
-app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001'],
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'x-api-key'],
-  credentials: true
-}))
-
-app.use(express.json())
-
-// Protección de rutas para /api
-app.use('/api', validateApiKey)
-
-app.use('/api/diaries', diaryRouter)
-app.use('/api', notificationsRouter)
-
-// Middleware para verificar API key
-const checkApiKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const apiKey = req.headers['x-api-key']
-  if (!apiKey || apiKey !== process.env.INTERNAL_API_KEY) {
-    return res.status(401).json({ error: 'API key inválida' })
-  }
-  return next()
+const corsOptions = {
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'x-api-key', 'Authorization'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }
 
-// Rutas de notificaciones
-app.post('/api/notificaciones/push-subscription', checkApiKey, async (req, res) => {
-  try {
-    const { profesorId, subscription } = req.body;
+// Aplicar CORS antes de cualquier middleware
+app.use(cors(corsOptions))
+app.use(express.json())
 
-    if (!profesorId || !subscription) {
-      return res.status(400).json({
-        error: 'Faltan datos requeridos',
-        received: { profesorId, subscription: !!subscription }
-      });
-    }
+// Middleware para validar API key
+const validateApiKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const apiKey = req.headers['x-api-key']
+  console.log('Validando API key:', apiKey)
 
-    // Guardar la suscripción push
-    const pushSubscription = await notificacionService.saveWebPushSubscription(
-      profesorId,
-      subscription.endpoint,
-      subscription.keys
-    );
-
-    console.log('Suscripción guardada:', pushSubscription);
-
-    // Crear o actualizar la configuración de notificaciones
-    const config = await notificacionService.updateConfig(profesorId, {
-      webPushEnabled: true,
-      emailEnabled: false,
-      smsEnabled: false,
-      reminderMinutes: 1440 // 24 horas en minutos
-    });
-
-
-    if (!config) {
-      throw new Error('No se pudo crear/actualizar la configuración');
-    }
-
-    // Verificar que la configuración se haya guardado correctamente
-    const verifyConfig = await notificacionService.getConfigByProfesor(profesorId);
-
-    if (!verifyConfig || !verifyConfig.webPushEnabled) {
-      throw new Error('La configuración no se guardó correctamente');
-    }
-
-    return res.json({
-      success: true,
-      pushSubscription,
-      config: verifyConfig
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: 'Error al guardar la suscripción',
-      details: error instanceof Error ? error.message : 'Error desconocido'
-    });
+  if (!apiKey || apiKey !== process.env.INTERNAL_API_KEY) {
+    console.error('API key inválida')
+    return res.status(401).json({ error: 'API key inválida' })
   }
-});
 
-// Manejo de errores
-app.use((_err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  return res.status(500).json({ error: 'Error interno del servidor' })
+  console.log('API key válida')
+  next()
+}
+
+// Aplicar middleware de validación de API key a todas las rutas
+app.use('/api', validateApiKey)
+
+// Rutas
+app.use('/api/diaries', diaryRouter)
+
+// Ruta de prueba
+app.get('/api/health', (req, res) => {
+  console.log('Health check realizado')
+  res.json({ status: 'ok' })
+})
+
+// Manejo de errores CORS
+app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('Error:', err)
+  if (err.name === 'CORSError') {
+    res.status(403).json({ error: 'CORS error' })
+  } else {
+    res.status(500).json({ error: 'Internal server error' })
+  }
 })
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`)
+  console.log(`Servidor corriendo en el puerto ${port}`)
 })

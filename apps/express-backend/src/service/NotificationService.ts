@@ -1,112 +1,148 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+interface NotificationConfig {
+    webPushEnabled: boolean;
+    emailEnabled: boolean;
+    smsEnabled: boolean;
+    avisoPrevioHoras: number;
+}
 
-export class NotificacionService {
-    async getConfigByProfesor(profesorId: string) {
-        return await prisma.notificacionConfig.findUnique({
-            where: { profesorId },
-        });
+interface WebPushSubscription {
+    endpoint: string;
+    keys: {
+        p256dh: string;
+        auth: string;
+    };
+}
+
+class NotificationService {
+    private prisma: PrismaClient;
+
+    constructor() {
+        this.prisma = new PrismaClient();
     }
 
-    async updateConfig(profesorId: string, config: Partial<{
-        webPushEnabled: boolean;
-        emailEnabled: boolean;
-        smsEnabled: boolean;
-        reminderMinutes: number;
-    }>) {
-
+    async getConfigByProfesor(profesorId: string) {
         try {
-            // Verificamos si ya existe la configuración
-            const existing = await prisma.notificacionConfig.findUnique({
+            console.log('Buscando configuración para profesor:', profesorId);
+            const config = await this.prisma.notificacionConfig.findUnique({
                 where: { profesorId }
             });
-
-            // Armamos los datos de actualización/creación
-            const data: any = {};
-            if (typeof config.webPushEnabled !== 'undefined') data.webPushEnabled = config.webPushEnabled;
-            if (typeof config.emailEnabled !== 'undefined') data.emailEnabled = config.emailEnabled;
-            if (typeof config.smsEnabled !== 'undefined') data.smsEnabled = config.smsEnabled;
-            if (typeof config.reminderMinutes !== 'undefined') {
-                data.avisoPrevioHoras = Math.floor(config.reminderMinutes / 60);
-            }
-            data.updatedAt = new Date();
-
-            // Si ya existe, actualizamos solo los campos enviados
-            if (existing) {
-                const result = await prisma.notificacionConfig.update({
-                    where: { profesorId },
-                    data,
-                });
-                return result;
-            } else {
-                // Si no existe, creamos con valores por defecto para los que no se envíen
-                const result = await prisma.notificacionConfig.create({
-                    data: {
-                        profesorId,
-                        webPushEnabled: config.webPushEnabled ?? false,
-                        emailEnabled: config.emailEnabled ?? false,
-                        smsEnabled: config.smsEnabled ?? false,
-                        avisoPrevioHoras: config.reminderMinutes ? Math.floor(config.reminderMinutes / 60) : 24,
-                        createdAt: new Date(),
-                        updatedAt: new Date()
-                    }
-                });
-                return result;
-            }
+            console.log('Configuración encontrada:', config);
+            return config;
         } catch (error) {
-            console.error('Error al actualizar configuración:', error);
-            throw error;
+            console.error('Error en getConfigByProfesor:', error);
+            throw new Error('Error al obtener la configuración');
         }
     }
 
-
-    async saveWebPushSubscription(profesorId: string, endpoint: string, keys: any) {
-
-        try {
-            // Primero verificamos si el profesor existe
-            const profesor = await prisma.profesor.findUnique({
-                where: { id: profesorId }
-            });
-
-            if (!profesor) {
-                throw new Error('Profesor no encontrado');
+    async getNotifications() {
+        return await this.prisma.mesaDeExamen.findMany({
+            where: {
+                fecha: {
+                    gte: new Date()
+                }
+            },
+            include: {
+                profesor: true,
+                vocal: true,
+                materia: {
+                    include: {
+                        carrera: true
+                    }
+                }
+            },
+            orderBy: {
+                fecha: 'asc'
             }
+        });
+    }
 
-            // Actualizamos la configuración para habilitar webPush
-            await this.updateConfig(profesorId, {
-                webPushEnabled: true,
-                emailEnabled: false,
-                smsEnabled: false
-            });
-
-            const result = await prisma.webPushSubscription.create({
-                data: {
+    async updateConfig(profesorId: string, config: NotificationConfig) {
+        try {
+            console.log('Actualizando configuración para profesor:', profesorId);
+            const updatedConfig = await this.prisma.notificacionConfig.upsert({
+                where: { profesorId },
+                update: config,
+                create: {
                     profesorId,
-                    endpoint,
-                    auth: keys.auth,
-                    p256dh: keys.p256dh,
-                    createdAt: new Date()
-                },
+                    ...config
+                }
             });
-            return result;
+            console.log('Configuración actualizada:', updatedConfig);
+            return updatedConfig;
         } catch (error) {
-            console.error('Error al guardar suscripción push:', error);
-            throw error;
+            console.error('Error en updateConfig:', error);
+            throw new Error('Error al actualizar la configuración');
+        }
+    }
+
+    async saveWebPushSubscription(profesorId: string, subscription: WebPushSubscription) {
+        try {
+            console.log('Guardando suscripción para profesor:', profesorId);
+            const existingSubscription = await this.prisma.webPushSubscription.findFirst({
+                where: { profesorId }
+            });
+
+            // Extraer solo los campos válidos
+            const { endpoint, keys } = subscription;
+            const { p256dh, auth } = keys;
+
+            let savedSubscription;
+            if (existingSubscription) {
+                savedSubscription = await this.prisma.webPushSubscription.update({
+                    where: { id: existingSubscription.id },
+                    data: {
+                        endpoint,
+                        p256dh,
+                        auth
+                    }
+                });
+            } else {
+                savedSubscription = await this.prisma.webPushSubscription.create({
+                    data: {
+                        profesorId,
+                        endpoint,
+                        p256dh,
+                        auth
+                    }
+                });
+            }
+            console.log('Suscripción guardada:', savedSubscription);
+            return savedSubscription;
+        } catch (error) {
+            console.error('Error en saveWebPushSubscription:', error);
+            throw new Error('Error al guardar la suscripción');
         }
     }
 
     async getWebPushSubscriptions(profesorId: string) {
-        return await prisma.webPushSubscription.findMany({
-            where: { profesorId },
-        });
+        try {
+            console.log('Buscando suscripciones para profesor:', profesorId);
+            const subscriptions = await this.prisma.webPushSubscription.findMany({
+                where: { profesorId }
+            });
+            console.log('Suscripciones encontradas:', subscriptions);
+            return subscriptions;
+        } catch (error) {
+            console.error('Error en getWebPushSubscriptions:', error);
+            throw new Error('Error al obtener las suscripciones');
+        }
     }
 
     async deleteWebPushSubscription(id: string) {
-        return await prisma.webPushSubscription.delete({
-            where: { id },
-        });
+        try {
+            console.log('Eliminando suscripción:', id);
+            const deletedSubscription = await this.prisma.webPushSubscription.delete({
+                where: { id }
+            });
+            console.log('Suscripción eliminada:', deletedSubscription);
+            return deletedSubscription;
+        } catch (error) {
+            console.error('Error en deleteWebPushSubscription:', error);
+            throw new Error('Error al eliminar la suscripción');
+        }
     }
 }
 
-export const notificacionService = new NotificacionService();
+export const notificacionService = new NotificationService();

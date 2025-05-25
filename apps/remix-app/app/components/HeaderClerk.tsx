@@ -10,6 +10,7 @@ interface LoaderData {
   env: {
     VAPID_PUBLIC_KEY: string;
     INTERNAL_API_KEY: string;
+    API_URL: string;
   };
 }
 
@@ -42,7 +43,7 @@ export function HeaderClerk() {
       if (!user?.id) return;
 
       try {
-        const response = await fetch(`http://localhost:3001/api/notificaciones/config/${user.id}`, {
+        const response = await fetch(`${env.API_URL}/api/diaries/notificaciones/config/${user.id}`, {
           headers: {
             'x-api-key': env.INTERNAL_API_KEY
           }
@@ -74,7 +75,7 @@ export function HeaderClerk() {
 
   const updateNotificationConfig = async (fields: Partial<NotificationConfig>) => {
     if (!user?.id) return;
-    await fetch(`http://localhost:3001/api/notificaciones/config/${user.id}`, {
+    await fetch(`${env.API_URL}/api/diaries/notificaciones/config/${user.id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -129,7 +130,7 @@ export function HeaderClerk() {
         });
 
         try {
-          const response = await fetch('http://localhost:3001/api/notificaciones/push-subscription', {
+          const response = await fetch(`${env.API_URL}/api/diaries/notificaciones/subscription`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -288,7 +289,7 @@ export function HeaderClerk() {
 
         console.log('Suscripción creada:', subscription);
 
-        await fetch('http://localhost:3001/api/notificaciones/push-subscription', {
+        await fetch(`${env.API_URL}/api/diaries/notificaciones/subscription`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -324,7 +325,7 @@ export function HeaderClerk() {
     if (!phoneNumber) return;
     
     try {
-      const response = await fetch('http://localhost:3001/api/profesores/telefono', {
+      const response = await fetch(`${env.API_URL}/api/diaries/profesores/telefono`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

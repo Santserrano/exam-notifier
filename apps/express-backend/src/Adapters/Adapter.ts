@@ -1,4 +1,5 @@
-import { NewDiaryEntry, NewNotification, DiaryEntry, Notification } from '../interfaces/Interface'
+import { Notification } from '../interfaces/Interface.js';
+import { DiaryEntry, NewDiaryEntry, NewNotification } from '../interfaces/Interface.js'
 
 // Validadores genéricos
 const isNumber = (value: unknown): value is number =>
