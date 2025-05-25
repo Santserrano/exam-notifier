@@ -42,13 +42,13 @@ export const loader = async (args: LoaderFunctionArgs) => {
 
   try {
     const [profesoresResponse, carrerasResponse] = await Promise.all([
-      fetch("http://localhost:3001/api/diaries/profesores", {
+      fetch("http://localhost:3005/api/diaries/profesores", {
         headers: {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
           "Content-Type": "application/json"
         }
       }),
-      fetch("http://localhost:3001/api/diaries/carreras", {
+      fetch("http://localhost:3005/api/diaries/carreras", {
         headers: {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
           "Content-Type": "application/json"
@@ -56,10 +56,46 @@ export const loader = async (args: LoaderFunctionArgs) => {
       })
     ]);
 
-    const [profesores, carreras] = await Promise.all([
+    const [profesoresRaw, carrerasRaw] = await Promise.all([
       profesoresResponse.ok ? profesoresResponse.json() : [],
       carrerasResponse.ok ? carrerasResponse.json() : []
     ]);
+
+    console.log('Profesores raw:', profesoresRaw);
+    console.log('Carreras raw:', carrerasRaw);
+
+    // Procesar los datos para asegurar que solo contengan strings o números
+    const profesores = profesoresRaw.map((profesor: any) => {
+      const profesorProcesado = {
+        id: profesor.id,
+        nombre: profesor.nombre,
+        apellido: profesor.apellido,
+        carreras: Array.isArray(profesor.carreras) ? profesor.carreras.map((c: any) => ({
+          id: c.id,
+          nombre: c.nombre
+        })) : [],
+        materias: Array.isArray(profesor.materias) ? profesor.materias.map((m: any) => ({
+          id: m.id,
+          nombre: m.nombre,
+          carreraId: m.carreraId
+        })) : []
+      };
+      console.log('Profesor procesado:', profesorProcesado);
+      return profesorProcesado;
+    });
+
+    const carreras = carrerasRaw.map((carrera: any) => {
+      const carreraProcesada = {
+        id: carrera.id,
+        nombre: carrera.nombre,
+        materias: Array.isArray(carrera.materias) ? carrera.materias.map((m: any) => ({
+          id: m.id,
+          nombre: m.nombre
+        })) : []
+      };
+      console.log('Carrera procesada:', carreraProcesada);
+      return carreraProcesada;
+    });
 
     return json({ profesores, carreras });
   } catch (error) {
@@ -86,7 +122,7 @@ export const action = async ({ request, params, context }: ActionFunctionArgs) =
   const { profesorId, carreras, materias } = formData;
 
   try {
-    const response = await fetch(`http://localhost:3001/api/diaries/profesores/${profesorId}/config`, {
+    const response = await fetch(`http://localhost:3005/api/diaries/profesores/${profesorId}/config`, {
       method: "PUT",
       headers: {
         "x-api-key": process.env.INTERNAL_API_KEY || "",
@@ -116,6 +152,8 @@ export const action = async ({ request, params, context }: ActionFunctionArgs) =
 
 export default function AdminProfesoresRoute() {
   const { profesores, carreras } = useLoaderData<typeof loader>();
+  console.log('Profesores en el componente:', profesores);
+  console.log('Carreras en el componente:', carreras);
   const [profesorSeleccionado, setProfesorSeleccionado] = useState<Profesor | null>(null);
   const [showModal, setShowModal] = useState(false);
   const fetcher = useFetcher<ActionData>();
@@ -141,14 +179,14 @@ export default function AdminProfesoresRoute() {
     <div className="min-h-screen bg-white flex flex-col items-center py-10">
       <div className="w-full max-w-4xl">
         <div className="mb-8 flex items-center gap-4">
-        <Link to="/admin">
-      <Button
-        variant="outline"
-        className="px-4 py-2 rounded-2xl text-sm font-medium hover:bg-muted transition"
-      >
-        Volver
-      </Button>
-    </Link>
+          <Link to="/admin">
+            <Button
+              variant="outline"
+              className="px-4 py-2 rounded-2xl text-sm font-medium hover:bg-muted transition"
+            >
+              Volver
+            </Button>
+          </Link>
           <h1 className="text-3xl font-extrabold tracking-tight text-green-900 ml-2">Gestión de Profesores</h1>
         </div>
         <div className="flex flex-col gap-4">
@@ -163,7 +201,7 @@ export default function AdminProfesoresRoute() {
                 </h2>
                 <div className="flex flex-wrap gap-2 mb-1">
                   <span className="font-semibold text-green-700">Carreras:</span>
-                  {profesor.carreras.map((c: { id: string; nombre: string }) => (
+                  {profesor.carreras?.map((c: { id: string; nombre: string }) => (
                     <span key={c.id} className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs font-medium">
                       {c.nombre}
                     </span>
@@ -171,11 +209,14 @@ export default function AdminProfesoresRoute() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <span className="font-semibold text-blue-700">Materias:</span>
-                  {profesor.materias.map(materia => (
-                    <span key={materia.id} className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs font-medium">
-                      {materia.nombre} ({carreras.find((c: Carrera) => c.id === materia.carreraId)?.nombre})
-                    </span>
-                  ))}
+                  {profesor.materias?.map(materia => {
+                    const carreraNombre = carreras.find((c: { id: string; nombre: string }) => c.id === materia.carreraId)?.nombre || '';
+                    return (
+                      <span key={materia.id} className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs font-medium">
+                        {materia.nombre} ({carreraNombre})
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
               <Button

@@ -1,7 +1,23 @@
-import { notificacionService } from "../service/NotificationService";
 import express from "express";
 
+import { notificacionService } from "../service/NotificationService.js";
+
 const router = express.Router();
+
+interface PushSubscription {
+  endpoint: string;
+  keys: {
+    auth: string;
+    p256dh: string;
+  };
+}
+
+interface NotificationConfig {
+  webPushEnabled: boolean;
+  emailEnabled: boolean;
+  smsEnabled: boolean;
+  avisoPrevioHoras: number;
+}
 
 // Middleware para validar API key
 const validateApiKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -18,25 +34,34 @@ router.use(validateApiKey);
 // PATCH /notificaciones/config/:profesorId
 router.patch('/notificaciones/config/:profesorId', async (req, res) => {
   const { profesorId } = req.params;
-  const { webPushEnabled, smsEnabled, emailEnabled } = req.body;
+  const { webPushEnabled, emailEnabled, smsEnabled, avisoPrevioHoras } = req.body;
 
   try {
     // Validar que al menos uno de los campos se envíe
     if (
       typeof webPushEnabled === 'undefined' &&
+      typeof emailEnabled === 'undefined' &&
       typeof smsEnabled === 'undefined' &&
-      typeof emailEnabled === 'undefined'
+      typeof avisoPrevioHoras === 'undefined'
     ) {
       return res.status(400).json({ error: 'No se enviaron campos para actualizar' });
     }
 
-    // Construir objeto con los campos proporcionados
-    const dataToUpdate: any = {};
-    if (typeof webPushEnabled !== 'undefined') dataToUpdate.webPushEnabled = webPushEnabled;
-    if (typeof smsEnabled !== 'undefined') dataToUpdate.smsEnabled = smsEnabled;
-    if (typeof emailEnabled !== 'undefined') dataToUpdate.emailEnabled = emailEnabled;
+    // Obtener la configuración actual
+    const currentConfig = await notificacionService.getConfigByProfesor(profesorId);
+    if (!currentConfig) {
+      return res.status(404).json({ error: 'Configuración no encontrada' });
+    }
 
-    const updated = await notificacionService.updateConfig(profesorId, dataToUpdate);
+    // Construir objeto con los campos proporcionados
+    const configToUpdate: NotificationConfig = {
+      webPushEnabled: webPushEnabled ?? currentConfig.webPushEnabled,
+      emailEnabled: emailEnabled ?? currentConfig.emailEnabled,
+      smsEnabled: smsEnabled ?? currentConfig.smsEnabled,
+      avisoPrevioHoras: avisoPrevioHoras ?? currentConfig.avisoPrevioHoras
+    };
+
+    const updated = await notificacionService.updateConfig(profesorId, configToUpdate);
     return res.json(updated);
   } catch (error) {
     return res.status(500).json({ error: 'Error al actualizar configuración' });
@@ -47,7 +72,7 @@ router.patch('/notificaciones/config/:profesorId', async (req, res) => {
 // POST /notificaciones/push-subscription
 router.post('/notificaciones/push-subscription', async (req, res) => {
   try {
-    const { profesorId, subscription } = req.body;
+    const { profesorId, subscription } = req.body as { profesorId: string; subscription: PushSubscription };
 
     if (!profesorId || !subscription) {
       return res.status(400).json({ error: 'Faltan datos requeridos' });
@@ -57,13 +82,7 @@ router.post('/notificaciones/push-subscription', async (req, res) => {
       return res.status(400).json({ error: 'Datos de suscripción inválidos' });
     }
 
-    const { endpoint, keys } = subscription;
-
-    if (!keys.auth || !keys.p256dh) {
-      return res.status(400).json({ error: 'Claves de suscripción inválidas' });
-    }
-
-    const saved = await notificacionService.saveWebPushSubscription(profesorId, endpoint, keys);
+    const saved = await notificacionService.saveWebPushSubscription(profesorId, subscription);
     return res.status(201).json(saved);
   } catch (error) {
     return res.status(500).json({
@@ -82,7 +101,12 @@ router.post('/notificaciones/config', async (req, res) => {
       return res.status(400).json({ error: 'ID de profesor requerido' });
     }
 
-    const config = await notificacionService.updateConfig(profesorId, { webPushEnabled });
+    const config = await notificacionService.updateConfig(profesorId, {
+      webPushEnabled,
+      emailEnabled: false,
+      smsEnabled: false,
+      avisoPrevioHoras: 24
+    });
     return res.status(200).json(config);
   } catch (error) {
     return res.status(500).json({

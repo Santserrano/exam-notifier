@@ -32,7 +32,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
   if (role !== "profesor") return redirect("/");
 
   try {
-    const response = await fetch(`http://localhost:3001/api/diaries/mesas/profesor/${userId}`, {
+    const response = await fetch(`http://localhost:3005/api/diaries/mesas/profesor/${userId}`, {
       headers: {
         "x-api-key": process.env.INTERNAL_API_KEY || "",
         "Content-Type": "application/json"
@@ -74,7 +74,8 @@ export const loader = async (args: LoaderFunctionArgs) => {
       mesas,
       env: {
         VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
-        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY
+        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
+        API_URL: process.env.API_URL
       }
     });
   } catch (error) {

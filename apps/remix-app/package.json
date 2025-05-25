@@ -5,7 +5,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "remix build",
-    "dev": "cross-env PORT=3000 remix dev --manual",
+    "dev": "cross-env NODE_ENV=development PORT=3000 REMIX_DEV_SERVER_WS_PORT=3002 remix dev --manual",
     "dev:test": "cross-env PORT=3000 NODE_ENV=test REMIX_CONFIG_FILE=remix.env.test.js remix dev --manual",
     "start": "remix-serve ./build/index.js",
     "typecheck": "tsc",

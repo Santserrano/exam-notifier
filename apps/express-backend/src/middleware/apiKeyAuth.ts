@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction,Request, Response } from 'express';
 
 const API_KEY = process.env.INTERNAL_API_KEY;
 

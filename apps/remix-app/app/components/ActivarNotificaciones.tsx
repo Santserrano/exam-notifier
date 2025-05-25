@@ -164,7 +164,7 @@ export function ActivarNotificaciones() {
       console.log('Suscripción obtenida:', subscription);
 
       // Enviar suscripción al backend
-      const response = await fetch(`${env.API_URL}/api/notificaciones/push-subscription`, {
+      const response = await fetch(`${env.API_URL}/api/notificaciones/subscription`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

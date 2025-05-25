@@ -9,6 +9,10 @@ declare module "@remix-run/server-runtime" {
 }
 
 export default defineConfig({
+  server: {
+    port: 3000,
+    strictPort: true
+  },
   plugins: [
     remix({
       ignoredRouteFiles: ["**/.*"],

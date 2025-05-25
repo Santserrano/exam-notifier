@@ -15,7 +15,7 @@ export interface Notification {
   id: number
   profesor: number
   vocal: number
-  mensage: String
+  mensage: string
   fechaMesa: Date
   materia: string
   carrera: string

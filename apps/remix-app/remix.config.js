@@ -22,6 +22,7 @@ module.exports = {
     ],
     assetsBuildDirectory: "public/build",
     publicPath: "/build/",
+    devServerPort: 3000,
     future: {
         v3_fetcherPersist: true,
         v3_lazyRouteDiscovery: true,

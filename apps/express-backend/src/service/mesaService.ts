@@ -1,10 +1,33 @@
-import { PrismaClient, MesaDeExamen } from '@prisma/client';
-import { sendPushToProfesor } from './SendPushNotification';
-import { notificacionService } from './NotificationService';
-import { enviarEmailNotificacion } from './emailService';
-import { enviarWhatsapp } from './whatsappService';
+import { MesaDeExamen, PrismaClient } from '@prisma/client';
 
-export class MesaService {
+import { enviarEmailNotificacion } from './emailService.js';
+import { notificacionService } from './NotificationService.js';
+import { sendPushToProfesor } from './SendPushNotification.js';
+import { enviarWhatsapp } from './whatsappService.js';
+
+interface MesaData {
+    id: number;
+    profesor: string;
+    vocal: string;
+    carrera: string;
+    materia: string;
+    fecha: Date;
+    descripcion: string;
+    cargo: string;
+    verification: boolean;
+    createdAt: Date;
+    modalidad?: string | null;
+    aula?: string | null;
+    webexLink?: string | null;
+}
+
+interface MesaResponse {
+    success: boolean;
+    data?: MesaData;
+    error?: string;
+}
+
+class MesaService {
     private prisma: PrismaClient;
 
     constructor() {
@@ -13,7 +36,8 @@ export class MesaService {
 
     async getAllMesas(): Promise<MesaDeExamen[]> {
         try {
-            return await this.prisma.mesaDeExamen.findMany({
+            console.log('Iniciando getAllMesas...');
+            const mesas = await this.prisma.mesaDeExamen.findMany({
                 include: {
                     profesor: true,
                     vocal: true,
@@ -24,13 +48,17 @@ export class MesaService {
                     }
                 }
             });
+            console.log('Mesas encontradas:', mesas);
+            return mesas;
         } catch (error) {
+            console.error('Error en getAllMesas:', error);
             throw new Error('Error al obtener las mesas');
         }
     }
 
     async getMesasByProfesorId(profesorId: string): Promise<MesaDeExamen[]> {
         try {
+            console.log('Buscando mesas para profesor:', profesorId);
             const mesas = await this.prisma.mesaDeExamen.findMany({
                 where: {
                     OR: [
@@ -49,8 +77,10 @@ export class MesaService {
                     carrera: true
                 }
             });
+            console.log('Mesas encontradas para profesor:', mesas);
             return mesas;
         } catch (error) {
+            console.error('Error en getMesasByProfesorId:', error);
             throw new Error('Error al obtener las mesas del profesor');
         }
     }
@@ -74,12 +104,12 @@ export class MesaService {
         }
     }
 
-    async createMesa(mesaData: any): Promise<MesaDeExamen> {
+    async createMesa(data: Omit<MesaData, 'id' | 'createdAt'>): Promise<MesaResponse> {
         try {
             // Verificar que la materia existe
             const materia = await this.prisma.materia.findUnique({
                 where: {
-                    id: mesaData.materia
+                    id: data.materia
                 }
             });
 
@@ -89,17 +119,17 @@ export class MesaService {
 
             const nuevaMesa = await this.prisma.mesaDeExamen.create({
                 data: {
-                    profesorId: mesaData.profesor,
-                    vocalId: mesaData.vocal,
-                    carreraId: mesaData.carrera,
-                    materiaId: mesaData.materia,
-                    fecha: mesaData.fecha,
-                    descripcion: mesaData.descripcion || 'Mesa de examen',
-                    cargo: mesaData.cargo || 'Titular',
-                    verification: mesaData.verification || true,
-                    modalidad: mesaData.modalidad,
-                    aula: mesaData.aula,
-                    webexLink: mesaData.webexLink
+                    profesorId: data.profesor,
+                    vocalId: data.vocal,
+                    carreraId: data.carrera,
+                    materiaId: data.materia,
+                    fecha: data.fecha,
+                    descripcion: data.descripcion || 'Mesa de examen',
+                    cargo: data.cargo || 'Titular',
+                    verification: data.verification || true,
+                    modalidad: data.modalidad,
+                    aula: data.aula,
+                    webexLink: data.webexLink
                 },
                 include: {
                     profesor: true,
@@ -113,30 +143,30 @@ export class MesaService {
                 }
             });
 
-            const config = await notificacionService.getConfigByProfesor(mesaData.profesor);
+            const config = await notificacionService.getConfigByProfesor(data.profesor);
             if (config?.webPushEnabled) {
-                const fechaFormateada = new Date(mesaData.fecha).toLocaleDateString();
+                const fechaFormateada = new Date(data.fecha).toLocaleDateString();
                 await sendPushToProfesor(
-                    mesaData.profesor,
+                    data.profesor,
                     'Nueva mesa asignada',
                     `Se te asignó una mesa de ${nuevaMesa.materia.nombre} (${nuevaMesa.carrera.nombre}) para el ${fechaFormateada} en modalidad ${nuevaMesa.modalidad || 'Presencial'}`
                 );
             }
 
             // Enviar notificación al vocal
-            const configVocal = await notificacionService.getConfigByProfesor(mesaData.vocal);
+            const configVocal = await notificacionService.getConfigByProfesor(data.vocal);
             if (configVocal?.webPushEnabled) {
-                const fechaFormateada = new Date(mesaData.fecha).toLocaleDateString();
+                const fechaFormateada = new Date(data.fecha).toLocaleDateString();
                 await sendPushToProfesor(
-                    mesaData.vocal,
+                    data.vocal,
                     'Nueva mesa asignada',
                     `Se te asignó como vocal en una mesa de ${nuevaMesa.materia.nombre} (${nuevaMesa.carrera.nombre}) para el ${fechaFormateada} en modalidad ${nuevaMesa.modalidad || 'Presencial'}`
                 );
             }
 
-            const profesorData = await this.prisma.profesor.findUnique({ where: { id: mesaData.profesor } });
+            const profesorData = await this.prisma.profesor.findUnique({ where: { id: data.profesor } });
             if (profesorData) {
-                const fechaObj = new Date(mesaData.fecha);
+                const fechaObj = new Date(data.fecha);
                 const fechaFormateada = fechaObj.toLocaleDateString();
                 const horaFormateada = fechaObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 const contenido = `Hola ${profesorData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada} a las ${horaFormateada}`;
@@ -148,39 +178,45 @@ export class MesaService {
                 }
             }
 
-            return nuevaMesa;
+            return {
+                success: true,
+                data: {
+                    id: nuevaMesa.id,
+                    profesor: nuevaMesa.profesorId,
+                    vocal: nuevaMesa.vocalId,
+                    carrera: nuevaMesa.carreraId,
+                    materia: nuevaMesa.materiaId,
+                    fecha: nuevaMesa.fecha,
+                    descripcion: nuevaMesa.descripcion,
+                    cargo: nuevaMesa.cargo,
+                    verification: nuevaMesa.verification,
+                    createdAt: nuevaMesa.createdAt,
+                    modalidad: nuevaMesa.modalidad || null,
+                    aula: nuevaMesa.aula || null,
+                    webexLink: nuevaMesa.webexLink || null
+                }
+            };
         } catch (error) {
-            throw new Error('Error al crear la mesa');
+            return { success: false, error: 'Error al crear la mesa' };
         }
     }
 
-    async updateMesa(id: number, mesaData: any): Promise<MesaDeExamen | null> {
+    async updateMesa(id: number, data: Partial<MesaData>): Promise<MesaResponse> {
         try {
-            // Verificar que la materia existe
-            const materia = await this.prisma.materia.findUnique({
-                where: {
-                    id: mesaData.materia
-                }
-            });
-
-            if (!materia) {
-                throw new Error('Materia no encontrada');
-            }
-
-            return await this.prisma.mesaDeExamen.update({
+            const updatedMesa = await this.prisma.mesaDeExamen.update({
                 where: { id },
                 data: {
-                    profesorId: mesaData.profesor,
-                    vocalId: mesaData.vocal,
-                    carreraId: mesaData.carrera,
-                    materiaId: mesaData.materia,
-                    fecha: mesaData.fecha,
-                    descripcion: mesaData.descripcion || 'Mesa de examen',
-                    cargo: mesaData.cargo || 'Titular',
-                    verification: mesaData.verification || true,
-                    modalidad: mesaData.modalidad,
-                    aula: mesaData.aula,
-                    webexLink: mesaData.webexLink
+                    profesorId: data.profesor,
+                    vocalId: data.vocal,
+                    carreraId: data.carrera,
+                    materiaId: data.materia,
+                    fecha: data.fecha,
+                    descripcion: data.descripcion,
+                    cargo: data.cargo,
+                    verification: data.verification,
+                    modalidad: data.modalidad,
+                    aula: data.aula,
+                    webexLink: data.webexLink
                 },
                 include: {
                     profesor: true,
@@ -193,8 +229,27 @@ export class MesaService {
                     carrera: true
                 }
             });
+
+            return {
+                success: true,
+                data: {
+                    id: updatedMesa.id,
+                    profesor: updatedMesa.profesorId,
+                    vocal: updatedMesa.vocalId,
+                    carrera: updatedMesa.carreraId,
+                    materia: updatedMesa.materiaId,
+                    fecha: updatedMesa.fecha,
+                    descripcion: updatedMesa.descripcion,
+                    cargo: updatedMesa.cargo,
+                    verification: updatedMesa.verification,
+                    createdAt: updatedMesa.createdAt,
+                    modalidad: updatedMesa.modalidad || null,
+                    aula: updatedMesa.aula || null,
+                    webexLink: updatedMesa.webexLink || null
+                }
+            };
         } catch (error) {
-            throw new Error('Error al actualizar la mesa');
+            return { success: false, error: 'Error al actualizar la mesa' };
         }
     }
 
