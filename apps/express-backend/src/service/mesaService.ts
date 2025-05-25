@@ -1,4 +1,4 @@
-import { PrismaClient, MesaDeExamen, Profesor } from '@prisma/client';
+import { PrismaClient, MesaDeExamen } from '@prisma/client';
 import { sendPushToProfesor } from './SendPushNotification';
 import { notificacionService } from './NotificationService';
 import { enviarEmailNotificacion } from './emailService';
@@ -25,14 +25,12 @@ export class MesaService {
                 }
             });
         } catch (error) {
-            console.error('Error al obtener mesas:', error);
             throw new Error('Error al obtener las mesas');
         }
     }
 
     async getMesasByProfesorId(profesorId: string): Promise<MesaDeExamen[]> {
         try {
-            console.log('MesaService: Buscando mesas para profesorId:', profesorId);
             const mesas = await this.prisma.mesaDeExamen.findMany({
                 where: {
                     OR: [
@@ -51,10 +49,8 @@ export class MesaService {
                     carrera: true
                 }
             });
-            console.log('MesaService: Mesas encontradas:', mesas);
             return mesas;
         } catch (error) {
-            console.error('Error al obtener mesas del profesor:', error);
             throw new Error('Error al obtener las mesas del profesor');
         }
     }
@@ -74,7 +70,6 @@ export class MesaService {
                 }
             });
         } catch (error) {
-            console.error('Error al obtener mesa:', error);
             throw new Error('Error al obtener la mesa');
         }
     }
@@ -155,7 +150,6 @@ export class MesaService {
 
             return nuevaMesa;
         } catch (error) {
-            console.error('Error al crear mesa:', error);
             throw new Error('Error al crear la mesa');
         }
     }
@@ -200,7 +194,6 @@ export class MesaService {
                 }
             });
         } catch (error) {
-            console.error('Error al actualizar mesa:', error);
             throw new Error('Error al actualizar la mesa');
         }
     }
@@ -220,7 +213,6 @@ export class MesaService {
                 }
             });
         } catch (error) {
-            console.error('Error al eliminar mesa:', error);
             throw new Error('Error al eliminar la mesa');
         }
     }

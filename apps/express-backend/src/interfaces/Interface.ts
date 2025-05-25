@@ -1,55 +1,25 @@
-export enum Profesor {
-  Gilda = 'Gilda Romero',
-  Jose = 'jose Fernandez'
-}
-
-export enum Carrera {
-  IngenieriaEnSistemas = 'Ingeniería en Sistemas',
-  Arquitectura = 'Arquitectura',
-  Nutricion = 'Licenciatura de nutricion'
-}
-
-export enum Materia {
-  AnalisisMatematico = 'Analisis Matematico',
-  ProgramacionEstructurada = 'Programacion Estructurada',
-  Fisica = 'Fisica',
-  DerechoCivil = 'Derecho Civil',
-  Quimica = 'Quimica',
-}
-
-export enum Descripcion {
-  MesaDeExamenFinal = 'Examen FInal',
-  MesaDeExamenEspecial = 'Mesa de examen especial'
-}
-
-export enum Cargo {
-  PresidenteDeMesa = 'Examinador',
-  VocalDeMesa = 'Vocal de mesa',
-  SuplenteDeMesa = 'Examinador suplente'
-}
-
 export interface DiaryEntry {
   id: number
-  profesor: Profesor
-  vocal: Profesor
-  carrera: Carrera
-  materia: Materia
+  profesor: number
+  vocal: number
+  carrera: string
+  materia: string
   fecha: Date
-  descripcion: Descripcion
-  cargo: Cargo
+  descripcion: string
+  cargo: string
   verification: boolean
   createdAt: Date
 }
 
 export interface Notification {
   id: number
-  profesor: Profesor
-  vocal: Profesor
+  profesor: number
+  vocal: number
   mensage: String
   fechaMesa: Date
-  materia: Materia
-  carrera: Carrera
-  cargo: Cargo
+  materia: string
+  carrera: string
+  cargo: string
   leido: boolean
   createAt: Date
 }

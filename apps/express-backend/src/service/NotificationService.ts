@@ -15,7 +15,6 @@ export class NotificacionService {
         smsEnabled: boolean;
         reminderMinutes: number;
     }>) {
-        console.log('Actualizando configuración para profesor:', profesorId, 'con config:', config);
 
         try {
             // Verificamos si ya existe la configuración
@@ -63,7 +62,6 @@ export class NotificacionService {
 
 
     async saveWebPushSubscription(profesorId: string, endpoint: string, keys: any) {
-        console.log('Guardando suscripción push para profesor:', profesorId);
 
         try {
             // Primero verificamos si el profesor existe
@@ -91,8 +89,6 @@ export class NotificacionService {
                     createdAt: new Date()
                 },
             });
-
-            console.log('Suscripción push guardada:', result);
             return result;
         } catch (error) {
             console.error('Error al guardar suscripción push:', error);

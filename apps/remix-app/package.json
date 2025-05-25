@@ -36,8 +36,6 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@exam-notifier/eslint-config": "workspace:*",
-    "@exam-notifier/tsconfig": "workspace:*",
     "@faker-js/faker": "^9.8.0",
     "@playwright/test": "^1.52.0",
     "@remix-run/dev": "^2.8.1",
