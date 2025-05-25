@@ -17,7 +17,8 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
-        "@exam-notifier/database": "workspace:*",
+        "@exam-notifier/eslint-config": "workspace:*",
+        "@exam-notifier/tsconfig": "workspace:*",
         "@prisma/client": "^5.20.0",
         "@supabase/supabase-js": "^2.39.0",
         "axios": "^1.9.0",
