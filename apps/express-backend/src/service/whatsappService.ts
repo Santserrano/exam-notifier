@@ -7,7 +7,7 @@ const VONAGE_FROM = '14157386102';
 
 export async function enviarWhatsapp(profesorTelefono: string, mensaje: string) {
     try {
-        const response = await axios.post(
+        await axios.post(
             VONAGE_API_URL,
             {
                 from: VONAGE_FROM,
@@ -28,7 +28,6 @@ export async function enviarWhatsapp(profesorTelefono: string, mensaje: string) 
             }
         );
 
-        console.log('WhatsApp enviado:', response.data);
     } catch (error) {
         console.error('Error al enviar WhatsApp:', error);
     }

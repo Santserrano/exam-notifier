@@ -9,7 +9,7 @@ const validateApiKey = (req: express.Request, res: express.Response, next: expre
   if (!apiKey || apiKey !== process.env.INTERNAL_API_KEY) {
     return res.status(401).json({ error: "API key inválida" });
   }
-  next();
+  return next();
 };
 
 // Aplicar middleware a todas las rutas
@@ -37,11 +37,9 @@ router.patch('/notificaciones/config/:profesorId', async (req, res) => {
     if (typeof emailEnabled !== 'undefined') dataToUpdate.emailEnabled = emailEnabled;
 
     const updated = await notificacionService.updateConfig(profesorId, dataToUpdate);
-
-    res.json(updated);
+    return res.json(updated);
   } catch (error) {
-    console.error('Error actualizando configuración:', error);
-    res.status(500).json({ error: 'Error al actualizar configuración' });
+    return res.status(500).json({ error: 'Error al actualizar configuración' });
   }
 });
 
@@ -66,10 +64,9 @@ router.post('/notificaciones/push-subscription', async (req, res) => {
     }
 
     const saved = await notificacionService.saveWebPushSubscription(profesorId, endpoint, keys);
-    res.status(201).json(saved);
+    return res.status(201).json(saved);
   } catch (error) {
-    console.error('Error guardando suscripción:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Error al guardar suscripción',
       details: error instanceof Error ? error.message : 'Error desconocido'
     });
@@ -86,10 +83,9 @@ router.post('/notificaciones/config', async (req, res) => {
     }
 
     const config = await notificacionService.updateConfig(profesorId, { webPushEnabled });
-    res.status(200).json(config);
+    return res.status(200).json(config);
   } catch (error) {
-    console.error('Error actualizando configuración:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Error al actualizar configuración',
       details: error instanceof Error ? error.message : 'Error desconocido'
     });
@@ -104,10 +100,9 @@ router.get('/notificaciones/config/:profesorId', async (req, res) => {
     if (!config) {
       return res.status(404).json({ error: 'Configuración no encontrada' });
     }
-    res.json(config);
+    return res.json(config);
   } catch (error) {
-    console.error('Error obteniendo configuración:', error);
-    res.status(500).json({ error: 'Error al obtener configuración' });
+    return res.status(500).json({ error: 'Error al obtener configuración' });
   }
 });
 
