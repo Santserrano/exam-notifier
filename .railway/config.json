@@ -1,4 +1,0 @@
-{
-    "buildCommand": "cd apps/express-backend && corepack enable && pnpm install --frozen-lockfile && pnpm run build",
-    "startCommand": "cd apps/express-backend && pnpm run start"
-  }
