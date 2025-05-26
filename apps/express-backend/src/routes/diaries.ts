@@ -1,9 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import express from 'express'
 
-import { toNewNotification } from '../Adapters/Adapter.js'
 import { mesaService } from '../service/mesaService.js'
-import { sendPushNotification } from '../service/notifications.js'
 import { notificacionService } from '../service/NotificationService.js'
 import { ProfesorService } from '../service/profesorService.js'
 
@@ -62,23 +60,6 @@ router.get('/profesores', async (req, res) => {
     res.status(500).json({ error: 'Error al obtener los profesores' });
   }
 });
-
-router.post('/notifications', (req, res) => {
-  try {
-    const subscription = req.body.subscription
-    const notificationData = toNewNotification(req.body.notification)
-
-    if (typeof subscription !== 'object' || subscription === null) {
-      res.status(400).json({ error: 'Missing subscription data' })
-      return
-    }
-
-    sendPushNotification(subscription, notificationData)
-    res.status(200).json({ message: 'Notification sent successfully' })
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to send notification' })
-  }
-})
 
 // Obtener todas las mesas
 router.get('/mesas', async (req, res) => {
