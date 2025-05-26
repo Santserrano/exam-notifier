@@ -1,5 +1,4 @@
 import { Resend } from 'resend';
-
 let resend: Resend | null = null;
 
 if (process.env.RESEND_API_KEY) {
