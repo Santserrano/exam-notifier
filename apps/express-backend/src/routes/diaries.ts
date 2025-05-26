@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client'
 import express from 'express'
-
 import { mesaService } from '../service/mesaService.js'
 import { notificacionService } from '../service/NotificationService.js'
 import { ProfesorService } from '../service/profesorService.js'
