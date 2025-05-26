@@ -29,7 +29,8 @@
         "build/**",
         "app/styles/tailwind.css",
         ".cache"
-      ]
+      ],
+      "env": ["NODE_ENV"]
     },
     "@remix-gospel-stack/remix-app#start": {
       "dependsOn": [
