@@ -7,7 +7,8 @@
     "scripts": {
         "dev": "cross-env NODE_ENV=development EXPRESS_PORT=3001 node --loader ts-node/esm src/index.ts",
         "dev:debug": "cross-env NODE_ENV=development node --loader ts-node/esm --inspect src/index.ts",
-        "build": "tsc",
+        "prisma:generate": "prisma generate --schema=../../packages/database/prisma/schema.prisma",
+        "build": "pnpm prisma:generate && tsc",
         "start": "node dist/index.js",
         "start:prod": "cross-env NODE_ENV=production node dist/index.js",
         "test": "jest",
