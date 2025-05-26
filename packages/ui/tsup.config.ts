@@ -43,6 +43,7 @@ export default defineConfig((opts) => {
     format: ["esm"],
     minify: true,
     outDir: "dist",
+    sourcemap: process.env.NODE_ENV !== 'production',
     esbuildOptions: (options) => {
       options.loader = {
         '.css': 'css'
