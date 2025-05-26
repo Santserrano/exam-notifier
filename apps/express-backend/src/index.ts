@@ -4,14 +4,17 @@ import express from 'express'
 
 import diaryRouter from './routes/diaries.js'
 
+// Cargar variables de entorno
 dotenv.config()
 
 const app = express()
-const port = 3005
+const port = process.env.PORT || 3005
 
 // Configuración de CORS
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: process.env.NODE_ENV === 'production' 
+    ? [process.env.FRONTEND_URL || 'https://exam-notifier.vercel.app']
+    : ['http://localhost:3000', 'http://127.0.0.1:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'x-api-key', 'Authorization'],
   credentials: true,
