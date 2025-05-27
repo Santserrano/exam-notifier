@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ../../
+      dockerfile: apps/express-backend/Dockerfile
+    container_name: exam-notifier-backend
+    ports:
+      - "${PORT:-3001}:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=${DATABASE_URL}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - VONAGE_API_KEY=${VONAGE_API_KEY}
+      - VONAGE_API_SECRET=${VONAGE_API_SECRET}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+    volumes:
+      - ../../apps/express-backend/src:/app/apps/express-backend/src
+      - ../../packages/database/src:/app/packages/database/src
+      - ../../packages/business/src:/app/packages/business/src
+      - /app/node_modules
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3001/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
