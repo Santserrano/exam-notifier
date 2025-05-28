@@ -290,7 +290,7 @@ router.patch('/notificaciones/config/:profesorId', async (req, res) => {
     res.status(500).json({ error: 'Error al actualizar la configuración' });
   }
 });
-
+{/* 
 router.post('/notificaciones/subscription', async (req, res) => {
   try {
     const { profesorId, subscription } = req.body;
@@ -300,7 +300,7 @@ router.post('/notificaciones/subscription', async (req, res) => {
     res.status(500).json({ error: 'Error al guardar la suscripción' });
   }
 });
-
+*/}
 router.get('/notificaciones/subscriptions/:profesorId', async (req, res) => {
   try {
     const { profesorId } = req.params;
