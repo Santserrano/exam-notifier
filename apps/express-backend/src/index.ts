@@ -46,12 +46,6 @@ app.use('/api', validateApiKey)
 // Rutas
 app.use('/api/diaries', diaryRouter)
 
-// Ruta de prueba
-app.get('/api/health', (req, res) => {
-  console.log('Health check realizado')
-  res.json({ status: 'ok' })
-})
-
 // Manejo de errores CORS
 app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Error:', err)
