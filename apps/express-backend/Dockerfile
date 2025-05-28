@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm@8.15.4
 
 # Copy package files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
