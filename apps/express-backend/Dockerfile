@@ -9,23 +9,35 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/express-backend/package.json ./apps/express-backend/
 COPY packages/database/package.json ./packages/database/
-COPY packages/business/package.json ./packages/business/
+COPY config/tsconfig/package.json ./config/tsconfig/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy source code
+# Copy source code and config files
 COPY apps/express-backend/src ./apps/express-backend/src
+COPY apps/express-backend/tsup.config.ts ./apps/express-backend/
 COPY packages/database/src ./packages/database/src
-COPY packages/business/src ./packages/business/src
+COPY packages/database/tsup.config.ts ./packages/database/
 
 # Copy tsconfig files
 COPY apps/express-backend/tsconfig.json ./apps/express-backend/
 COPY packages/database/tsconfig.json ./packages/database/
-COPY packages/business/tsconfig.json ./packages/business/
+
+# Copy turbo config
+COPY turbo.json ./
+
+# Copy prisma schema
+COPY packages/database/prisma ./packages/database/prisma
+
+# Copiar el paquete eslint-config completo
+COPY config/eslint ./config/eslint
+
+# Copiar el paquete tsconfig completo
+COPY config/tsconfig ./config/tsconfig
 
 # Build the application
-RUN pnpm run build --filter=express-backend
+RUN pnpm run build --filter=@exam-notifier/database --filter=express-backend
 
 # Production image
 FROM node:20-alpine
@@ -39,10 +51,8 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
 COPY --from=builder /app/apps/express-backend/package.json ./apps/express-backend/
 COPY --from=builder /app/packages/database/package.json ./packages/database/
-COPY --from=builder /app/packages/business/package.json ./packages/business/
 COPY --from=builder /app/apps/express-backend/dist ./apps/express-backend/dist
 COPY --from=builder /app/packages/database/dist ./packages/database/dist
-COPY --from=builder /app/packages/business/dist ./packages/business/dist
 
 # Install production dependencies only
 RUN pnpm install --frozen-lockfile --prod

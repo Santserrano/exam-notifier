@@ -6,20 +6,19 @@ import { notificacionService } from '../service/NotificationService.js'
 import { ProfesorService } from '../service/profesorService.js'
 
 const router = express.Router()
-const profesorService = new ProfesorService()
 const prisma = new PrismaClient()
+
+const profesorService = new ProfesorService()
 
 // Middleware para validar API key
 const validateApiKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const apiKey = req.headers["x-api-key"];
-  console.log('Validando API key:', apiKey);
 
   if (!apiKey || apiKey !== process.env.INTERNAL_API_KEY) {
     console.error('API key inválida');
     return res.status(401).json({ error: 'API key inválida' });
   }
 
-  console.log('API key válida');
   return next();
 };
 
@@ -29,7 +28,6 @@ router.use(validateApiKey);
 // Obtener todas las carreras
 router.get('/carreras', async (req, res) => {
   try {
-    console.log('Obteniendo carreras...');
     const carreras = await prisma.carrera.findMany({
       include: {
         materias: {
@@ -40,7 +38,6 @@ router.get('/carreras', async (req, res) => {
         }
       }
     });
-    console.log('Carreras encontradas:', carreras);
     res.json(carreras);
   } catch (error) {
     console.error('Error al obtener carreras:', error);
@@ -51,9 +48,7 @@ router.get('/carreras', async (req, res) => {
 // Obtener todos los profesores
 router.get('/profesores', async (req, res) => {
   try {
-    console.log('Obteniendo profesores...');
     const profesores = await profesorService.getAllProfesores();
-    console.log('Profesores encontrados:', profesores);
     res.json(profesores);
   } catch (error) {
     console.error('Error al obtener profesores:', error);
@@ -267,12 +262,9 @@ router.put('/profesores/:profesorId/config', async (req, res) => {
 router.get('/notificaciones/config/:profesorId', async (req, res) => {
   try {
     const { profesorId } = req.params;
-    console.log('Obteniendo configuración para profesor:', profesorId);
     const config = await notificacionService.getConfigByProfesor(profesorId);
-    console.log('Configuración encontrada:', config);
     res.json(config || { webPushEnabled: false, emailEnabled: false, smsEnabled: false, avisoPrevioHoras: 24 });
   } catch (error) {
-    console.error('Error al obtener configuración:', error);
     res.status(500).json({ error: 'Error al obtener la configuración' });
   }
 });
@@ -281,12 +273,9 @@ router.put('/notificaciones/config/:profesorId', async (req, res) => {
   try {
     const { profesorId } = req.params;
     const config = req.body;
-    console.log('Actualizando configuración para profesor:', profesorId);
     const updatedConfig = await notificacionService.updateConfig(profesorId, config);
-    console.log('Configuración actualizada:', updatedConfig);
     res.json(updatedConfig);
   } catch (error) {
-    console.error('Error al actualizar configuración:', error);
     res.status(500).json({ error: 'Error al actualizar la configuración' });
   }
 });
@@ -295,12 +284,9 @@ router.patch('/notificaciones/config/:profesorId', async (req, res) => {
   try {
     const { profesorId } = req.params;
     const config = req.body;
-    console.log('Actualizando configuración para profesor (PATCH):', profesorId);
     const updatedConfig = await notificacionService.updateConfig(profesorId, config);
-    console.log('Configuración actualizada:', updatedConfig);
     res.json(updatedConfig);
   } catch (error) {
-    console.error('Error al actualizar configuración:', error);
     res.status(500).json({ error: 'Error al actualizar la configuración' });
   }
 });
@@ -308,12 +294,9 @@ router.patch('/notificaciones/config/:profesorId', async (req, res) => {
 router.post('/notificaciones/subscription', async (req, res) => {
   try {
     const { profesorId, subscription } = req.body;
-    console.log('Guardando suscripción para profesor:', profesorId);
     const savedSubscription = await notificacionService.saveWebPushSubscription(profesorId, subscription);
-    console.log('Suscripción guardada:', savedSubscription);
     res.json({ success: true, config: { webPushEnabled: true } });
   } catch (error) {
-    console.error('Error al guardar suscripción:', error);
     res.status(500).json({ error: 'Error al guardar la suscripción' });
   }
 });
@@ -321,12 +304,9 @@ router.post('/notificaciones/subscription', async (req, res) => {
 router.get('/notificaciones/subscriptions/:profesorId', async (req, res) => {
   try {
     const { profesorId } = req.params;
-    console.log('Obteniendo suscripciones para profesor:', profesorId);
     const subscriptions = await notificacionService.getWebPushSubscriptions(profesorId);
-    console.log('Suscripciones encontradas:', subscriptions);
     res.json(subscriptions);
   } catch (error) {
-    console.error('Error al obtener suscripciones:', error);
     res.status(500).json({ error: 'Error al obtener las suscripciones' });
   }
 });
@@ -334,12 +314,9 @@ router.get('/notificaciones/subscriptions/:profesorId', async (req, res) => {
 router.delete('/notificaciones/subscription/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('Eliminando suscripción:', id);
     const deletedSubscription = await notificacionService.deleteWebPushSubscription(id);
-    console.log('Suscripción eliminada:', deletedSubscription);
     res.json(deletedSubscription);
   } catch (error) {
-    console.error('Error al eliminar suscripción:', error);
     res.status(500).json({ error: 'Error al eliminar la suscripción' });
   }
 });
