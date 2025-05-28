@@ -1,0 +1,133 @@
+import express from "express";
+
+import { notificacionService } from "../service/NotificationService.js";
+
+const router = express.Router();
+
+interface PushSubscription {
+  endpoint: string;
+  keys: {
+    auth: string;
+    p256dh: string;
+  };
+}
+
+interface NotificationConfig {
+  webPushEnabled: boolean;
+  emailEnabled: boolean;
+  smsEnabled: boolean;
+  avisoPrevioHoras: number;
+}
+
+// Middleware para validar API key
+const validateApiKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const apiKey = req.headers["x-api-key"];
+  if (!apiKey || apiKey !== process.env.INTERNAL_API_KEY) {
+    return res.status(401).json({ error: "API key inválida" });
+  }
+  return next();
+};
+
+// Aplicar middleware a todas las rutas
+router.use(validateApiKey);
+
+// PATCH /notificaciones/config/:profesorId
+router.patch('/notificaciones/config/:profesorId', async (req, res) => {
+  const { profesorId } = req.params;
+  const { webPushEnabled, emailEnabled, smsEnabled, avisoPrevioHoras } = req.body;
+
+  try {
+    // Validar que al menos uno de los campos se envíe
+    if (
+      typeof webPushEnabled === 'undefined' &&
+      typeof emailEnabled === 'undefined' &&
+      typeof smsEnabled === 'undefined' &&
+      typeof avisoPrevioHoras === 'undefined'
+    ) {
+      return res.status(400).json({ error: 'No se enviaron campos para actualizar' });
+    }
+
+    // Obtener la configuración actual
+    const currentConfig = await notificacionService.getConfigByProfesor(profesorId);
+    if (!currentConfig) {
+      return res.status(404).json({ error: 'Configuración no encontrada' });
+    }
+
+    // Construir objeto con los campos proporcionados
+    const configToUpdate: NotificationConfig = {
+      webPushEnabled: webPushEnabled ?? currentConfig.webPushEnabled,
+      emailEnabled: emailEnabled ?? currentConfig.emailEnabled,
+      smsEnabled: smsEnabled ?? currentConfig.smsEnabled,
+      avisoPrevioHoras: avisoPrevioHoras ?? currentConfig.avisoPrevioHoras
+    };
+
+    const updated = await notificacionService.updateConfig(profesorId, configToUpdate);
+    return res.json(updated);
+  } catch (error) {
+    return res.status(500).json({ error: 'Error al actualizar configuración' });
+  }
+});
+
+
+// POST /notificaciones/push-subscription
+router.post('/notificaciones/push-subscription', async (req, res) => {
+  try {
+    const { profesorId, subscription } = req.body as { profesorId: string; subscription: PushSubscription };
+
+    if (!profesorId || !subscription) {
+      return res.status(400).json({ error: 'Faltan datos requeridos' });
+    }
+
+    if (!subscription.endpoint || !subscription.keys) {
+      return res.status(400).json({ error: 'Datos de suscripción inválidos' });
+    }
+
+    const saved = await notificacionService.saveWebPushSubscription(profesorId, subscription);
+    return res.status(201).json(saved);
+  } catch (error) {
+    return res.status(500).json({
+      error: 'Error al guardar suscripción',
+      details: error instanceof Error ? error.message : 'Error desconocido'
+    });
+  }
+});
+
+// POST /notificaciones/config
+router.post('/notificaciones/config', async (req, res) => {
+  try {
+    const { profesorId, webPushEnabled } = req.body;
+
+    if (!profesorId) {
+      return res.status(400).json({ error: 'ID de profesor requerido' });
+    }
+
+    const config = await notificacionService.updateConfig(profesorId, {
+      webPushEnabled,
+      emailEnabled: false,
+      smsEnabled: false,
+      avisoPrevioHoras: 24
+    });
+    return res.status(200).json(config);
+  } catch (error) {
+    return res.status(500).json({
+      error: 'Error al actualizar configuración',
+      details: error instanceof Error ? error.message : 'Error desconocido'
+    });
+  }
+});
+
+// GET /notificaciones/config/:profesorId
+router.get('/notificaciones/config/:profesorId', async (req, res) => {
+  const { profesorId } = req.params;
+  try {
+    const config = await notificacionService.getConfigByProfesor(profesorId);
+    if (!config) {
+      return res.status(404).json({ error: 'Configuración no encontrada' });
+    }
+    return res.json(config);
+  } catch (error) {
+    return res.status(500).json({ error: 'Error al obtener configuración' });
+  }
+});
+
+export default router;
