@@ -1,9 +1,6 @@
 import { MesaDeExamen, PrismaClient } from '@prisma/client';
-
-import { enviarEmailNotificacion } from './emailService.js';
+import { notificationFactory } from '../core/notifications/NotificationFactory.js';
 import { notificacionService } from './NotificationService.js';
-import { sendPushToProfesor } from './SendPushNotification.js';
-import { enviarWhatsapp } from './whatsappService.js';
 
 interface MesaData {
     id: number;
@@ -146,35 +143,70 @@ class MesaService {
             const config = await notificacionService.getConfigByProfesor(data.profesor);
             if (config?.webPushEnabled) {
                 const fechaFormateada = new Date(data.fecha).toLocaleDateString();
-                await sendPushToProfesor(
-                    data.profesor,
-                    'Nueva mesa asignada',
-                    `Se te asignó una mesa de ${nuevaMesa.materia.nombre} (${nuevaMesa.carrera.nombre}) para el ${fechaFormateada} en modalidad ${nuevaMesa.modalidad || 'Presencial'}`
-                );
+                const pushNotification = notificationFactory.createNotification('push', {
+                    title: 'Nueva mesa asignada',
+                    body: `Se te asignó una mesa de ${nuevaMesa.materia.nombre} (${nuevaMesa.carrera.nombre}) para el ${fechaFormateada} en modalidad ${nuevaMesa.modalidad || 'Presencial'}`,
+                    recipient: data.profesor
+                });
+                await pushNotification.send();
             }
 
             // Enviar notificación al vocal
             const configVocal = await notificacionService.getConfigByProfesor(data.vocal);
             if (configVocal?.webPushEnabled) {
                 const fechaFormateada = new Date(data.fecha).toLocaleDateString();
-                await sendPushToProfesor(
-                    data.vocal,
-                    'Nueva mesa asignada',
-                    `Se te asignó como vocal en una mesa de ${nuevaMesa.materia.nombre} (${nuevaMesa.carrera.nombre}) para el ${fechaFormateada} en modalidad ${nuevaMesa.modalidad || 'Presencial'}`
-                );
+                const pushNotification = notificationFactory.createNotification('push', {
+                    title: 'Nueva mesa asignada',
+                    body: `Se te asignó como vocal en una mesa de ${nuevaMesa.materia.nombre} (${nuevaMesa.carrera.nombre}) para el ${fechaFormateada} en modalidad ${nuevaMesa.modalidad || 'Presencial'}`,
+                    recipient: data.vocal
+                });
+                await pushNotification.send();
             }
 
-            const profesorData = await this.prisma.profesor.findUnique({ where: { id: data.profesor } });
+            const profesorData = await this.prisma.profesor.findUnique({
+                where: { id: data.profesor }
+            });
+
             if (profesorData) {
                 const fechaObj = new Date(data.fecha);
                 const fechaFormateada = fechaObj.toLocaleDateString();
-                const horaFormateada = fechaObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const contenido = `Hola ${profesorData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada} a las ${horaFormateada}`;
-                if (profesorData.email) {
-                    await enviarEmailNotificacion(profesorData.email, contenido);
+                const horaFormateada = fechaObj.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const notificationData = {
+                    title: 'Nueva mesa asignada',
+                    body: `Hola ${profesorData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada} a las ${horaFormateada}`,
+                    recipient: data.profesor,
+                    metadata: {
+                        mesaId: nuevaMesa.id,
+                        materia: nuevaMesa.materia.nombre,
+                        fecha: fechaFormateada,
+                        hora: horaFormateada
+                    }
+                };
+
+                // Enviar notificaciones según la configuración
+                if (config?.webPushEnabled) {
+                    const pushNotification = notificationFactory.createNotification('push', notificationData);
+                    await pushNotification.send();
                 }
-                if (profesorData.telefono) {
-                    await enviarWhatsapp(profesorData.telefono, contenido);
+
+                if (profesorData.email && config?.emailEnabled) {
+                    const emailNotification = notificationFactory.createNotification('email', {
+                        ...notificationData,
+                        recipient: profesorData.email
+                    });
+                    await emailNotification.send();
+                }
+
+                if (profesorData.telefono && config?.smsEnabled) {
+                    const whatsappNotification = notificationFactory.createNotification('whatsapp', {
+                        ...notificationData,
+                        recipient: profesorData.telefono
+                    });
+                    await whatsappNotification.send();
                 }
             }
 
