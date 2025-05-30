@@ -16,27 +16,17 @@ RUN npm config set registry https://registry.npmjs.org/ && \
     pnpm config set fetch-retry-mintimeout 20000 && \
     pnpm config set fetch-retry-maxtimeout 120000
 
-# Copiar archivos de configuración
-COPY ../../package.json ../../pnpm-lock.yaml ../../pnpm-workspace.yaml ./
-COPY ../../apps/express-backend/package.json ./apps/express-backend/
-COPY ../../packages/database/package.json ./packages/database/
-COPY ../../config/tsconfig/package.json ./config/tsconfig/
+# Copiar solo los archivos necesarios para instalar dependencias
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/express-backend/package.json ./apps/express-backend/
+COPY packages/database/package.json ./packages/database/
+COPY config/tsconfig/package.json ./config/tsconfig/
 
 # Instalar dependencias con configuración optimizada
 RUN pnpm install --frozen-lockfile --prefer-offline
 
-# Copiar schema.prisma
-COPY ../../packages/database/prisma ./packages/database/prisma
-
 # Copiar el código fuente
-COPY ../../apps/express-backend/src ./apps/express-backend/src
-COPY ../../apps/express-backend/tsconfig.json ./apps/express-backend/
-COPY ../../apps/express-backend/tsup.config.ts ./apps/express-backend/
-COPY ../../packages/database/src ./packages/database/src
-COPY ../../packages/database/tsconfig.json ./packages/database/
-COPY ../../packages/database/tsup.config.ts ./packages/database/
-COPY ../../config/tsconfig/base.json ./config/tsconfig/
-COPY ../../config/tsconfig/node18.json ./config/tsconfig/
+COPY . .
 
 # Generar Prisma y compilar
 RUN cd packages/database && pnpm exec prisma generate
