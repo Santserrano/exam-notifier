@@ -90,9 +90,6 @@ importers:
 
   apps/express-backend:
     dependencies:
-      '@exam-notifier/eslint-config':
-        specifier: workspace:*
-        version: link:../../config/eslint
       '@exam-notifier/tsconfig':
         specifier: workspace:*
         version: link:../../config/tsconfig
@@ -473,9 +470,6 @@ importers:
         specifier: ^5.20.0
         version: 5.22.0(prisma@5.22.0)
     devDependencies:
-      '@exam-notifier/eslint-config':
-        specifier: workspace:*
-        version: link:../../config/eslint
       '@exam-notifier/tsconfig':
         specifier: workspace:*
         version: link:../../config/tsconfig
