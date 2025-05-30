@@ -11,7 +11,7 @@ import { Link, useFetcher, useLoaderData } from "@remix-run/react";
 import { Button, Modal } from "@exam-notifier/ui";
 
 import { clerkClient } from "~/utils/clerk.server";
-import { getClientEnv } from "~/utils/env.client";
+import getClientEnv from "~/utils/env.client";
 
 interface Profesor {
   id: string;
