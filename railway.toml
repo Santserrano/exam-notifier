@@ -1,0 +1,13 @@
+[build]
+builder = "nixpacks"
+buildCommand = "pnpm install --frozen-lockfile && pnpm build --filter=express-backend"
+
+[deploy]
+startCommand = "cd apps/express-backend && pnpm start"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 100
+restartPolicyType = "on-failure"
+restartPolicyMaxRetries = 10
+
+[watch]
+paths = ["apps/express-backend/**"] 
