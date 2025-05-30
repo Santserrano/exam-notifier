@@ -16,6 +16,7 @@ import {
 import { customEs } from "./localizations/customEs";
 import fontStyles from "./styles/font.css?url";
 import tailwindStyles from "./styles/tailwind.css?url";
+import { getServerEnv } from "./utils/env.server";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: tailwindStyles },
@@ -26,11 +27,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
   const authData = await rootAuthLoader(args);
   return {
     ...authData,
-    ENV: {
-      API_URL: process.env.API_URL || "http://localhost:3001",
-      VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
-      INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
-    },
+    ENV: getServerEnv(),
   };
 };
 
