@@ -1,14 +1,14 @@
+import { EmailNotification } from './EmailNotification.js';
 import { Notification, NotificationData } from './Notification.js';
 import { PushNotification } from './PushNotification.js';
-import { WhatsAppNotification } from './WhatsAppNotification.js';
-import { EmailNotification } from './EmailNotification.js';
 import { NotificationType } from './types.js';
+import { WhatsAppNotification } from './WhatsAppNotification.js';
 
 export class NotificationFactory {
     createNotification(type: NotificationType, data: NotificationData): Notification {
         switch (type) {
             case 'push':
-                return new PushNotification(data);
+                return PushNotification.getInstance(data);
             case 'whatsapp':
                 return new WhatsAppNotification(data);
             case 'email':

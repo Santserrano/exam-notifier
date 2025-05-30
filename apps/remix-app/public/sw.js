@@ -11,56 +11,32 @@ const urlsToCache = [
 self.skipWaiting();
 
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Instalando...');
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('[Service Worker] Cache abierto');
-        return cache.addAll(urlsToCache);
-      })
-      .then(() => {
-        console.log('[Service Worker] Cache completado');
-        return self.skipWaiting(); // Fuerza la activación inmediata
-      })
-      .catch((error) => {
-        console.error('[Service Worker] Error durante la instalación:', error);
-      })
+      .then((cache) => cache.addAll(urlsToCache))
+      .then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activando...');
   event.waitUntil(
     Promise.all([
-      // Limpiar caches antiguas
+      self.clients.claim(),
       caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
             if (cacheName !== CACHE_NAME) {
-              console.log('[Service Worker] Eliminando cache antigua:', cacheName);
               return caches.delete(cacheName);
             }
           })
         );
-      }),
-      // Tomar control inmediatamente
-      self.clients.claim()
-    ]).then(() => {
-      console.log('[Service Worker] Activación completada');
-      // Notificar a todos los clientes que el Service Worker está activo
-      self.clients.matchAll().then((clients) => {
-        clients.forEach((client) => {
-          client.postMessage({ type: 'SW_ACTIVATED' });
-        });
-      });
-    })
+      })
+    ])
   );
 });
 
 self.addEventListener('message', (event) => {
-  console.log('[Service Worker] Mensaje recibido:', event.data);
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    console.log('[Service Worker] Forzando activación...');
     self.skipWaiting();
   }
 });
@@ -77,44 +53,87 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
+self.addEventListener('pushsubscriptionchange', async function (event) {
+  try {
+    const subscription = await self.registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: event.oldSubscription?.options?.applicationServerKey
+    });
+
+    // Obtener el ID del profesor del cliente
+    const clients = await self.clients.matchAll();
+    const client = clients[0];
+    if (!client) {
+      throw new Error('No se encontró un cliente activo');
+    }
+
+    // Enviar la nueva suscripción al servidor
+    const response = await fetch('http://localhost:3005/api/diaries/notificaciones/push-subscription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.INTERNAL_API_KEY
+      },
+      body: JSON.stringify({
+        subscription: subscription.toJSON()
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al actualizar la suscripción en el servidor');
+    }
+  } catch (error) {
+    console.error('[Service Worker] Error:', error);
+  }
+});
+
 self.addEventListener('push', function (event) {
-  if (event.data) {
+  if (!event.data) return;
+
+  try {
     const data = event.data.json();
+
     const options = {
       body: data.body,
-      icon: '/icon-ucp.png',
-      badge: '/icon-ucp.png',
-      vibrate: [100, 50, 100],
-      data: {
-        dateOfArrival: Date.now(),
-        primaryKey: 1
-      },
+      icon: data.icon || '/icon-ucp.png',
+      badge: data.badge || '/icon-ucp.png',
+      data: data.data || {},
       actions: [
         {
           action: 'explore',
-          title: 'Ver detalles',
-          icon: '/checkmark.png'
-        },
-        {
-          action: 'close',
-          title: 'Cerrar',
-          icon: '/xmark.png'
+          title: 'Ver detalles'
         }
-      ]
+      ],
+      requireInteraction: true,
+      vibrate: [200, 100, 200]
     };
 
     event.waitUntil(
       self.registration.showNotification(data.title, options)
     );
+  } catch (error) {
+    console.error('[Service Worker] Error:', error);
   }
 });
 
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
 
-  if (event.action === 'explore') {
-    event.waitUntil(
-      clients.openWindow('/mesas')
-    );
-  }
+  const urlToOpen = event.notification.data?.url || '/mesas';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(function (clientList) {
+        // Si hay una ventana abierta, enfócala
+        for (const client of clientList) {
+          if (client.url === urlToOpen && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        // Si no hay ventana abierta, abre una nueva
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
+      })
+  );
 });

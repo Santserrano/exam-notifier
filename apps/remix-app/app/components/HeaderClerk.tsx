@@ -45,26 +45,31 @@ export function HeaderClerk() {
       try {
         const response = await fetch(`${env.API_URL}/api/diaries/notificaciones/config/${user.id}`, {
           headers: {
-            'x-api-key': env.INTERNAL_API_KEY
+            'x-api-key': env.INTERNAL_API_KEY,
+            'Content-Type': 'application/json'
           }
         });
         
-        if (response.ok) {
-          const data = await response.json();
-          setConfig({
-            webPushEnabled: data.webPushEnabled || false,
-            smsEnabled: data.smsEnabled || false,
-            emailEnabled: data.emailEnabled || false
-          });
-          setIsSubscribed(data.webPushEnabled || false);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Error al obtener configuración: ${response.statusText}`);
         }
+
+        const data = await response.json();
+        
+        setConfig({
+          webPushEnabled: data.webPushEnabled || false,
+          smsEnabled: data.smsEnabled || false,
+          emailEnabled: data.emailEnabled || false
+        });
+        setIsSubscribed(data.webPushEnabled || false);
       } catch (error) {
-        console.error('Error al obtener configuración:', error);
+        showNotification(error instanceof Error ? error.message : 'Error al obtener configuración', 'error');
       }
     };
 
     fetchConfig();
-  }, [user?.id, env.INTERNAL_API_KEY]);
+  }, [user?.id, env.INTERNAL_API_KEY, env.API_URL]);
 
   const showNotification = (message: string, type: 'success' | 'error') => {
     setToastMessage(message);
@@ -73,64 +78,40 @@ export function HeaderClerk() {
     setTimeout(() => setShowToast(false), 5000);
   };
 
-  const updateNotificationConfig = async (fields: Partial<NotificationConfig>) => {
-    if (!user?.id) return;
-    await fetch(`${env.API_URL}/api/diaries/notificaciones/config/${user.id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': env.INTERNAL_API_KEY
-      },
-      body: JSON.stringify(fields)
-    });
-  };
-
-  const handleToggleNotification = async (type: keyof NotificationConfig) => {
-    if (!user?.id) return;
+  const handleToggleNotification = async (type: 'webPush' | 'email' | 'whatsapp') => {
+    if (!user?.id) {
+      showNotification('No hay usuario autenticado', 'error');
+      return;
+    }
 
     try {
-      setIsLoading(true);
-      setError(null);
-      const newConfig = {
-        ...config,
-        [type]: !config[type]
-      };
-
-      const getNotificationMessage = (type: keyof NotificationConfig, enabled: boolean) => {
-        switch (type) {
-          case 'webPushEnabled':
-            return `Notificaciones del navegador ${enabled ? 'activadas' : 'desactivadas'}`;
-          case 'emailEnabled':
-            return enabled 
-              ? 'Notificaciones por email activadas. Recibirás un email 24 horas antes de cada mesa.'
-              : 'Notificaciones por email desactivadas';
-          case 'smsEnabled':
-            return enabled 
-              ? 'Notificaciones por WhatsApp activadas. Recibirás un mensaje 24 horas antes de cada mesa.'
-              : 'Notificaciones por WhatsApp desactivadas';
-          default:
-            return '';
-        }
-      };
-
-      if (type === 'webPushEnabled' && newConfig.webPushEnabled) {
-        if (!('serviceWorker' in navigator)) {
-          throw new Error('Tu navegador no soporta notificaciones push');
+      if (type === 'webPush') {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+          showNotification('Push notifications no soportadas', 'error');
+          return;
         }
 
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
-          throw new Error('Permiso de notificaciones denegado');
-        }
+        // Registrar el Service Worker
+        const registration = await navigator.serviceWorker.register('/sw.js');
 
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: env.VAPID_PUBLIC_KEY
-        });
+        // Obtener la suscripción actual
+        let subscription = await registration.pushManager.getSubscription();
 
-        try {
-          const response = await fetch(`${env.API_URL}/api/diaries/notificaciones/subscription`, {
+        if (!subscription) {
+          // Crear nueva suscripción
+          const publicKey = env.VAPID_PUBLIC_KEY;
+          if (!publicKey) {
+            showNotification('Error en la configuración de notificaciones', 'error');
+            return;
+          }
+
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: publicKey
+          });
+
+          // Enviar la suscripción al servidor
+          const response = await fetch(`${env.API_URL}/api/diaries/notificaciones/push-subscription`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -138,186 +119,57 @@ export function HeaderClerk() {
             },
             body: JSON.stringify({
               profesorId: user.id,
-              subscription
+              subscription: subscription.toJSON()
             })
           });
 
           if (!response.ok) {
-            throw new Error('Error al registrar la suscripción');
+            throw new Error('Error al guardar suscripción');
           }
-        } catch (error) {
-          console.error('Error al registrar suscripción:', error);
-          newConfig.webPushEnabled = false;
-          throw new Error('No se pudo registrar la suscripción. Por favor, intenta nuevamente.');
         }
-      }
 
-      try {
-        await updateNotificationConfig({ [type]: newConfig[type] });
-
-        setConfig(newConfig);
-        setIsSubscribed(newConfig.webPushEnabled);
-        showNotification(getNotificationMessage(type, newConfig[type]), 'success');
-      } catch (error) {
-        console.error('Error al actualizar configuración:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Error al actualizar configuración';
-        setError(errorMessage);
-        showNotification(errorMessage, 'error');
-      } finally {
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error al actualizar configuración';
-      setError(errorMessage);
-      showNotification(errorMessage, 'error');
-    }
-  };
-
-  const waitForServiceWorker = async (registration: ServiceWorkerRegistration): Promise<ServiceWorkerRegistration> => {
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Timeout esperando activación del Service Worker'));
-      }, 10000);
-
-      console.log('Estado inicial del Service Worker:', {
-        active: !!registration.active,
-        installing: !!registration.installing,
-        waiting: !!registration.waiting,
-        scope: registration.scope
-      });
-
-      if (registration.active) {
-        console.log('Service Worker ya está activo');
-        clearTimeout(timeout);
-        resolve(registration);
-        return;
-      }
-
-      const checkState = () => {
-        console.log('Verificando estado del Service Worker:', {
-          active: !!registration.active,
-          installing: !!registration.installing,
-          waiting: !!registration.waiting
-        });
-
-        if (registration.active) {
-          console.log('Service Worker activado');
-          clearTimeout(timeout);
-          resolve(registration);
-          return true;
-        }
-        return false;
-      };
-
-      if (checkState()) return;
-
-      registration.addEventListener('updatefound', () => {
-        console.log('Service Worker actualización encontrada');
-        if (registration.installing) {
-          registration.installing.addEventListener('statechange', () => {
-            console.log('Estado del Service Worker cambiado:', registration.installing?.state);
-            if (registration.installing?.state === 'installed') {
-              console.log('Service Worker instalado, forzando activación');
-              registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
-            }
-            checkState();
-          });
-        }
-      });
-
-      const interval = setInterval(() => {
-        if (checkState()) {
-          clearInterval(interval);
-        }
-      }, 1000);
-
-      setTimeout(() => {
-        clearInterval(interval);
-      }, 10000);
-    });
-  };
-
-  const handleNotificationToggle = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!user || !env?.VAPID_PUBLIC_KEY || !env?.INTERNAL_API_KEY) {
-      setError('Configuración incompleta');
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      if (!('serviceWorker' in navigator)) {
-        throw new Error('Service Workers no soportados');
-      }
-
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      console.log('Service Workers existentes:', registrations.length);
-      
-      for (const registration of registrations) {
-        console.log('Desregistrando Service Worker:', registration.scope);
-        await registration.unregister();
-      }
-
-      console.log('Registrando nuevo Service Worker...');
-      const registration = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/'
-      });
-      console.log('Service Worker registrado:', registration);
-
-      try {
-        await waitForServiceWorker(registration);
-        console.log('Service Worker activado exitosamente');
-      } catch (error) {
-        console.error('Error esperando activación:', error);
-        throw new Error('No se pudo activar el Service Worker');
-      }
-
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        throw new Error('Permiso de notificaciones denegado');
-      }
-
-      if (!isSubscribed) {
-        console.log('Intentando suscribirse...');
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: env.VAPID_PUBLIC_KEY
-        });
-
-        console.log('Suscripción creada:', subscription);
-
-        await fetch(`${env.API_URL}/api/diaries/notificaciones/subscription`, {
-          method: 'POST',
+        // Actualizar la configuración
+        const configResponse = await fetch(`${env.API_URL}/api/diaries/notificaciones/config/${user.id}`, {
+          method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
             'x-api-key': env.INTERNAL_API_KEY
           },
           body: JSON.stringify({
-            profesorId: user.id,
-            subscription
+            webPushEnabled: true
           })
         });
 
-        setIsSubscribed(true);
-        showNotification('¡Notificaciones activadas con éxito!', 'success');
-      } else {
-        const subscription = await registration.pushManager.getSubscription();
-        if (subscription) {
-          await subscription.unsubscribe();
-          setIsSubscribed(false);
-          showNotification('Notificaciones desactivadas', 'success');
+        if (!configResponse.ok) {
+          throw new Error('Error al actualizar configuración');
         }
+
+        const updatedConfig = await configResponse.json();
+        setConfig(updatedConfig);
+        showNotification('Notificaciones activadas correctamente', 'success');
+      } else {
+        // Actualizar configuración para email o WhatsApp
+        const configResponse = await fetch(`${env.API_URL}/api/diaries/notificaciones/config/${user.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': env.INTERNAL_API_KEY
+          },
+          body: JSON.stringify({
+            [type === 'email' ? 'emailEnabled' : 'smsEnabled']: !config[type === 'email' ? 'emailEnabled' : 'smsEnabled']
+          })
+        });
+
+        if (!configResponse.ok) {
+          throw new Error('Error al actualizar configuración');
+        }
+
+        const updatedConfig = await configResponse.json();
+        setConfig(updatedConfig);
+        showNotification(`${type === 'email' ? 'Email' : 'WhatsApp'} ${updatedConfig[type === 'email' ? 'emailEnabled' : 'smsEnabled'] ? 'activado' : 'desactivado'}`, 'success');
       }
     } catch (error) {
-      console.error('Error al manejar notificaciones:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      setError(errorMessage);
-      showNotification(errorMessage, 'error');
-    } finally {
-      setIsLoading(false);
+      showNotification(error instanceof Error ? error.message : 'Error al actualizar notificaciones', 'error');
     }
   };
 
@@ -344,7 +196,6 @@ export function HeaderClerk() {
       setIsEditingPhone(false);
       showNotification('Número de teléfono actualizado', 'success');
     } catch (error) {
-      console.error('Error:', error);
       showNotification(error instanceof Error ? error.message : 'Error al actualizar teléfono', 'error');
     }
   };
@@ -366,7 +217,7 @@ export function HeaderClerk() {
           <div className="relative">
             <div className="flex items-center gap-2">
               <Button
-                onClick={() => handleToggleNotification('webPushEnabled')}
+                onClick={() => handleToggleNotification('webPush')}
                 disabled={isLoading || config.webPushEnabled}
                 className={`w-10 h-10 rounded-full p-0 flex items-center justify-center ${
                   config.webPushEnabled 
@@ -408,7 +259,7 @@ export function HeaderClerk() {
                       <span className="text-xs text-gray-500">Recibe alertas en tu navegador</span>
                     </div>
                     <button
-                      onClick={() => handleToggleNotification('webPushEnabled')}
+                      onClick={() => handleToggleNotification('webPush')}
                       className={`w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${
                         config.webPushEnabled ? 'bg-green-500' : 'bg-gray-300'
                       }`}
@@ -424,7 +275,7 @@ export function HeaderClerk() {
                       <span className="text-xs text-gray-500">Recibe alertas en tu WhatsApp</span>
                     </div>
                     <button
-                      onClick={() => handleToggleNotification('smsEnabled')}
+                      onClick={() => handleToggleNotification('whatsapp')}
                       className={`w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${
                         config.smsEnabled ? 'bg-green-500' : 'bg-gray-300'
                       }`}
@@ -440,7 +291,7 @@ export function HeaderClerk() {
                       <span className="text-xs text-gray-500">Recibe alertas en tu correo</span>
                     </div>
                     <button
-                      onClick={() => handleToggleNotification('emailEnabled')}
+                      onClick={() => handleToggleNotification('email')}
                       className={`w-12 h-6 rounded-full transition-colors duration-200 ease-in-out ${
                         config.emailEnabled ? 'bg-green-500' : 'bg-gray-300'
                       }`}
@@ -469,4 +320,3 @@ export function HeaderClerk() {
 }
 
 export default HeaderClerk;
-

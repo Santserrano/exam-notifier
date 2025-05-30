@@ -28,6 +28,20 @@ class NotificationService {
             const config = await this.prisma.notificacionConfig.findUnique({
                 where: { profesorId }
             });
+
+            if (!config) {
+                // Si no existe configuración, crear una por defecto
+                return await this.prisma.notificacionConfig.create({
+                    data: {
+                        profesorId,
+                        webPushEnabled: false,
+                        emailEnabled: false,
+                        smsEnabled: false,
+                        avisoPrevioHoras: 24
+                    }
+                });
+            }
+
             console.log('Configuración encontrada:', config);
             return config;
         } catch (error) {

@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 import { Notification, NotificationData } from './Notification.js';
 
 export class WhatsAppNotification implements Notification {
