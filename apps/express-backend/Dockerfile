@@ -23,7 +23,7 @@ COPY packages/database/package.json ./packages/database/
 COPY config/tsconfig/package.json ./config/tsconfig/
 
 # Instalar dependencias con configuración optimizada
-RUN pnpm install --frozen-lockfile --prefer-offline
+RUN pnpm install --no-frozen-lockfile --prefer-offline
 
 # Copiar el código fuente
 COPY . .
@@ -61,7 +61,7 @@ COPY --from=builder /app/packages/database/dist ./packages/database/dist
 COPY --from=builder /app/packages/database/prisma ./packages/database/prisma
 
 # Instalar solo dependencias de producción
-RUN pnpm install --prod --frozen-lockfile --prefer-offline
+RUN pnpm install --prod --no-frozen-lockfile --prefer-offline
 
 # Variables de entorno
 ENV NODE_ENV=production
