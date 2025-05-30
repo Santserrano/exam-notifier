@@ -59,7 +59,7 @@ export class PushNotification implements Notification {
             const payload = JSON.stringify({
                 title: this.data.title,
                 body: this.data.body,
-                data: this.data.metadata || {}
+                data: this.data.metadata ?? {}
             });
 
             // Enviar la notificación a cada suscripción

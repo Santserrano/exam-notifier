@@ -1,0 +1,21 @@
+touch codacy-fix.patch
+nano codacy-fix.patch
+
+diff --git a/apps/remix-app/app/components/HeaderClerk.tsx b/apps/remix-app/app/components/HeaderClerk.tsx
+--- a/apps/remix-app/app/components/HeaderClerk.tsx
++++ b/apps/remix-app/app/components/HeaderClerk.tsx
+@@ -159,1 +159,1 @@
+-            [type === 'email' ? 'emailEnabled' : 'smsEnabled']: !config?.[type === 'email' ? 'emailEnabled' : 'smsEnabled']
++            [type === 'email' ? 'emailEnabled' : 'smsEnabled']: !config[type === 'email' ? 'emailEnabled' : 'smsEnabled']
+diff --git a/apps/express-backend/src/core/notifications/PushNotification.ts b/apps/express-backend/src/core/notifications/PushNotification.ts
+--- a/apps/express-backend/src/core/notifications/PushNotification.ts
++++ b/apps/express-backend/src/core/notifications/PushNotification.ts
+@@ -62,1 +62,1 @@
+-                data: this.data.metadata || {}
++                data: this.data.metadata ?? {}
+diff --git a/apps/express-backend/src/core/notifications/Notification.ts b/apps/express-backend/src/core/notifications/Notification.ts
+--- a/apps/express-backend/src/core/notifications/Notification.ts
++++ b/apps/express-backend/src/core/notifications/Notification.ts
+@@ -5,1 +5,1 @@
+-    metadata?: Record<string, any>;
++    metadata?: Record<string, unknown>;

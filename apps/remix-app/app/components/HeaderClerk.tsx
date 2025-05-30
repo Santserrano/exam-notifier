@@ -156,7 +156,7 @@ export function HeaderClerk() {
             'x-api-key': env.INTERNAL_API_KEY
           },
           body: JSON.stringify({
-            [type === 'email' ? 'emailEnabled' : 'smsEnabled']: !config?.[type === 'email' ? 'emailEnabled' : 'smsEnabled']
+            [type === 'email' ? 'emailEnabled' : 'smsEnabled']: !config[type === 'email' ? 'emailEnabled' : 'smsEnabled']
           })
         });
 
