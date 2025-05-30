@@ -48,11 +48,6 @@ app.use('/api', validateApiKey)
 app.use('/api/diaries', diaryRouter)
 app.use('/api/diaries/notificaciones', notificationsRouter)
 
-// Ruta de salud
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' })
-})
-
 // Configuración de notificaciones
 app.get('/api/notifications/config/:profesorId', async (req, res) => {
   try {
