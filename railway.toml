@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "pnpm install --no-frozen-lockfile && pnpm build --filter=express-backend"
+buildCommand = "pnpm install && pnpm build --filter=express-backend"
 
 [deploy]
 startCommand = "cd apps/express-backend && pnpm start"
