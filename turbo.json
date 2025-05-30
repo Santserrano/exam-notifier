@@ -15,7 +15,17 @@
     "DATABASE_PATH",
     "LITEFS_DIR",
     "SUPABASE_URL",
-    "SUPABASE_ANON_KEY"
+    "SUPABASE_ANON_KEY",
+    "DIRECT_URL",
+    "INTERNAL_API_KEY",
+    "VAPID_PUBLIC_KEY",
+    "VAPID_PRIVATE_KEY",
+    "RESEND_API_KEY",
+    "VONAGE_API_KEY",
+    "SESSION_SECRET",
+    "CLERK_PUBLISHABLE_KEY",
+    "CLERK_SECRET_KEY",
+    "API_URL"
   ],
   "tasks": {
     "build": {
@@ -30,7 +40,9 @@
         "app/styles/tailwind.css",
         ".cache"
       ],
-      "env": ["NODE_ENV"]
+      "env": [
+        "NODE_ENV"
+      ]
     },
     "@remix-gospel-stack/remix-app#start": {
       "dependsOn": [
