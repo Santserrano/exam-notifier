@@ -2,7 +2,6 @@ import { PrismaClient } from '@prisma/client'
 import express from 'express'
 
 import { mesaService } from '../service/mesaService.js'
-import { notificacionService } from '../service/NotificationService.js'
 import { ProfesorService } from '../service/profesorService.js'
 
 const router = express.Router()
@@ -15,7 +14,6 @@ const validateApiKey = (req: express.Request, res: express.Response, next: expre
   const apiKey = req.headers["x-api-key"];
 
   if (!apiKey || apiKey !== process.env.INTERNAL_API_KEY) {
-    console.error('API key inválida');
     return res.status(401).json({ error: 'API key inválida' });
   }
 
@@ -40,7 +38,6 @@ router.get('/carreras', async (req, res) => {
     });
     res.json(carreras);
   } catch (error) {
-    console.error('Error al obtener carreras:', error);
     res.status(500).json({ error: 'Error al obtener las carreras' });
   }
 });
@@ -51,7 +48,6 @@ router.get('/profesores', async (req, res) => {
     const profesores = await profesorService.getAllProfesores();
     res.json(profesores);
   } catch (error) {
-    console.error('Error al obtener profesores:', error);
     res.status(500).json({ error: 'Error al obtener los profesores' });
   }
 });
@@ -59,12 +55,9 @@ router.get('/profesores', async (req, res) => {
 // Obtener todas las mesas
 router.get('/mesas', async (req, res) => {
   try {
-    console.log('Obteniendo mesas...');
     const mesas = await mesaService.getAllMesas();
-    console.log('Mesas encontradas:', mesas);
     res.json(mesas);
   } catch (error) {
-    console.error('Error al obtener mesas:', error);
     res.status(500).json({ error: 'Error al obtener las mesas' });
   }
 });
@@ -94,7 +87,7 @@ router.post('/mesas', async (req, res) => {
 
     if (camposFaltantes.length > 0) {
       return res.status(400).json({
-        error: `Campos requeridos faltantes: ${camposFaltantes.join(', ')}`
+        error: 'Campos requeridos faltantes'
       });
     }
 
@@ -132,7 +125,7 @@ router.post('/mesas', async (req, res) => {
     return res.status(201).json(nuevaMesa);
   } catch (error) {
     return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Error al crear la mesa'
+      error: 'Error al crear la mesa'
     });
   }
 });
@@ -171,12 +164,9 @@ router.delete('/mesas/:id', async (req, res) => {
 router.get('/mesas/profesor/:profesorId', async (req, res) => {
   try {
     const { profesorId } = req.params;
-    console.log('Obteniendo mesas para profesor:', profesorId);
     const mesas = await mesaService.getMesasByProfesorId(profesorId);
-    console.log('Mesas encontradas para profesor:', mesas);
     res.json(mesas);
   } catch (error) {
-    console.error('Error al obtener mesas del profesor:', error);
     res.status(500).json({ error: 'Error al obtener las mesas del profesor' });
   }
 });
@@ -251,73 +241,7 @@ router.put('/profesores/:profesorId/config', async (req, res) => {
       profesor: updatedProfesor
     });
   } catch (error) {
-    return res.status(500).json({
-      error: 'Error al actualizar la configuración del profesor',
-      details: error instanceof Error ? error.message : 'Error desconocido'
-    });
-  }
-});
-
-// Rutas de notificaciones
-router.get('/notificaciones/config/:profesorId', async (req, res) => {
-  try {
-    const { profesorId } = req.params;
-    const config = await notificacionService.getConfigByProfesor(profesorId);
-    res.json(config || { webPushEnabled: false, emailEnabled: false, smsEnabled: false, avisoPrevioHoras: 24 });
-  } catch (error) {
-    res.status(500).json({ error: 'Error al obtener la configuración' });
-  }
-});
-
-router.put('/notificaciones/config/:profesorId', async (req, res) => {
-  try {
-    const { profesorId } = req.params;
-    const config = req.body;
-    const updatedConfig = await notificacionService.updateConfig(profesorId, config);
-    res.json(updatedConfig);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al actualizar la configuración' });
-  }
-});
-
-router.patch('/notificaciones/config/:profesorId', async (req, res) => {
-  try {
-    const { profesorId } = req.params;
-    const config = req.body;
-    const updatedConfig = await notificacionService.updateConfig(profesorId, config);
-    res.json(updatedConfig);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al actualizar la configuración' });
-  }
-});
-{/* 
-router.post('/notificaciones/subscription', async (req, res) => {
-  try {
-    const { profesorId, subscription } = req.body;
-    const savedSubscription = await notificacionService.saveWebPushSubscription(profesorId, subscription);
-    res.json({ success: true, config: { webPushEnabled: true } });
-  } catch (error) {
-    res.status(500).json({ error: 'Error al guardar la suscripción' });
-  }
-});
-*/}
-router.get('/notificaciones/subscriptions/:profesorId', async (req, res) => {
-  try {
-    const { profesorId } = req.params;
-    const subscriptions = await notificacionService.getWebPushSubscriptions(profesorId);
-    res.json(subscriptions);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al obtener las suscripciones' });
-  }
-});
-
-router.delete('/notificaciones/subscription/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const deletedSubscription = await notificacionService.deleteWebPushSubscription(id);
-    res.json(deletedSubscription);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al eliminar la suscripción' });
+    return res.status(500).json({ error: 'Error al actualizar la configuración' });
   }
 });
 

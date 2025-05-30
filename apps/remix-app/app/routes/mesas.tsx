@@ -32,7 +32,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
   if (role !== "profesor") return redirect("/");
 
   try {
-    const response = await fetch(`http://localhost:3005/api/diaries/mesas/profesor/${userId}`, {
+    const response = await fetch(`${process.env.API_URL}/api/diaries/mesas/profesor/${userId}`, {
       headers: {
         "x-api-key": process.env.INTERNAL_API_KEY || "",
         "Content-Type": "application/json"
@@ -44,7 +44,6 @@ export const loader = async (args: LoaderFunctionArgs) => {
     }
 
     const mesasRaw = await response.json();
-    console.log('Mesas raw del backend:', mesasRaw);
 
     const meses = ["ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sep.", "oct.", "nov.", "dic."];
     const mesas = mesasRaw.map((m: any, index: number) => {
@@ -79,14 +78,14 @@ export const loader = async (args: LoaderFunctionArgs) => {
       }
     });
   } catch (error) {
-    console.error("Error en el loader:", error);
     return json({ 
       userId, 
       role, 
       mesas: [],
       env: {
         VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
-        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY
+        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
+        API_URL: process.env.API_URL
       }
     });
   }
@@ -106,8 +105,6 @@ const alumnosMock = [
 export default function MesasRoute() {
   const { mesas, userId } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
-
-  console.log('Mesas en el componente:', mesas); // Debug log
 
   const search = searchParams.get("search") ?? "";
   const carrera = searchParams.get("carrera") ?? "";
@@ -139,10 +136,7 @@ export default function MesasRoute() {
     (m: any) => m.id?.toString() === detalleId || m.id?.toString() === alumnosId
   );
 
-  console.log('Mesa detalle encontrada:', mesaDetalle); // Debug log
-
   function DetalleMesa({ mesa }: { mesa: any }) {
-    console.log('Renderizando DetalleMesa con mesa:', mesa); // Debug log
     const fechaObj = new Date(mesa.fechaOriginal);
     const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
     const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -285,7 +279,6 @@ export default function MesasRoute() {
             <div className="text-center text-gray-500 py-8">No hay mesas para mostrar.</div>
           ) : (
             mesasFiltradas.map((mesa: any) => {
-              console.log('Renderizando mesa:', mesa);
               return (
                 <MesaCard
                   key={mesa.id}

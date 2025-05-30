@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+
 import { Notification, NotificationData } from './Notification.js';
 
 export class EmailNotification implements Notification {

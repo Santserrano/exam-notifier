@@ -1,23 +1,10 @@
-import express from "express";
+import { PrismaClient } from '@prisma/client';
+import express from 'express';
 
-import { notificacionService } from "../service/NotificationService.js";
+import { notificacionService } from '../service/NotificationService.js';
 
 const router = express.Router();
-
-interface PushSubscription {
-  endpoint: string;
-  keys: {
-    auth: string;
-    p256dh: string;
-  };
-}
-
-interface NotificationConfig {
-  webPushEnabled: boolean;
-  emailEnabled: boolean;
-  smsEnabled: boolean;
-  avisoPrevioHoras: number;
-}
+const prisma = new PrismaClient();
 
 // Middleware para validar API key
 const validateApiKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -31,20 +18,33 @@ const validateApiKey = (req: express.Request, res: express.Response, next: expre
 // Aplicar middleware a todas las rutas
 router.use(validateApiKey);
 
-// PATCH /notificaciones/config/:profesorId
-router.patch('/notificaciones/config/:profesorId', async (req, res) => {
+// GET /api/diaries/notificaciones/config/:profesorId
+router.get('/config/:profesorId', async (req, res) => {
   const { profesorId } = req.params;
-  const { webPushEnabled, emailEnabled, smsEnabled, avisoPrevioHoras } = req.body;
+  try {
+    const config = await notificacionService.getConfigByProfesor(profesorId);
+    if (!config) {
+      return res.status(404).json({ error: 'Configuración no encontrada' });
+    }
+    return res.status(200).json(config);
+  } catch (error) {
+    return res.status(500).json({ error: 'Error al obtener configuración' });
+  }
+});
+
+// PATCH /api/diaries/notificaciones/config/:profesorId
+router.patch('/config/:profesorId', async (req, res) => {
+  const { profesorId } = req.params;
+  const updates = req.body;
 
   try {
-    // Validar que al menos uno de los campos se envíe
-    if (
-      typeof webPushEnabled === 'undefined' &&
-      typeof emailEnabled === 'undefined' &&
-      typeof smsEnabled === 'undefined' &&
-      typeof avisoPrevioHoras === 'undefined'
-    ) {
-      return res.status(400).json({ error: 'No se enviaron campos para actualizar' });
+    // Verificar que el profesor existe
+    const profesor = await prisma.profesor.findUnique({
+      where: { id: profesorId }
+    });
+
+    if (!profesor) {
+      return res.status(404).json({ error: 'Profesor no encontrado' });
     }
 
     // Obtener la configuración actual
@@ -53,80 +53,100 @@ router.patch('/notificaciones/config/:profesorId', async (req, res) => {
       return res.status(404).json({ error: 'Configuración no encontrada' });
     }
 
-    // Construir objeto con los campos proporcionados
-    const configToUpdate: NotificationConfig = {
-      webPushEnabled: webPushEnabled ?? currentConfig.webPushEnabled,
-      emailEnabled: emailEnabled ?? currentConfig.emailEnabled,
-      smsEnabled: smsEnabled ?? currentConfig.smsEnabled,
-      avisoPrevioHoras: avisoPrevioHoras ?? currentConfig.avisoPrevioHoras
-    };
+    // Si se está desactivando webPush, eliminar la suscripción
+    if (updates.webPushEnabled === false && currentConfig.webPushEnabled) {
+      const subscriptions = await notificacionService.getWebPushSubscriptions(profesorId);
+      for (const sub of subscriptions) {
+        await notificacionService.deleteWebPushSubscription(sub.id);
+      }
+    }
 
-    const updated = await notificacionService.updateConfig(profesorId, configToUpdate);
-    return res.json(updated);
+    // Actualizar la configuración
+    const updated = await notificacionService.updateConfig(profesorId, {
+      ...currentConfig,
+      ...updates
+    });
+
+    return res.status(200).json(updated);
   } catch (error) {
-    return res.status(500).json({ error: 'Error al actualizar configuración' });
+    return res.status(500).json({
+      error: 'Error al actualizar configuración'
+    });
   }
 });
 
-
-// POST /notificaciones/push-subscription
-router.post('/notificaciones/push-subscription', async (req, res) => {
+// POST /api/diaries/notificaciones/push-subscription
+router.post('/push-subscription', async (req, res) => {
   try {
-    const { profesorId, subscription } = req.body as { profesorId: string; subscription: PushSubscription };
+    const { profesorId, subscription } = req.body;
 
     if (!profesorId || !subscription) {
-      return res.status(400).json({ error: 'Faltan datos requeridos' });
+      return res.status(400).json({
+        error: 'Faltan datos requeridos'
+      });
     }
 
     if (!subscription.endpoint || !subscription.keys) {
-      return res.status(400).json({ error: 'Datos de suscripción inválidos' });
+      return res.status(400).json({
+        error: 'Datos de suscripción inválidos'
+      });
     }
 
+    // Verificar que el profesor existe
+    const profesor = await prisma.profesor.findUnique({
+      where: { id: profesorId }
+    });
+
+    if (!profesor) {
+      return res.status(404).json({
+        error: 'Profesor no encontrado'
+      });
+    }
+
+    // Guardar la suscripción
     const saved = await notificacionService.saveWebPushSubscription(profesorId, subscription);
-    return res.status(201).json(saved);
+
+    // Actualizar la configuración del profesor
+    const currentConfig = await notificacionService.getConfigByProfesor(profesorId);
+    await notificacionService.updateConfig(profesorId, {
+      ...currentConfig,
+      webPushEnabled: true
+    });
+
+    return res.status(201).json({
+      message: 'Suscripción guardada exitosamente',
+      subscription: saved,
+      config: {
+        ...currentConfig,
+        webPushEnabled: true
+      }
+    });
   } catch (error) {
     return res.status(500).json({
-      error: 'Error al guardar suscripción',
-      details: error instanceof Error ? error.message : 'Error desconocido'
+      error: 'Error al procesar la solicitud'
     });
   }
 });
 
-// POST /notificaciones/config
-router.post('/notificaciones/config', async (req, res) => {
+// GET /api/diaries/notificaciones/subscriptions/:profesorId
+router.get('/subscriptions/:profesorId', async (req, res) => {
   try {
-    const { profesorId, webPushEnabled } = req.body;
-
-    if (!profesorId) {
-      return res.status(400).json({ error: 'ID de profesor requerido' });
-    }
-
-    const config = await notificacionService.updateConfig(profesorId, {
-      webPushEnabled,
-      emailEnabled: false,
-      smsEnabled: false,
-      avisoPrevioHoras: 24
-    });
-    return res.status(200).json(config);
+    const { profesorId } = req.params;
+    const subscriptions = await notificacionService.getWebPushSubscriptions(profesorId);
+    return res.status(200).json(subscriptions);
   } catch (error) {
-    return res.status(500).json({
-      error: 'Error al actualizar configuración',
-      details: error instanceof Error ? error.message : 'Error desconocido'
-    });
+    return res.status(500).json({ error: 'Error al obtener las suscripciones' });
   }
 });
 
-// GET /notificaciones/config/:profesorId
-router.get('/notificaciones/config/:profesorId', async (req, res) => {
-  const { profesorId } = req.params;
+// DELETE /api/diaries/notificaciones/subscription/:id
+router.delete('/subscription/:id', async (req, res) => {
   try {
-    const config = await notificacionService.getConfigByProfesor(profesorId);
-    if (!config) {
-      return res.status(404).json({ error: 'Configuración no encontrada' });
-    }
-    return res.json(config);
+    const { id } = req.params;
+    const deletedSubscription = await notificacionService.deleteWebPushSubscription(id);
+    return res.status(200).json(deletedSubscription);
   } catch (error) {
-    return res.status(500).json({ error: 'Error al obtener configuración' });
+    return res.status(500).json({ error: 'Error al eliminar la suscripción' });
   }
 });
 
