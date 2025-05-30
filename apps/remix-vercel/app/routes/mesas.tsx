@@ -16,9 +16,9 @@ import { SearchBar } from "@exam-notifier/ui/components/SearchBar";
 import { clerkClient } from "~/utils/clerk.server";
 import { ActivarNotificaciones } from "../components/ActivarNotificaciones";
 import HeaderClerk from "../components/HeaderClerk";
-import { getEnv } from "../utils/env.server";
+import { getClientEnv } from "~/utils/env.client";
 
-const { API_URL } = getEnv();
+const { API_URL } = getClientEnv();
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);

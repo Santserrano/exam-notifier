@@ -11,7 +11,7 @@ import { Bell, BellOff, Settings } from "lucide-react";
 
 import { Button } from "@exam-notifier/ui/components/button";
 import { Toast } from "@exam-notifier/ui/components/Toast";
-import { getEnv } from "~/utils/env.server";
+import { getClientEnv } from "~/utils/env.client";
 
 interface LoaderData {
   env: {
@@ -43,7 +43,7 @@ export function HeaderClerk() {
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const { user } = useUser();
   const { env } = useLoaderData<LoaderData>();
-  const { API_URL } = getEnv();
+  const { API_URL } = getClientEnv();
 
   useEffect(() => {
     const fetchConfig = async () => {
