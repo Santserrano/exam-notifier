@@ -41,7 +41,7 @@ Para iniciar el servidor de desarrollo:
 pnpm dev
 ```
 
-El servidor estará disponible en `http://localhost:3001` (por defecto)
+El servidor estará disponible en `http://localhost:3005`
 
 ## 🧪 Testing
 
@@ -51,8 +51,6 @@ Para ejecutar las pruebas:
 # Ejecutar todas las pruebas
 pnpm test
 
-# Ejecutar pruebas en modo watch
-pnpm test:watch
 ```
 
 ## 🏗️ Construcción
@@ -70,16 +68,6 @@ Para iniciar la aplicación en producción:
 ```bash
 pnpm start
 ```
-
-## 📦 Dependencias Principales
-
-- Express.js v4.18.2
-- Prisma ORM v5.20.0
-- Supabase v2.39.0
-- Redis v5.0.1
-- Web Push v3.6.7
-- Resend v4.5.1
-- TypeScript v5.3.2
 
 ## 🔧 Scripts Disponibles
 
@@ -112,15 +100,6 @@ Las siguientes variables de entorno son necesarias:
 - `VAPID_PUBLIC_KEY`: Clave pública para Web Push
 - `VAPID_PRIVATE_KEY`: Clave privada para Web Push
 
-## 📝 Licencia
-
-Este proyecto es privado y está protegido por derechos de autor.
-
 ## 👥 Contribución
 
 Por favor, asegúrate de seguir las guías de contribución del proyecto antes de enviar un pull request.
-
-## Endpoints
-
-- `GET /api/health`: Verifica el estado del servidor
-- `GET /api/notifications`: Obtiene todas las notificaciones 
