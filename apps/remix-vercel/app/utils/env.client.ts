@@ -2,26 +2,15 @@ declare global {
     interface Window {
         ENV: {
             API_URL: string;
+            VAPID_PUBLIC_KEY: string;
+            INTERNAL_API_KEY: string;
         };
     }
 }
 
-const getClientEnv = () => {
-    try {
-        if (typeof window !== "undefined") {
-            return window.ENV || {
-                API_URL: process.env.API_URL || "http://localhost:3001"
-            };
-        }
-        return {
-            API_URL: process.env.API_URL || "http://localhost:3001"
-        };
-    } catch (error) {
-        console.error("Error al obtener variables de entorno:", error);
-        return {
-            API_URL: "http://localhost:3001"
-        };
+export function getClientEnv() {
+    if (typeof window === "undefined") {
+        throw new Error("getClientEnv debe ser llamado solo en el cliente");
     }
-};
-
-export { getClientEnv }; 
+    return window.ENV;
+} 
