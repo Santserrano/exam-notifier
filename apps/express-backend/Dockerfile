@@ -17,26 +17,26 @@ RUN npm config set registry https://registry.npmjs.org/ && \
     pnpm config set fetch-retry-maxtimeout 120000
 
 # Copiar archivos de configuración
-COPY exam-notifier/package.json exam-notifier/pnpm-lock.yaml exam-notifier/pnpm-workspace.yaml ./
-COPY exam-notifier/apps/express-backend/package.json ./apps/express-backend/
-COPY exam-notifier/packages/database/package.json ./packages/database/
-COPY exam-notifier/config/tsconfig/package.json ./config/tsconfig/
+COPY ../../package.json ../../pnpm-lock.yaml ../../pnpm-workspace.yaml ./
+COPY ../../apps/express-backend/package.json ./apps/express-backend/
+COPY ../../packages/database/package.json ./packages/database/
+COPY ../../config/tsconfig/package.json ./config/tsconfig/
 
 # Instalar dependencias con configuración optimizada
-RUN pnpm install --prefer-offline
+RUN pnpm install --frozen-lockfile --prefer-offline
 
 # Copiar schema.prisma
-COPY exam-notifier/packages/database/prisma ./packages/database/prisma
+COPY ../../packages/database/prisma ./packages/database/prisma
 
 # Copiar el código fuente
-COPY exam-notifier/apps/express-backend/src ./apps/express-backend/src
-COPY exam-notifier/apps/express-backend/tsconfig.json ./apps/express-backend/
-COPY exam-notifier/apps/express-backend/tsup.config.ts ./apps/express-backend/
-COPY exam-notifier/packages/database/src ./packages/database/src
-COPY exam-notifier/packages/database/tsconfig.json ./packages/database/
-COPY exam-notifier/packages/database/tsup.config.ts ./packages/database/
-COPY exam-notifier/config/tsconfig/base.json ./config/tsconfig/
-COPY exam-notifier/config/tsconfig/node18.json ./config/tsconfig/
+COPY ../../apps/express-backend/src ./apps/express-backend/src
+COPY ../../apps/express-backend/tsconfig.json ./apps/express-backend/
+COPY ../../apps/express-backend/tsup.config.ts ./apps/express-backend/
+COPY ../../packages/database/src ./packages/database/src
+COPY ../../packages/database/tsconfig.json ./packages/database/
+COPY ../../packages/database/tsup.config.ts ./packages/database/
+COPY ../../config/tsconfig/base.json ./config/tsconfig/
+COPY ../../config/tsconfig/node18.json ./config/tsconfig/
 
 # Generar Prisma y compilar
 RUN cd packages/database && pnpm exec prisma generate
@@ -71,7 +71,7 @@ COPY --from=builder /app/packages/database/dist ./packages/database/dist
 COPY --from=builder /app/packages/database/prisma ./packages/database/prisma
 
 # Instalar solo dependencias de producción
-RUN pnpm install --prod --prefer-offline
+RUN pnpm install --prod --frozen-lockfile --prefer-offline
 
 # Variables de entorno
 ENV NODE_ENV=production

@@ -9,6 +9,7 @@ node_modules
 # Testing
 coverage
 .nyc_output
+codacy-fix.patch
 
 # Build outputs
 .next/
