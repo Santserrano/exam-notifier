@@ -11,7 +11,7 @@ import { Bell, BellOff, Settings } from "lucide-react";
 
 import { Button } from "@exam-notifier/ui/components/button";
 import { Toast } from "@exam-notifier/ui/components/Toast";
-import { getClientEnv } from "~/utils/env.client";
+import getClientEnv from "~/utils/env.client";
 
 interface LoaderData {
   env: {
