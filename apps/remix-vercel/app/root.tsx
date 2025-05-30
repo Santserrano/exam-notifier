@@ -10,6 +10,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "@remix-run/react";
 
 import { customEs } from "./localizations/customEs";
@@ -21,9 +22,19 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: fontStyles },
 ];
 
-export const loader = (args: LoaderFunctionArgs) => rootAuthLoader(args);
+export const loader = async (args: LoaderFunctionArgs) => {
+  const authData = await rootAuthLoader(args);
+  return {
+    ...authData,
+    ENV: {
+      API_URL: process.env.API_URL || "http://localhost:3001",
+    },
+  };
+};
 
 function Root() {
+  const { ENV } = useLoaderData<typeof loader>();
+
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
@@ -49,6 +60,11 @@ function Root() {
         <Outlet />
         <ScrollRestoration />
         <Scripts />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.ENV = ${JSON.stringify(ENV)}`,
+          }}
+        />
         <LiveReload />
       </body>
     </html>
