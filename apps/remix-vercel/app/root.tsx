@@ -25,9 +25,15 @@ export const links: LinksFunction = () => [
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const authData = await rootAuthLoader(args);
+  const env = getServerEnv();
+  
+  if (!env.API_URL) {
+    throw new Error("API_URL no está definida en las variables de entorno");
+  }
+
   return {
     ...authData,
-    ENV: getServerEnv(),
+    ENV: env,
   };
 };
 
