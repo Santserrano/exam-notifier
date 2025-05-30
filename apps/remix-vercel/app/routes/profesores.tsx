@@ -11,7 +11,7 @@ import { Link, useFetcher, useLoaderData } from "@remix-run/react";
 import { Button, Modal } from "@exam-notifier/ui";
 
 import { clerkClient } from "~/utils/clerk.server";
-import { getEnv } from "~/utils/env.server";
+import { getClientEnv } from "~/utils/env.client";
 
 interface Profesor {
   id: string;
@@ -33,7 +33,7 @@ interface ActionData {
   profesor?: any;
 }
 
-const { API_URL } = getEnv();
+const { API_URL } = getClientEnv();
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);

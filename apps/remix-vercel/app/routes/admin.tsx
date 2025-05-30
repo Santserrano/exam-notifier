@@ -21,7 +21,7 @@ import { SearchBar } from "@exam-notifier/ui/components/SearchBar";
 
 import { clerkClient } from "~/utils/clerk.server";
 import HeaderClerk from "../components/HeaderClerk";
-import { getEnv } from "~/utils/env.server";
+import { getClientEnv } from "~/utils/env.client";
 
 type Modalidad = "Virtual" | "Presencial";
 
@@ -67,7 +67,7 @@ interface Profesor {
   materias: Materia[];
 }
 
-const { API_URL } = getEnv();
+const { API_URL } = getClientEnv();
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
