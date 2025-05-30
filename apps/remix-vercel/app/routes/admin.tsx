@@ -21,6 +21,7 @@ import { SearchBar } from "@exam-notifier/ui/components/SearchBar";
 
 import { clerkClient } from "~/utils/clerk.server";
 import HeaderClerk from "../components/HeaderClerk";
+import { getEnv } from "~/utils/env.server";
 
 type Modalidad = "Virtual" | "Presencial";
 
@@ -66,6 +67,8 @@ interface Profesor {
   materias: Materia[];
 }
 
+const { API_URL } = getEnv();
+
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
 
@@ -84,7 +87,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
     // Obtener las mesas y profesores del backend
     const [mesasResponse, profesoresResponse, carrerasResponse] =
       await Promise.all([
-        fetch("http://localhost:3001/api/diaries/mesas", {
+        fetch(`${API_URL}/api/diaries/mesas`, {
           headers: {
             "x-api-key": process.env.INTERNAL_API_KEY || "",
             "Content-Type": "application/json",
@@ -93,7 +96,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
           console.error("Error al obtener mesas:", error);
           return { ok: false, status: 500, json: () => [] };
         }),
-        fetch("http://localhost:3001/api/diaries/profesores", {
+        fetch(`${API_URL}/api/diaries/profesores`, {
           headers: {
             "x-api-key": process.env.INTERNAL_API_KEY || "",
             "Content-Type": "application/json",
@@ -102,7 +105,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
           console.error("Error al obtener profesores:", error);
           return { ok: false, status: 500, json: () => [] };
         }),
-        fetch("http://localhost:3001/api/diaries/carreras", {
+        fetch(`${API_URL}/api/diaries/carreras`, {
           headers: {
             "x-api-key": process.env.INTERNAL_API_KEY || "",
             "Content-Type": "application/json",
@@ -178,7 +181,7 @@ export const action = async (args: ActionFunctionArgs) => {
   const fechaHora = new Date(`${fecha}T${hora}`);
 
   try {
-    const response = await fetch("http://localhost:3001/api/diaries/mesas", {
+    const response = await fetch(`${API_URL}/api/diaries/mesas`, {
       method: "POST",
       headers: {
         "x-api-key": process.env.INTERNAL_API_KEY || "",

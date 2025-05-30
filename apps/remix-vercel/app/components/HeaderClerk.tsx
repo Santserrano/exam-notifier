@@ -11,6 +11,7 @@ import { Bell, BellOff, Settings } from "lucide-react";
 
 import { Button } from "@exam-notifier/ui/components/button";
 import { Toast } from "@exam-notifier/ui/components/Toast";
+import { getEnv } from "~/utils/env.server";
 
 interface LoaderData {
   env: {
@@ -42,6 +43,7 @@ export function HeaderClerk() {
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const { user } = useUser();
   const { env } = useLoaderData<LoaderData>();
+  const { API_URL } = getEnv();
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -49,7 +51,7 @@ export function HeaderClerk() {
 
       try {
         const response = await fetch(
-          `http://localhost:3001/api/notificaciones/config/${user.id}`,
+          `${API_URL}/api/notificaciones/config/${user.id}`,
           {
             headers: {
               "x-api-key": env.INTERNAL_API_KEY,
@@ -72,7 +74,7 @@ export function HeaderClerk() {
     };
 
     fetchConfig();
-  }, [user?.id, env.INTERNAL_API_KEY]);
+  }, [user?.id, env.INTERNAL_API_KEY, API_URL]);
 
   const showNotification = (message: string, type: "success" | "error") => {
     setToastMessage(message);
@@ -85,7 +87,7 @@ export function HeaderClerk() {
     fields: Partial<NotificationConfig>,
   ) => {
     if (!user?.id) return;
-    await fetch(`http://localhost:3001/api/notificaciones/config/${user.id}`, {
+    await fetch(`${API_URL}/api/notificaciones/config/${user.id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -144,7 +146,7 @@ export function HeaderClerk() {
 
         try {
           const response = await fetch(
-            "http://localhost:3001/api/notificaciones/push-subscription",
+            `${API_URL}/api/notificaciones/push-subscription`,
             {
               method: "POST",
               headers: {
@@ -322,7 +324,7 @@ export function HeaderClerk() {
         console.log("Suscripción creada:", subscription);
 
         await fetch(
-          "http://localhost:3001/api/notificaciones/push-subscription",
+          `${API_URL}/api/notificaciones/push-subscription`,
           {
             method: "POST",
             headers: {
@@ -362,7 +364,7 @@ export function HeaderClerk() {
 
     try {
       const response = await fetch(
-        "http://localhost:3001/api/profesores/telefono",
+        `${API_URL}/api/profesores/telefono`,
         {
           method: "POST",
           headers: {

@@ -11,6 +11,7 @@ import { Link, useFetcher, useLoaderData } from "@remix-run/react";
 import { Button, Modal } from "@exam-notifier/ui";
 
 import { clerkClient } from "~/utils/clerk.server";
+import { getEnv } from "~/utils/env.server";
 
 interface Profesor {
   id: string;
@@ -32,6 +33,8 @@ interface ActionData {
   profesor?: any;
 }
 
+const { API_URL } = getEnv();
+
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
 
@@ -48,13 +51,13 @@ export const loader = async (args: LoaderFunctionArgs) => {
 
   try {
     const [profesoresResponse, carrerasResponse] = await Promise.all([
-      fetch("http://localhost:3001/api/diaries/profesores", {
+      fetch(`${API_URL}/api/diaries/profesores`, {
         headers: {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
           "Content-Type": "application/json",
         },
       }),
-      fetch("http://localhost:3001/api/diaries/carreras", {
+      fetch(`${API_URL}/api/diaries/carreras`, {
         headers: {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
           "Content-Type": "application/json",
@@ -97,7 +100,7 @@ export const action = async ({
 
   try {
     const response = await fetch(
-      `http://localhost:3001/api/diaries/profesores/${profesorId}/config`,
+      `${API_URL}/api/diaries/profesores/${profesorId}/config`,
       {
         method: "PUT",
         headers: {

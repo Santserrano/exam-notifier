@@ -18,6 +18,8 @@ import { ActivarNotificaciones } from "../components/ActivarNotificaciones";
 import HeaderClerk from "../components/HeaderClerk";
 import { getEnv } from "../utils/env.server";
 
+const { API_URL } = getEnv();
+
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
   if (!userId) return redirect("/sign-in");
@@ -28,7 +30,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
 
   try {
     const response = await fetch(
-      `http://localhost:3001/api/diaries/mesas/profesor/${userId}`,
+      `${API_URL}/api/diaries/mesas/profesor/${userId}`,
       {
         headers: {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
