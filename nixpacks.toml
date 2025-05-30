@@ -2,10 +2,10 @@
 nixPkgs = ["nodejs", "pnpm"]
 
 [phases.install]
-cmds = ["pnpm install --no-frozen-lockfile"]
+cmds = ["pnpm install --no-frozen-lockfile --filter=express-backend..."]
 
 [phases.build]
-cmds = ["pnpm build --filter=express-backend"]
+cmds = ["pnpm build --filter=express-backend..."]
 
 [start]
 cmd = "cd apps/express-backend && pnpm start" 
