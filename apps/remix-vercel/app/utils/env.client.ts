@@ -6,7 +6,7 @@ declare global {
     }
 }
 
-export function getClientEnv() {
+const getClientEnv = () => {
     try {
         if (typeof window !== "undefined") {
             return window.ENV || {
@@ -22,4 +22,6 @@ export function getClientEnv() {
             API_URL: "http://localhost:3001"
         };
     }
-} 
+};
+
+export { getClientEnv }; 
