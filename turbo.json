@@ -29,7 +29,7 @@
     "PUBLIC_API_URL",
     "PUBLIC_APP_NAME"
   ],
-  "pipeline": {
+  "tasks": {
     "build": {
       "dependsOn": [
         "^build"
