@@ -38,3 +38,14 @@ export function getClientEnv() {
     INTERNAL_API_KEY: _clientEnv.INTERNAL_API_KEY,
   };
 }
+
+/**
+ * Variables accesibles en el servidor.
+ */
+export function getServerEnv() {
+  return {
+    API_URL: _clientEnv.PUBLIC_API_URL,
+    VAPID_PUBLIC_KEY: _clientEnv.VAPID_PUBLIC_KEY,
+    INTERNAL_API_KEY: _clientEnv.INTERNAL_API_KEY,
+  };
+}

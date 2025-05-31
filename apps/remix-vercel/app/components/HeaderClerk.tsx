@@ -11,10 +11,10 @@ import { Bell, BellOff, Settings } from "lucide-react";
 
 import { Button } from "@exam-notifier/ui/components/button";
 import { Toast } from "@exam-notifier/ui/components/Toast";
-import getClientEnv from "~/utils/env.client";
 
 interface LoaderData {
-  env: {
+  ENV: {
+    API_URL: string;
     VAPID_PUBLIC_KEY: string;
     INTERNAL_API_KEY: string;
   };
@@ -42,8 +42,7 @@ export function HeaderClerk() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const { user } = useUser();
-  const { env } = useLoaderData<LoaderData>();
-  const { API_URL } = getClientEnv();
+  const { ENV } = useLoaderData<LoaderData>();
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -51,10 +50,10 @@ export function HeaderClerk() {
 
       try {
         const response = await fetch(
-          `${API_URL}/api/notificaciones/config/${user.id}`,
+          `${ENV.API_URL}/api/notificaciones/config/${user.id}`,
           {
             headers: {
-              "x-api-key": env.INTERNAL_API_KEY,
+              "x-api-key": ENV.INTERNAL_API_KEY,
             },
           },
         );
@@ -74,7 +73,7 @@ export function HeaderClerk() {
     };
 
     fetchConfig();
-  }, [user?.id, env.INTERNAL_API_KEY, API_URL]);
+  }, [user?.id, ENV.INTERNAL_API_KEY, ENV.API_URL]);
 
   const showNotification = (message: string, type: "success" | "error") => {
     setToastMessage(message);
@@ -87,11 +86,11 @@ export function HeaderClerk() {
     fields: Partial<NotificationConfig>,
   ) => {
     if (!user?.id) return;
-    await fetch(`${API_URL}/api/notificaciones/config/${user.id}`, {
+    await fetch(`${ENV.API_URL}/api/notificaciones/config/${user.id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": env.INTERNAL_API_KEY,
+        "x-api-key": ENV.INTERNAL_API_KEY,
       },
       body: JSON.stringify(fields),
     });
@@ -141,17 +140,17 @@ export function HeaderClerk() {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: env.VAPID_PUBLIC_KEY,
+          applicationServerKey: ENV.VAPID_PUBLIC_KEY,
         });
 
         try {
           const response = await fetch(
-            `${API_URL}/api/notificaciones/push-subscription`,
+            `${ENV.API_URL}/api/notificaciones/push-subscription`,
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                "x-api-key": env.INTERNAL_API_KEY,
+                "x-api-key": ENV.INTERNAL_API_KEY,
               },
               body: JSON.stringify({
                 profesorId: user.id,
@@ -274,7 +273,7 @@ export function HeaderClerk() {
 
   const handleNotificationToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!user || !env?.VAPID_PUBLIC_KEY || !env?.INTERNAL_API_KEY) {
+    if (!user || !ENV?.VAPID_PUBLIC_KEY || !ENV?.INTERNAL_API_KEY) {
       setError("Configuración incompleta");
       return;
     }
@@ -318,18 +317,18 @@ export function HeaderClerk() {
         console.log("Intentando suscribirse...");
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: env.VAPID_PUBLIC_KEY,
+          applicationServerKey: ENV.VAPID_PUBLIC_KEY,
         });
 
         console.log("Suscripción creada:", subscription);
 
         await fetch(
-          `${API_URL}/api/notificaciones/push-subscription`,
+          `${ENV.API_URL}/api/notificaciones/push-subscription`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-api-key": env.INTERNAL_API_KEY,
+              "x-api-key": ENV.INTERNAL_API_KEY,
             },
             body: JSON.stringify({
               profesorId: user.id,
@@ -364,12 +363,12 @@ export function HeaderClerk() {
 
     try {
       const response = await fetch(
-        `${API_URL}/api/profesores/telefono`,
+        `${ENV.API_URL}/api/profesores/telefono`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-api-key": env.INTERNAL_API_KEY,
+            "x-api-key": ENV.INTERNAL_API_KEY,
           },
           body: JSON.stringify({
             profesorId: user?.id,

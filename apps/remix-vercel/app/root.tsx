@@ -16,7 +16,7 @@ import {
 import { customEs } from "./localizations/customEs";
 import fontStyles from "./styles/font.css?url";
 import tailwindStyles from "./styles/tailwind.css?url";
-import getClientEnv from "./utils/env.client";
+import { getServerEnv } from "./utils/env.server";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: tailwindStyles },
@@ -25,7 +25,7 @@ export const links: LinksFunction = () => [
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const authData = await rootAuthLoader(args);
-  const env = getClientEnv();
+  const env = getServerEnv();
   
   if (!env.API_URL) {
     throw new Error("API_URL no está definida en las variables de entorno");
