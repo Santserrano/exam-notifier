@@ -1,7 +1,6 @@
 import { ClerkApp } from "@clerk/remix";
 import { rootAuthLoader } from "@clerk/remix/ssr.server";
-import { cssBundleHref } from "@remix-run/css-bundle";
-import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
+import type { LoaderFunction, LinksFunction } from "@remix-run/node";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, LiveReload, useLoaderData } from "@remix-run/react";
 
 import { customEs } from "./localizations/customEs";
@@ -14,7 +13,7 @@ export const links: LinksFunction = () => [
   { rel: "stylesheet", href: fontStyles },
 ];
 
-export const loader = async (args: LoaderFunctionArgs) => {
+export const loader: LoaderFunction = async (args) => {
   const authData = await rootAuthLoader(args);
   const env = getPublicEnv();
 
@@ -28,10 +27,9 @@ export const loader = async (args: LoaderFunctionArgs) => {
   };
 };
 
-
 function App() {
   const { ENV } = useLoaderData<typeof loader>();
-  
+
   return (
     <html lang="es" className="h-full">
       <head>
@@ -46,7 +44,7 @@ function App() {
         <Scripts />
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.ENV = ${JSON.stringify(ENV)}`,
+            __html: `window.ENV = ${JSON.stringify(ENV)};`,
           }}
         />
         <LiveReload />
@@ -57,5 +55,5 @@ function App() {
 
 export default ClerkApp(App, {
   localization: customEs,
-  publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+  publishableKey: process.env.CLERK_PUBLISHABLE_KEY!,
 });
