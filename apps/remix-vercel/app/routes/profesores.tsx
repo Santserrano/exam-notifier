@@ -11,7 +11,7 @@ import { Link, useFetcher, useLoaderData } from "@remix-run/react";
 import { Button, Modal } from "@exam-notifier/ui";
 
 import { clerkClient } from "~/utils/clerk.server";
-import getClientEnv from "~/utils/env.client";
+import { getServerEnv } from "~/utils/env.server";
 
 interface Profesor {
   id: string;
@@ -33,8 +33,6 @@ interface ActionData {
   profesor?: any;
 }
 
-const { API_URL } = getClientEnv();
-
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
 
@@ -48,6 +46,8 @@ export const loader = async (args: LoaderFunctionArgs) => {
   if (role !== "admin") {
     return redirect("/");
   }
+
+  const { API_URL } = getServerEnv();
 
   try {
     const [profesoresResponse, carrerasResponse] = await Promise.all([
@@ -97,6 +97,8 @@ export const action = async ({
 
   const formData = await request.json();
   const { profesorId, carreras, materias } = formData;
+
+  const { API_URL } = getServerEnv();
 
   try {
     const response = await fetch(
