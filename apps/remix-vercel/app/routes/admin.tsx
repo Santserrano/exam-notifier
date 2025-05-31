@@ -21,7 +21,7 @@ import { SearchBar } from "@exam-notifier/ui/components/SearchBar";
 
 import { clerkClient } from "~/utils/clerk.server";
 import HeaderClerk from "../components/HeaderClerk";
-import getClientEnv from "~/utils/env.client";
+import { getClientEnv } from "~/utils/env.server";
 
 type Modalidad = "Virtual" | "Presencial";
 
