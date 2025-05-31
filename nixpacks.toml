@@ -8,4 +8,4 @@ cmds = ["pnpm install --no-frozen-lockfile --filter=express-backend --filter=@ex
 cmds = ["pnpm build --filter=express-backend --filter=@exam-notifier/database"]
 
 [start]
-cmd = "cd apps/express-backend && pnpm start" 
+cmd = "cd apps/express-backend && cross-env NODE_ENV=production PORT=$PORT pnpm start" 
