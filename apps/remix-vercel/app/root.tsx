@@ -1,17 +1,8 @@
-import { useEffect } from "react";
 import { ClerkApp } from "@clerk/remix";
 import { rootAuthLoader } from "@clerk/remix/ssr.server";
 import { cssBundleHref } from "@remix-run/css-bundle";
 import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
-import {
-  Links,
-  LiveReload,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-  useLoaderData,
-} from "@remix-run/react";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, LiveReload } from "@remix-run/react";
 
 import { customEs } from "./localizations/customEs";
 import fontStyles from "./styles/font.css?url";
@@ -26,7 +17,7 @@ export const links: LinksFunction = () => [
 export const loader = async (args: LoaderFunctionArgs) => {
   const authData = await rootAuthLoader(args);
   const env = getServerEnv();
-  
+
   if (!env.API_URL) {
     throw new Error("API_URL no está definida en las variables de entorno");
   }
@@ -37,22 +28,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
   };
 };
 
-function Root() {
-  const { ENV } = useLoaderData<typeof loader>();
-
-  useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then((registration) => {
-          console.log("Service Worker registrado con éxito:", registration);
-        })
-        .catch((error) => {
-          console.error("Error al registrar el Service Worker:", error);
-        });
-    }
-  }, []);
-
+function App() {
   return (
     <html lang="es" className="h-full">
       <head>
@@ -65,18 +41,13 @@ function Root() {
         <Outlet />
         <ScrollRestoration />
         <Scripts />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `window.ENV = ${JSON.stringify(ENV)}`,
-          }}
-        />
         <LiveReload />
       </body>
     </html>
   );
 }
 
-export default ClerkApp(Root, {
+export default ClerkApp(App, {
   localization: customEs,
   publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
 });
