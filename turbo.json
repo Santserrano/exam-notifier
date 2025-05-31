@@ -29,7 +29,7 @@
     "PUBLIC_API_URL",
     "PUBLIC_APP_NAME"
   ],
-  "tasks": {
+  "pipeline": {
     "build": {
       "dependsOn": [
         "^build"
@@ -59,7 +59,8 @@
       ],
       "outputs": [
         "dist/**"
-      ]
+      ],
+      "cache": false
     },
     "db:migrate:deploy": {
       "outputs": []
