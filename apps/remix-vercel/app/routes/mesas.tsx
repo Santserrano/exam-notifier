@@ -15,6 +15,7 @@ import { SearchBar } from "@exam-notifier/ui/components/SearchBar";
 import { clerkClient } from "~/utils/clerk.server";
 import HeaderClerk from "../components/HeaderClerk";
 import { getServerEnv } from "~/utils/env.server";
+import { getNotificationConfig } from "~/utils/notification.server";
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
@@ -25,6 +26,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
   if (role !== "profesor") return redirect("/");
 
   const { API_URL, INTERNAL_API_KEY } = getServerEnv();
+  const notificationConfig = await getNotificationConfig(args);
 
   try {
     const response = await fetch(
@@ -90,6 +92,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
       userId,
       role,
       mesas,
+      notificationConfig,
     });
   } catch (error) {
     console.error("Error en el loader:", error);
@@ -97,6 +100,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
       userId,
       role,
       mesas: [],
+      notificationConfig,
     });
   }
 };
@@ -118,7 +122,7 @@ const alumnosMock = [
 ];
 
 export default function MesasRoute() {
-  const { mesas, userId } = useLoaderData<typeof loader>();
+  const { mesas, userId, notificationConfig } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const search = searchParams.get("search") ?? "";
@@ -290,7 +294,7 @@ export default function MesasRoute() {
 
   return (
     <div className="mx-auto max-w-md pb-8">
-      <HeaderClerk />
+      <HeaderClerk notificationConfig={notificationConfig} />
       <div className="mt-2 px-4">
         <h2 className="mb-4 text-lg font-bold text-green-900">Mis Mesas</h2>
         <SearchBar
