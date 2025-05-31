@@ -78,4 +78,5 @@ function Root() {
 
 export default ClerkApp(Root, {
   localization: customEs,
+  publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
 });
