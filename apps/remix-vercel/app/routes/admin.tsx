@@ -22,6 +22,7 @@ import { SearchBar } from "@exam-notifier/ui/components/SearchBar";
 import { clerkClient } from "~/utils/clerk.server";
 import HeaderClerk from "../components/HeaderClerk";
 import { getClientEnv } from "~/utils/env.server";
+import { getNotificationConfig } from "~/utils/notification.server";
 
 type Modalidad = "Virtual" | "Presencial";
 
@@ -83,6 +84,8 @@ export const loader = async (args: LoaderFunctionArgs) => {
     return redirect("/");
   }
 
+  const notificationConfig = await getNotificationConfig(args);
+
   try {
     // Obtener las mesas y profesores del backend
     const [mesasResponse, profesoresResponse, carrerasResponse] =
@@ -128,6 +131,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
       mesas: Array.isArray(mesas) ? mesas : [],
       profesores: Array.isArray(profesores) ? profesores : [],
       carreras: Array.isArray(carreras) ? carreras : [],
+      notificationConfig,
       env: {
         INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
         VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
@@ -143,6 +147,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
       mesas: [],
       profesores: [],
       carreras: [],
+      notificationConfig,
       env: {
         INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
         VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
@@ -221,7 +226,7 @@ export const action = async (args: ActionFunctionArgs) => {
 };
 
 export default function AdminRoute() {
-  const { userId, role, mesas, profesores, carreras } =
+  const { userId, role, mesas, profesores, carreras, notificationConfig } =
     useLoaderData<typeof loader>();
   console.log("Profesores cargados:", profesores);
   const actionData = useActionData<typeof action>();
@@ -567,7 +572,7 @@ export default function AdminRoute() {
 
   return (
     <div className="mx-auto max-w-md pb-8">
-      <HeaderClerk />
+      <HeaderClerk notificationConfig={notificationConfig} />
       <div className="mt-2 px-4">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-center text-lg font-bold">

@@ -1,0 +1,41 @@
+import { getAuth } from "@clerk/remix/ssr.server";
+import { getServerEnv } from "./env.server";
+import type { LoaderFunctionArgs } from "@remix-run/node";
+
+export interface NotificationConfig {
+    webPushEnabled: boolean;
+    smsEnabled: boolean;
+    emailEnabled: boolean;
+}
+
+export async function getNotificationConfig(args: LoaderFunctionArgs) {
+    const { userId } = await getAuth(args);
+    if (!userId) return null;
+
+    const { API_URL, INTERNAL_API_KEY } = getServerEnv();
+
+    try {
+        const response = await fetch(
+            `${API_URL}/api/notificaciones/config/${userId}`,
+            {
+                headers: {
+                    "x-api-key": INTERNAL_API_KEY,
+                    "Content-Type": "application/json",
+                },
+            },
+        );
+
+        if (!response.ok) {
+            throw new Error(`Error al obtener configuración: ${response.statusText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error("Error al obtener configuración:", error);
+        return {
+            webPushEnabled: false,
+            smsEnabled: false,
+            emailEnabled: false,
+        };
+    }
+} 

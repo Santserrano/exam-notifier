@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   SignedIn,
-  SignedOut,
-  SignInButton,
   UserButton,
   useUser,
 } from "@clerk/remix";
@@ -11,69 +9,22 @@ import { Bell, BellOff, Settings } from "lucide-react";
 
 import { Button } from "@exam-notifier/ui/components/button";
 import { Toast } from "@exam-notifier/ui/components/Toast";
+import { NotificationConfig } from "~/utils/notification.server";
 
-interface LoaderData {
-  ENV: {
-    API_URL: string;
-    VAPID_PUBLIC_KEY: string;
-    INTERNAL_API_KEY: string;
-  };
+interface Props {
+  notificationConfig: NotificationConfig;
 }
 
-interface NotificationConfig {
-  webPushEnabled: boolean;
-  smsEnabled: boolean;
-  emailEnabled: boolean;
-}
-
-export function HeaderClerk() {
-  const [isSubscribed, setIsSubscribed] = useState(false);
+export function HeaderClerk({ notificationConfig }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
   const [showConfig, setShowConfig] = useState(false);
-  const [config, setConfig] = useState<NotificationConfig>({
-    webPushEnabled: false,
-    smsEnabled: false,
-    emailEnabled: false,
-  });
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [config, setConfig] = useState<NotificationConfig>(notificationConfig);
   const { user } = useUser();
-  const { ENV } = useLoaderData<LoaderData>();
-
-  useEffect(() => {
-    const fetchConfig = async () => {
-      if (!user?.id) return;
-
-      try {
-        const response = await fetch(
-          `${ENV.API_URL}/api/notificaciones/config/${user.id}`,
-          {
-            headers: {
-              "x-api-key": ENV.INTERNAL_API_KEY,
-            },
-          },
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setConfig({
-            webPushEnabled: data.webPushEnabled || false,
-            smsEnabled: data.smsEnabled || false,
-            emailEnabled: data.emailEnabled || false,
-          });
-          setIsSubscribed(data.webPushEnabled || false);
-        }
-      } catch (error) {
-        console.error("Error al obtener configuración:", error);
-      }
-    };
-
-    fetchConfig();
-  }, [user?.id, ENV.INTERNAL_API_KEY, ENV.API_URL]);
+  const { ENV } = useLoaderData<{ ENV: { API_URL: string; VAPID_PUBLIC_KEY: string; INTERNAL_API_KEY: string } }>();
 
   const showNotification = (message: string, type: "success" | "error") => {
     setToastMessage(message);
@@ -175,7 +126,6 @@ export function HeaderClerk() {
         await updateNotificationConfig({ [type]: newConfig[type] });
 
         setConfig(newConfig);
-        setIsSubscribed(newConfig.webPushEnabled);
         showNotification(
           getNotificationMessage(type, newConfig[type]),
           "success",
@@ -202,207 +152,12 @@ export function HeaderClerk() {
     }
   };
 
-  const waitForServiceWorker = async (
-    registration: ServiceWorkerRegistration,
-  ): Promise<ServiceWorkerRegistration> => {
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error("Timeout esperando activación del Service Worker"));
-      }, 10000);
-
-      console.log("Estado inicial del Service Worker:", {
-        active: !!registration.active,
-        installing: !!registration.installing,
-        waiting: !!registration.waiting,
-        scope: registration.scope,
-      });
-
-      if (registration.active) {
-        console.log("Service Worker ya está activo");
-        clearTimeout(timeout);
-        resolve(registration);
-        return;
-      }
-
-      const checkState = () => {
-        console.log("Verificando estado del Service Worker:", {
-          active: !!registration.active,
-          installing: !!registration.installing,
-          waiting: !!registration.waiting,
-        });
-
-        if (registration.active) {
-          console.log("Service Worker activado");
-          clearTimeout(timeout);
-          resolve(registration);
-          return true;
-        }
-        return false;
-      };
-
-      if (checkState()) return;
-
-      registration.addEventListener("updatefound", () => {
-        console.log("Service Worker actualización encontrada");
-        if (registration.installing) {
-          registration.installing.addEventListener("statechange", () => {
-            console.log(
-              "Estado del Service Worker cambiado:",
-              registration.installing?.state,
-            );
-            if (registration.installing?.state === "installed") {
-              console.log("Service Worker instalado, forzando activación");
-              registration.waiting?.postMessage({ type: "SKIP_WAITING" });
-            }
-            checkState();
-          });
-        }
-      });
-
-      const interval = setInterval(() => {
-        if (checkState()) {
-          clearInterval(interval);
-        }
-      }, 1000);
-
-      setTimeout(() => {
-        clearInterval(interval);
-      }, 10000);
-    });
-  };
-
-  const handleNotificationToggle = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!user || !ENV?.VAPID_PUBLIC_KEY || !ENV?.INTERNAL_API_KEY) {
-      setError("Configuración incompleta");
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      if (!("serviceWorker" in navigator)) {
-        throw new Error("Service Workers no soportados");
-      }
-
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      console.log("Service Workers existentes:", registrations.length);
-
-      for (const registration of registrations) {
-        console.log("Desregistrando Service Worker:", registration.scope);
-        await registration.unregister();
-      }
-
-      console.log("Registrando nuevo Service Worker...");
-      const registration = await navigator.serviceWorker.register("/sw.js", {
-        scope: "/",
-      });
-      console.log("Service Worker registrado:", registration);
-
-      try {
-        await waitForServiceWorker(registration);
-        console.log("Service Worker activado exitosamente");
-      } catch (error) {
-        console.error("Error esperando activación:", error);
-        throw new Error("No se pudo activar el Service Worker");
-      }
-
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        throw new Error("Permiso de notificaciones denegado");
-      }
-
-      if (!isSubscribed) {
-        console.log("Intentando suscribirse...");
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: ENV.VAPID_PUBLIC_KEY,
-        });
-
-        console.log("Suscripción creada:", subscription);
-
-        await fetch(
-          `${ENV.API_URL}/api/notificaciones/push-subscription`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-api-key": ENV.INTERNAL_API_KEY,
-            },
-            body: JSON.stringify({
-              profesorId: user.id,
-              subscription,
-            }),
-          },
-        );
-
-        setIsSubscribed(true);
-        showNotification("¡Notificaciones activadas con éxito!", "success");
-      } else {
-        const subscription = await registration.pushManager.getSubscription();
-        if (subscription) {
-          await subscription.unsubscribe();
-          setIsSubscribed(false);
-          showNotification("Notificaciones desactivadas", "success");
-        }
-      }
-    } catch (error) {
-      console.error("Error al manejar notificaciones:", error);
-      const errorMessage =
-        error instanceof Error ? error.message : "Error desconocido";
-      setError(errorMessage);
-      showNotification(errorMessage, "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePhoneSubmit = async () => {
-    if (!phoneNumber) return;
-
-    try {
-      const response = await fetch(
-        `${ENV.API_URL}/api/profesores/telefono`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": ENV.INTERNAL_API_KEY,
-          },
-          body: JSON.stringify({
-            profesorId: user?.id,
-            telefono: phoneNumber,
-          }),
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Error al actualizar el número de teléfono");
-      }
-
-      setIsEditingPhone(false);
-      showNotification("Número de teléfono actualizado", "success");
-    } catch (error) {
-      console.error("Error:", error);
-      showNotification(
-        error instanceof Error ? error.message : "Error al actualizar teléfono",
-        "error",
-      );
-    }
-  };
-
   return (
     <header className="flex items-center justify-between border-b bg-white p-4">
       <div>
         <SignedIn>
-          <UserButton afterSignOutUrl="/sign-in" />
+          <UserButton/>
         </SignedIn>
-        <SignedOut>
-          <SignInButton>
-            <button className="text-sm font-semibold">Iniciar sesión</button>
-          </SignInButton>
-        </SignedOut>
       </div>
       <div className="flex items-center gap-4">
         <SignedIn>
