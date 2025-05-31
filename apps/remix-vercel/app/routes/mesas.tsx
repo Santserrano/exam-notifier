@@ -16,7 +16,7 @@ import { SearchBar } from "@exam-notifier/ui/components/SearchBar";
 import { clerkClient } from "~/utils/clerk.server";
 import { ActivarNotificaciones } from "../components/ActivarNotificaciones";
 import HeaderClerk from "../components/HeaderClerk";
-import { getClientEnv } from "~/utils/env.client";
+import getClientEnv from "~/utils/env.client";
 
 const { API_URL } = getClientEnv();
 
