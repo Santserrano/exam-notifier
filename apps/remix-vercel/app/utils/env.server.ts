@@ -5,15 +5,15 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const clientEnvSchema = z.object({
-  PUBLIC_API_URL: z.string().url(),
-  PUBLIC_APP_NAME: z.string(),
-  VAPID_PUBLIC_KEY: z.string(),
-  INTERNAL_API_KEY: z.string(),
+  PUBLIC_API_URL: z.string().url().optional().default("http://localhost:3001"),
+  PUBLIC_APP_NAME: z.string().optional().default("Exam Notifier"),
+  VAPID_PUBLIC_KEY: z.string().optional().default(""),
+  INTERNAL_API_KEY: z.string().optional().default(""),
 });
 
 const serverEnvSchema = z.object({
-  DATABASE_URL: z.string().url(),
-  SESSION_SECRET: z.string().min(32),
+  DATABASE_URL: z.string().url().optional().default("postgresql://localhost:5432/exam_notifier"),
+  SESSION_SECRET: z.string().min(32).optional().default("default_session_secret_32_chars_long"),
 });
 
 const processEnv = {
