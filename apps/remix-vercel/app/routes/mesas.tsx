@@ -14,7 +14,7 @@ import { SearchBar } from "@exam-notifier/ui/components/SearchBar";
 
 import { clerkClient } from "~/utils/clerk.server";
 import HeaderClerk from "../components/HeaderClerk";
-import { getServerEnv } from "~/utils/env.server";
+import getClientEnv from "~/utils/env.client";
 
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
@@ -24,7 +24,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
   const role = user.publicMetadata.role;
   if (role !== "profesor") return redirect("/");
 
-  const { API_URL } = getServerEnv();
+  const { API_URL } = getClientEnv();
 
   try {
     const response = await fetch(
