@@ -17,7 +17,7 @@ const port = process.env.PORT || 3005
 // Configuración de CORS
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? [process.env.FRONTEND_URL || 'https://exam-notifier.vercel.app']
+    ? [process.env.FRONTEND_URL || 'https://ucpmesas.site']
     : ['http://localhost:3000', 'http://127.0.0.1:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'x-api-key', 'Authorization'],
