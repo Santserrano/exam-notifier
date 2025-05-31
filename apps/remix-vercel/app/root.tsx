@@ -42,6 +42,6 @@ function App() {
 }
 
 export default ClerkApp(App, {
-  publishableKey: process.env.CLERK_PUBLISHABLE_KEY!,
+  publishableKey: import.meta.env.CLERK_PUBLISHABLE_KEY,
   localization: customEs,
 });
