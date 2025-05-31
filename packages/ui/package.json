@@ -44,7 +44,6 @@
     "src/tailwind.css"
   ],
   "scripts": {
-    "build": "cross-env NODE_ENV=production tsup && pnpm run build:tailwind",
     "clean": "rimraf .turbo node_modules dist",
     "dev": "tsup --watch & tailwindcss -i ./src/tailwind.css -o ./dist/tailwind.css --watch & if not exist ..\\..\\apps\\remix-app\\public\\build mkdir ..\\..\\apps\\remix-app\\public\\build && copy .\\dist\\tailwind.css ..\\..\\apps\\remix-app\\public\\build\\styles.css",
     "lint": "eslint \"src/**/*.ts*\"",
