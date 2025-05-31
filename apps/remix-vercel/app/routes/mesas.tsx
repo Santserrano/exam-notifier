@@ -10,13 +10,11 @@ import { Building2, Calendar, Clock, Info, MapPin, User } from "lucide-react";
 
 import { Button } from "@exam-notifier/ui/components/button";
 import MesaCard from "@exam-notifier/ui/components/MesaCard";
-import Modal from "@exam-notifier/ui/components/Modal";
 import { SearchBar } from "@exam-notifier/ui/components/SearchBar";
 
 import { clerkClient } from "~/utils/clerk.server";
-import { ActivarNotificaciones } from "../components/ActivarNotificaciones";
 import HeaderClerk from "../components/HeaderClerk";
-import getClientEnv from "~/utils/env.client";
+import { getClientEnv } from "~/utils/env.server";
 
 const { API_URL } = getClientEnv();
 
@@ -44,7 +42,6 @@ export const loader = async (args: LoaderFunctionArgs) => {
     }
 
     const mesasRaw = await response.json();
-    console.log("Mesas raw del backend:", mesasRaw);
 
     const meses = [
       "ene.",
@@ -131,8 +128,6 @@ const alumnosMock = [
 export default function MesasRoute() {
   const { mesas, userId } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
-
-  console.log("Mesas en el componente:", mesas); // Debug log
 
   const search = searchParams.get("search") ?? "";
   const carrera = searchParams.get("carrera") ?? "";
