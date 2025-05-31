@@ -35,17 +35,14 @@
         "^build"
       ],
       "outputs": [
-        "dist/**",
-        ".next/**",
-        "public/build/**",
-        "build/**",
-        "app/styles/tailwind.css",
-        ".cache"
+        "dist/**"
       ],
       "env": [
         "NODE_ENV",
-        "PUBLIC_API_URL",
-        "PUBLIC_APP_NAME"
+        "DATABASE_URL",
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "DIRECT_URL"
       ]
     },
     "@remix-gospel-stack/remix-app#start": {
@@ -61,7 +58,6 @@
         "^build"
       ],
       "outputs": [
-        "public/build/**",
         "dist/**"
       ]
     },
@@ -94,12 +90,7 @@
       ]
     },
     "lint": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        "node_modules/.cache/.eslintcache"
-      ]
+      "outputs": []
     },
     "docker:build": {
       "outputs": [],
@@ -111,12 +102,6 @@
       ],
       "outputs": [
         "coverage/**"
-      ],
-      "inputs": [
-        "src/**/*.tsx",
-        "src/**/*.ts",
-        "test/**/*.ts",
-        "test/**/*.tsx"
       ]
     },
     "test:watch": {
