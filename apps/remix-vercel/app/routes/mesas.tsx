@@ -24,14 +24,14 @@ export const loader = async (args: LoaderFunctionArgs) => {
   const role = user.publicMetadata.role;
   if (role !== "profesor") return redirect("/");
 
-  const { API_URL } = getServerEnv();
+  const { API_URL, INTERNAL_API_KEY } = getServerEnv();
 
   try {
     const response = await fetch(
       `${API_URL}/api/diaries/mesas/profesor/${userId}`,
       {
         headers: {
-          "x-api-key": process.env.INTERNAL_API_KEY || "",
+          "x-api-key": INTERNAL_API_KEY,
           "Content-Type": "application/json",
         },
       },
@@ -90,10 +90,6 @@ export const loader = async (args: LoaderFunctionArgs) => {
       userId,
       role,
       mesas,
-      env: {
-        VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
-        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
-      },
     });
   } catch (error) {
     console.error("Error en el loader:", error);
@@ -101,10 +97,6 @@ export const loader = async (args: LoaderFunctionArgs) => {
       userId,
       role,
       mesas: [],
-      env: {
-        VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
-        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
-      },
     });
   }
 };
