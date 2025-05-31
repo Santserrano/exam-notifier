@@ -25,7 +25,9 @@
     "SESSION_SECRET",
     "CLERK_PUBLISHABLE_KEY",
     "CLERK_SECRET_KEY",
-    "API_URL"
+    "API_URL",
+    "PUBLIC_API_URL",
+    "PUBLIC_APP_NAME"
   ],
   "tasks": {
     "build": {
@@ -41,7 +43,9 @@
         ".cache"
       ],
       "env": [
-        "NODE_ENV"
+        "NODE_ENV",
+        "PUBLIC_API_URL",
+        "PUBLIC_APP_NAME"
       ]
     },
     "@remix-gospel-stack/remix-app#start": {
