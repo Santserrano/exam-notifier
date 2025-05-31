@@ -8,7 +8,7 @@ declare global {
     }
 }
 
-function getClientEnv() {
+export function getClientEnv() {
     if (typeof window === "undefined") {
         return {
             API_URL: "",
@@ -18,5 +18,3 @@ function getClientEnv() {
     }
     return window.ENV;
 }
-
-export default getClientEnv;
