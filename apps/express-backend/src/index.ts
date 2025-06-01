@@ -48,65 +48,6 @@ app.use('/api', validateApiKey)
 app.use('/api/diaries', diaryRouter)
 app.use('/api/diaries/notificaciones', notificationsRouter)
 
-// Configuración de notificaciones
-app.get('/api/notifications/config/:profesorId', async (req, res) => {
-  try {
-    const config = await notificacionService.getConfigByProfesor(req.params.profesorId)
-    res.json(config)
-  } catch (error) {
-    res.status(500).json({ error: 'Error al obtener la configuración' })
-  }
-})
-
-app.patch('/api/notifications/config/:profesorId', async (req, res) => {
-  try {
-    const config = await notificacionService.updateConfig(req.params.profesorId, req.body)
-    res.json(config)
-  } catch (error) {
-    res.status(500).json({ error: 'Error al actualizar la configuración' })
-  }
-})
-
-// Suscripciones push
-app.post('/api/notifications/push/subscribe', async (req, res) => {
-  try {
-    const { profesorId, subscription } = req.body
-    if (!profesorId || !subscription) {
-      return res.status(400).json({ error: 'Faltan datos requeridos' })
-    }
-
-    const savedSubscription = await notificacionService.saveWebPushSubscription(profesorId, subscription)
-    res.json(savedSubscription)
-  } catch (error) {
-    res.status(500).json({ error: 'Error al guardar la suscripción' })
-  }
-})
-
-app.delete('/api/notifications/push/subscribe/:id', async (req, res) => {
-  try {
-    await notificacionService.deleteWebPushSubscription(req.params.id)
-    res.json({ message: 'Suscripción eliminada' })
-  } catch (error) {
-    res.status(500).json({ error: 'Error al eliminar la suscripción' })
-  }
-})
-
-// Envío de notificaciones
-app.post('/api/notifications/send', async (req, res) => {
-  try {
-    const { type, data } = req.body
-    if (!type || !data) {
-      return res.status(400).json({ error: 'Faltan datos requeridos' })
-    }
-
-    const notification = notificationFactory.createNotification(type as NotificationType, data)
-    await notification.send()
-    res.json({ message: 'Notificación enviada' })
-  } catch (error) {
-    res.status(500).json({ error: 'Error al enviar la notificación' })
-  }
-})
-
 // Manejo de errores CORS
 app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   if (err.name === 'CORSError') {
