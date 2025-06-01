@@ -1,4 +1,3 @@
-// vite.config.ts
 import { vitePlugin as remix } from "file:///C:/Dev/remix-init/exam-notifications/node_modules/@remix-run/dev/dist/index.js";
 import { vercelPreset } from "file:///C:/Dev/remix-init/exam-notifications/node_modules/@vercel/remix/vite.js";
 import { defineConfig } from "file:///C:/Dev/remix-init/exam-notifications/node_modules/vite/dist/node/index.js";

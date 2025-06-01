@@ -7,7 +7,6 @@ if (process.env.RESEND_API_KEY) {
 
 export async function enviarEmailNotificacion(profesorEmail: string, contenido: string) {
     if (!resend) {
-        console.warn('Resend no está configurado. No se enviará el email.');
         return;
     }
 

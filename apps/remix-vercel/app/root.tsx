@@ -1,7 +1,6 @@
-// root.tsx
 import { ClerkApp } from "@clerk/remix";
 import { rootAuthLoader } from "@clerk/remix/ssr.server";
-import type { LinksFunction, LoaderFunction } from "@remix-run/node";
+import type { LinksFunction, LoaderFunction, MetaFunction } from "@remix-run/node";
 import {
   Links,
   Meta,
@@ -16,6 +15,16 @@ import tailwindStyles from "./styles/tailwind.css?url";
 import { customEs } from "./localizations/customEs";
 
 export const loader: LoaderFunction = rootAuthLoader;
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Universidad de la Cuenca del Plata - Sistema de Notificaciones" },
+    {
+      name: "description",
+      content: "Sistema de Notificaciones de Mesas para la Universidad de la Cuenca del Plata",
+    },
+  ];
+};
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: tailwindStyles },

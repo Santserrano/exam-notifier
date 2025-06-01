@@ -24,7 +24,6 @@ class NotificationService {
 
     async getConfigByProfesor(profesorId: string) {
         try {
-            console.log('Buscando configuración para profesor:', profesorId);
             const config = await this.prisma.notificacionConfig.findUnique({
                 where: { profesorId }
             });
@@ -74,7 +73,6 @@ class NotificationService {
 
     async updateConfig(profesorId: string, config: NotificationConfig) {
         try {
-            console.log('Actualizando configuración para profesor:', profesorId);
             const updatedConfig = await this.prisma.notificacionConfig.upsert({
                 where: { profesorId },
                 update: config,
@@ -83,7 +81,6 @@ class NotificationService {
                     ...config
                 }
             });
-            console.log('Configuración actualizada:', updatedConfig);
             return updatedConfig;
         } catch (error) {
             console.error('Error en updateConfig:', error);
@@ -93,7 +90,6 @@ class NotificationService {
 
     async saveWebPushSubscription(profesorId: string, subscription: WebPushSubscription) {
         try {
-            console.log('Guardando suscripción para profesor:', profesorId);
             const existingSubscription = await this.prisma.webPushSubscription.findFirst({
                 where: { profesorId }
             });
@@ -122,7 +118,6 @@ class NotificationService {
                     }
                 });
             }
-            console.log('Suscripción guardada:', savedSubscription);
             return savedSubscription;
         } catch (error) {
             console.error('Error en saveWebPushSubscription:', error);
@@ -132,11 +127,9 @@ class NotificationService {
 
     async getWebPushSubscriptions(profesorId: string) {
         try {
-            console.log('Buscando suscripciones para profesor:', profesorId);
             const subscriptions = await this.prisma.webPushSubscription.findMany({
                 where: { profesorId }
             });
-            console.log('Suscripciones encontradas:', subscriptions);
             return subscriptions;
         } catch (error) {
             console.error('Error en getWebPushSubscriptions:', error);
@@ -146,11 +139,9 @@ class NotificationService {
 
     async deleteWebPushSubscription(id: string) {
         try {
-            console.log('Eliminando suscripción:', id);
             const deletedSubscription = await this.prisma.webPushSubscription.delete({
                 where: { id }
             });
-            console.log('Suscripción eliminada:', deletedSubscription);
             return deletedSubscription;
         } catch (error) {
             console.error('Error en deleteWebPushSubscription:', error);

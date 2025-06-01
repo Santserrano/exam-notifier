@@ -2,7 +2,6 @@ import { startTransition, StrictMode } from "react";
 import { RemixBrowser } from "@remix-run/react";
 import { hydrateRoot } from "react-dom/client";
 
-//hidratación de la app - ssr con html servido en bandeja :D
 const hydrate = () =>
   startTransition(() => {
     hydrateRoot(

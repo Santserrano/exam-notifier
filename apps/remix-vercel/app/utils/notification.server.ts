@@ -16,7 +16,7 @@ export async function getNotificationConfig(args: LoaderFunctionArgs) {
 
     try {
         const response = await fetch(
-            `${API_URL}/api/notificaciones/config/${userId}`,
+            `${API_URL}/api/diaries/notificaciones/config/${userId}`,
             {
                 headers: {
                     "x-api-key": INTERNAL_API_KEY,
