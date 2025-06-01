@@ -7,7 +7,7 @@ import { globSync } from "glob";
 const pkg = fsExtra.readJsonSync(path.join(process.cwd(), "package.json"));
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const here = (...s: Array<string>) => path.join(__dirname, ...s);
+const here = (...s: string[]) => path.join(__dirname, ...s);
 const globsafe = (s: string) => s.replace(/\\/g, "/");
 
 const allFiles = globSync(globsafe(here("../server/**/*.*")), {

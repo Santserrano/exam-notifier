@@ -9,12 +9,12 @@ import notificationsRouter from './routes/notifications.js'
 dotenv.config()
 
 const app = express()
-const port = process.env.PORT || 3005
+const port = process.env.PORT ?? 3005
 
 // Configuración de CORS
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? [process.env.FRONTEND_URL || 'https://ucpmesas.site']
+    ? [process.env.FRONTEND_URL ?? 'https://exam-notifier.vercel.app']
     : ['http://localhost:3000', 'http://127.0.0.1:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'x-api-key', 'Authorization'],

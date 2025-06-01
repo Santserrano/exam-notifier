@@ -54,9 +54,9 @@ export function ActivarNotificaciones() {
               "x-api-key": env.INTERNAL_API_KEY,
               "Content-Type": "application/json",
             },
-          }).catch((error) => {
+          }).catch((error: unknown) => {
             console.error("Error en la petición:", error);
-            throw new Error(`Error de conexión: ${error.message}`);
+            throw new Error(`Error de conexión: ${error instanceof Error ? error.message : ''}`);
           });
 
           if (response.ok) {
@@ -86,7 +86,7 @@ export function ActivarNotificaciones() {
     };
 
     if (user && env?.API_URL && env?.INTERNAL_API_KEY) {
-      checkSubscription();
+      void checkSubscription();
     }
   }, [user, env?.API_URL, env?.INTERNAL_API_KEY]);
 
@@ -152,7 +152,7 @@ export function ActivarNotificaciones() {
           if (registration.active) {
             resolve(true);
           } else {
-            registration.addEventListener("activate", () => resolve(true));
+            registration.addEventListener("activate", () => { resolve(true); });
           }
         });
       }
@@ -257,7 +257,7 @@ export function ActivarNotificaciones() {
         <Toast
           message={toastMessage}
           type={toastType}
-          onClose={() => setShowToast(false)}
+          onClose={() => { setShowToast(false); }}
         />
       )}
     </div>

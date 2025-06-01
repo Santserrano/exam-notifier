@@ -17,6 +17,47 @@ import HeaderClerk from "../components/HeaderClerk";
 import { getServerEnv } from "~/utils/env.server";
 import { getNotificationConfig } from "~/utils/notification.server";
 
+interface MesaRaw {
+  id: string | number;
+  fecha: string;
+  modalidad?: string;
+  materia?: {
+    nombre?: string;
+    carrera?: {
+      nombre?: string;
+    };
+  } | string;
+  carrera?: {
+    nombre?: string;
+    id?: string;
+  } | string;
+  sede?: string;
+  profesor?: {
+    nombre?: string;
+    apellido?: string;
+  } | string;
+  vocal?: {
+    nombre?: string;
+    apellido?: string;
+  } | string;
+  aula?: string;
+}
+
+interface MesaProcesada {
+  id: string;
+  materia: string;
+  carrera: string;
+  fecha: string;
+  fechaOriginal: string;
+  futura: boolean;
+  modalidad: "Presencial" | "Virtual";
+  color: string;
+  sede: string;
+  profesorNombre: string;
+  vocalNombre: string;
+  aula: string;
+}
+
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
   if (!userId) return redirect("/sign-in");
@@ -59,31 +100,36 @@ export const loader = async (args: LoaderFunctionArgs) => {
       "nov.",
       "dic.",
     ];
-    const mesas = mesasRaw.map((m: any, index: number) => {
+    const mesas = mesasRaw.map((m: MesaRaw, index: number) => {
       const fechaObj = new Date(m.fecha);
       const fechaFormateada = `${fechaObj.getDate()} ${meses[fechaObj.getMonth()]}`;
       const futura = fechaObj > new Date();
-      const modalidad = m.modalidad || "Presencial";
+      const modalidad = m.modalidad === "Virtual" ? "Virtual" : "Presencial";
+
+      const materiaNombre = typeof m.materia === 'object' ? m.materia?.nombre || '' : m.materia || '';
+      const carreraNombre = typeof m.carrera === 'object' 
+        ? m.carrera?.nombre || m.carrera?.id || ''
+        : m.carrera || '';
+      
+      const profesorObj = typeof m.profesor === 'object' ? m.profesor : null;
+      const vocalObj = typeof m.vocal === 'object' ? m.vocal : null;
+
       return {
-        id: m.id || `mesa-${index}`,
-        materia: m.materia?.nombre || m.materia,
-        carrera:
-          m.materia?.carrera?.nombre ||
-          m.carrera?.nombre ||
-          m.carrera?.id ||
-          m.carrera,
+        id: m.id?.toString() || `mesa-${index}`,
+        materia: materiaNombre,
+        carrera: carreraNombre,
         fecha: fechaFormateada,
         fechaOriginal: m.fecha,
         futura,
         modalidad,
         color: modalidad === "Virtual" ? "blue" : "green",
         sede: m.sede || "Central",
-        profesorNombre: m.profesor?.nombre
-          ? `${m.profesor.nombre} ${m.profesor.apellido}`
-          : m.profesor,
-        vocalNombre: m.vocal?.nombre
-          ? `${m.vocal.nombre} ${m.vocal.apellido}`
-          : m.vocal,
+        profesorNombre: profesorObj 
+          ? `${profesorObj.nombre || ''} ${profesorObj.apellido || ''}`
+          : typeof m.profesor === 'string' ? m.profesor : '',
+        vocalNombre: vocalObj
+          ? `${vocalObj.nombre || ''} ${vocalObj.apellido || ''}`
+          : typeof m.vocal === 'string' ? m.vocal : '',
         aula: m.aula || "Aula por confirmar",
       };
     });
@@ -140,7 +186,7 @@ export default function MesasRoute() {
     setSearchParams(searchParams);
   };
 
-  const mesasFiltradas = mesas.filter((m: any) => {
+  const mesasFiltradas = mesas.filter((m: MesaProcesada) => {
     const futura = new Date(m.fechaOriginal) > new Date();
     return (
       (searchParams.get("tab") === "pasadas" ? !futura : futura) &&
@@ -152,13 +198,13 @@ export default function MesasRoute() {
   });
 
   const mesaDetalle = mesas.find(
-    (m: any) =>
-      m.id?.toString() === detalleId || m.id?.toString() === alumnosId,
+    (m: MesaProcesada) =>
+      m.id === detalleId || m.id === alumnosId,
   );
 
   console.log("Mesa detalle encontrada:", mesaDetalle); // Debug log
 
-  function DetalleMesa({ mesa }: { mesa: any }) {
+  function DetalleMesa({ mesa }: { mesa: MesaProcesada }) {
     console.log("Renderizando DetalleMesa con mesa:", mesa); // Debug log
     const fechaObj = new Date(mesa.fechaOriginal);
     const diasSemana = [
@@ -248,7 +294,7 @@ export default function MesasRoute() {
     );
   }
 
-  function ListaAlumnos({ mesa }: { mesa: any }) {
+  function ListaAlumnos({ mesa }: { mesa: MesaProcesada }) {
     const alumnosFiltrados = alumnosMock.filter((a) =>
       a.nombre.toLowerCase().includes(filtroAlumno.toLowerCase()),
     );
@@ -272,7 +318,7 @@ export default function MesasRoute() {
           type="text"
           placeholder="Buscar alumno por nombre"
           value={filtroAlumno}
-          onChange={(e) => actualizarFiltro("filtroAlumno", e.target.value)}
+          onChange={(e) => { actualizarFiltro("filtroAlumno", e.target.value); }}
           className="rounded border px-2 py-2"
         />
         <div className="flex flex-col gap-1">
@@ -299,16 +345,16 @@ export default function MesasRoute() {
         <h2 className="py-2 text-lg font-bold text-green-900 px-4">Mis Mesas</h2>
         <SearchBar
           searchValue={search}
-          onSearchChange={(val) => actualizarFiltro("search", val)}
+          onSearchChange={(val) => { actualizarFiltro("search", val); }}
           carreras={carreras}
           carreraSeleccionada={carrera}
-          onCarreraChange={(val) => actualizarFiltro("carrera", val)}
+          onCarreraChange={(val) => { actualizarFiltro("carrera", val); }}
           fechas={fechas}
           fechaSeleccionada={fecha}
-          onFechaChange={(val) => actualizarFiltro("fecha", val)}
+          onFechaChange={(val) => { actualizarFiltro("fecha", val); }}
           sedes={sedes}
           sedeSeleccionada={sede}
-          onSedeChange={(val) => actualizarFiltro("sede", val)}
+          onSedeChange={(val) => { actualizarFiltro("sede", val); }}
           showAddMesaButton={false}
         />
 
@@ -351,7 +397,7 @@ export default function MesasRoute() {
               No hay mesas para mostrar.
             </div>
           ) : (
-            mesasFiltradas.map((mesa: any) => {
+            mesasFiltradas.map((mesa: MesaProcesada) => {
               console.log("Renderizando mesa:", mesa);
               return (
                 <MesaCard

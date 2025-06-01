@@ -23,7 +23,7 @@ interface Carrera {
 interface ActionData {
   error?: string;
   message?: string;
-  profesor?: any;
+  profesor?: unknown;
 }
 
 export const loader = async (args: LoaderFunctionArgs) => {
@@ -65,16 +65,16 @@ export const loader = async (args: LoaderFunctionArgs) => {
     console.log('Carreras raw:', carrerasRaw);
 
     // Procesar los datos para asegurar que solo contengan strings o números
-    const profesores = profesoresRaw.map((profesor: any) => {
+    const profesores = profesoresRaw.map((profesor: unknown) => {
       const profesorProcesado = {
         id: profesor.id,
         nombre: profesor.nombre,
         apellido: profesor.apellido,
-        carreras: Array.isArray(profesor.carreras) ? profesor.carreras.map((c: any) => ({
+        carreras: Array.isArray(profesor.carreras) ? profesor.carreras.map((c: unknown) => ({
           id: c.id,
           nombre: c.nombre
         })) : [],
-        materias: Array.isArray(profesor.materias) ? profesor.materias.map((m: any) => ({
+        materias: Array.isArray(profesor.materias) ? profesor.materias.map((m: unknown) => ({
           id: m.id,
           nombre: m.nombre,
           carreraId: m.carreraId
@@ -84,11 +84,11 @@ export const loader = async (args: LoaderFunctionArgs) => {
       return profesorProcesado;
     });
 
-    const carreras = carrerasRaw.map((carrera: any) => {
+    const carreras = carrerasRaw.map((carrera: unknown) => {
       const carreraProcesada = {
         id: carrera.id,
         nombre: carrera.nombre,
-        materias: Array.isArray(carrera.materias) ? carrera.materias.map((m: any) => ({
+        materias: Array.isArray(carrera.materias) ? carrera.materias.map((m: unknown) => ({
           id: m.id,
           nombre: m.nombre
         })) : []
@@ -236,7 +236,7 @@ export default function AdminProfesoresRoute() {
         <ConfiguracionProfesorModal
           profesor={profesorSeleccionado}
           carreras={carreras}
-          onClose={() => setShowModal(false)}
+          onClose={() => { setShowModal(false); }}
           onSave={handleSaveConfig}
         />
       )}
@@ -298,7 +298,7 @@ function ConfiguracionProfesorModal({
                 <input
                   type="checkbox"
                   checked={carrerasSeleccionadas.includes(carrera.id)}
-                  onChange={() => handleCarreraChange(carrera.id)}
+                  onChange={() => { handleCarreraChange(carrera.id); }}
                   className="accent-green-600"
                 />
                 <span className="text-green-900">{carrera.nombre}</span>
@@ -320,7 +320,7 @@ function ConfiguracionProfesorModal({
                       <input
                         type="checkbox"
                         checked={materiasSeleccionadas.includes(materia.id)}
-                        onChange={() => handleMateriaChange(materia.id, carrera.id)}
+                        onChange={() => { handleMateriaChange(materia.id, carrera.id); }}
                         className="accent-blue-600"
                       />
                       <span className="text-blue-900">{materia.nombre}</span>
@@ -336,7 +336,7 @@ function ConfiguracionProfesorModal({
             Cancelar
           </Button>
           <Button
-            onClick={() => onSave(profesor.id, carrerasSeleccionadas, materiasSeleccionadas)}
+            onClick={() => { onSave(profesor.id, carrerasSeleccionadas, materiasSeleccionadas); }}
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-1 rounded shadow"
           >
             Guardar
