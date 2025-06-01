@@ -13,7 +13,7 @@ import { Toast } from "@exam-notifier/ui/components/Toast";
 import { NotificationConfig } from "~/utils/notification.server";
 
 interface Props {
-  notificationConfig: NotificationConfig;
+  notificationConfig: NotificationConfig | null;
 }
 
 interface FetcherData {
@@ -31,7 +31,7 @@ export function HeaderClerk({ notificationConfig }: Props) {
   const handleToggleNotification = async (type: keyof NotificationConfig) => {
     if (!user?.id) return;
 
-    if (type === "webPushEnabled" && !notificationConfig.webPushEnabled) {
+    if (type === "webPushEnabled" && !notificationConfig?.webPushEnabled) {
       if (!("serviceWorker" in navigator)) {
         fetcher.data = { error: "Tu navegador no soporta notificaciones push" };
         return;
@@ -61,7 +61,7 @@ export function HeaderClerk({ notificationConfig }: Props) {
       fetcher.submit(
         {
           type,
-          enabled: (!notificationConfig[type]).toString(),
+          enabled: (!notificationConfig?.[type]).toString(),
         },
         { method: "post" }
       );
@@ -101,23 +101,23 @@ export function HeaderClerk({ notificationConfig }: Props) {
             <div className="flex items-center gap-2">
               <Button
                 onClick={() => handleToggleNotification("webPushEnabled")}
-                disabled={isSubmitting || notificationConfig.webPushEnabled}
+                disabled={isSubmitting || notificationConfig?.webPushEnabled}
                 className={`flex h-10 w-10 items-center justify-center rounded-full p-0 ${
-                  notificationConfig.webPushEnabled
+                  notificationConfig?.webPushEnabled
                     ? "cursor-not-allowed bg-green-600"
                     : isSubmitting
                       ? "cursor-not-allowed bg-gray-400"
                       : "bg-blue-600 hover:bg-blue-700"
                 }`}
                 title={
-                  notificationConfig.webPushEnabled
+                  notificationConfig?.webPushEnabled
                     ? "Notificaciones activadas"
                     : isSubmitting
                       ? "Activando..."
                       : "Activar notificaciones"
                 }
               >
-                {notificationConfig.webPushEnabled ? (
+                {notificationConfig?.webPushEnabled ? (
                   <Bell className="h-5 w-5 text-white" />
                 ) : isSubmitting ? (
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -156,12 +156,12 @@ export function HeaderClerk({ notificationConfig }: Props) {
                     <button
                       onClick={() => handleToggleNotification("webPushEnabled")}
                       className={`h-6 w-12 rounded-full transition-colors duration-200 ease-in-out ${
-                        notificationConfig.webPushEnabled ? "bg-green-500" : "bg-gray-300"
+                        notificationConfig?.webPushEnabled ? "bg-green-500" : "bg-gray-300"
                       }`}
                     >
                       <div
                         className={`h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ease-in-out ${
-                          notificationConfig.webPushEnabled
+                          notificationConfig?.webPushEnabled
                             ? "translate-x-6"
                             : "translate-x-1"
                         }`}
@@ -180,12 +180,12 @@ export function HeaderClerk({ notificationConfig }: Props) {
                     <button
                       onClick={() => handleToggleNotification("smsEnabled")}
                       className={`h-6 w-12 rounded-full transition-colors duration-200 ease-in-out ${
-                        notificationConfig.smsEnabled ? "bg-green-500" : "bg-gray-300"
+                        notificationConfig?.smsEnabled ? "bg-green-500" : "bg-gray-300"
                       }`}
                     >
                       <div
                         className={`h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ease-in-out ${
-                          notificationConfig.smsEnabled ? "translate-x-6" : "translate-x-1"
+                          notificationConfig?.smsEnabled ? "translate-x-6" : "translate-x-1"
                         }`}
                       />
                     </button>
@@ -202,12 +202,12 @@ export function HeaderClerk({ notificationConfig }: Props) {
                     <button
                       onClick={() => handleToggleNotification("emailEnabled")}
                       className={`h-6 w-12 rounded-full transition-colors duration-200 ease-in-out ${
-                        notificationConfig.emailEnabled ? "bg-green-500" : "bg-gray-300"
+                        notificationConfig?.emailEnabled ? "bg-green-500" : "bg-gray-300"
                       }`}
                     >
                       <div
                         className={`h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ease-in-out ${
-                          notificationConfig.emailEnabled
+                          notificationConfig?.emailEnabled
                             ? "translate-x-6"
                             : "translate-x-1"
                         }`}

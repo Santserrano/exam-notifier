@@ -17,7 +17,6 @@ export class ProfesorService {
 
     async getAllProfesores() {
         try {
-            console.log('Iniciando getAllProfesores...');
             const profesores = await this.prisma.profesor.findMany({
                 include: {
                     carreras: {
@@ -35,7 +34,6 @@ export class ProfesorService {
                     }
                 }
             });
-            console.log('Profesores encontrados:', profesores);
             return profesores;
         } catch (error) {
             console.error('Error en getAllProfesores:', error);
@@ -45,11 +43,9 @@ export class ProfesorService {
 
     async getProfesorById(id: string) {
         try {
-            console.log('Buscando profesor con ID:', id);
             const profesor = await this.prisma.profesor.findUnique({
                 where: { id }
             });
-            console.log('Profesor encontrado:', profesor);
             return profesor;
         } catch (error) {
             console.error('Error en getProfesorById:', error);

@@ -23,7 +23,6 @@ import { clerkClient } from "~/utils/clerk.server";
 import HeaderClerk from "../components/HeaderClerk";
 import { getClientEnv } from "~/utils/env.server";
 import { getNotificationConfig } from "~/utils/notification.server";
-
 type Modalidad = "Virtual" | "Presencial";
 
 interface Mesa {
@@ -85,7 +84,6 @@ export const loader = async (args: LoaderFunctionArgs) => {
   }
 
   const notificationConfig = await getNotificationConfig(args);
-
   try {
     // Obtener las mesas y profesores del backend
     const [mesasResponse, profesoresResponse, carrerasResponse] =

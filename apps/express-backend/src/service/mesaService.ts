@@ -34,7 +34,6 @@ class MesaService {
 
     async getAllMesas(): Promise<MesaDeExamen[]> {
         try {
-            console.log('Iniciando getAllMesas...');
             const mesas = await this.prisma.mesaDeExamen.findMany({
                 include: {
                     profesor: true,
@@ -46,7 +45,6 @@ class MesaService {
                     }
                 }
             });
-            console.log('Mesas encontradas:', mesas);
             return mesas;
         } catch (error) {
             console.error('Error en getAllMesas:', error);
@@ -56,7 +54,6 @@ class MesaService {
 
     async getMesasByProfesorId(profesorId: string): Promise<MesaDeExamen[]> {
         try {
-            console.log('Buscando mesas para profesor:', profesorId);
             const mesas = await this.prisma.mesaDeExamen.findMany({
                 where: {
                     OR: [
@@ -75,7 +72,6 @@ class MesaService {
                     carrera: true
                 }
             });
-            console.log('Mesas encontradas para profesor:', mesas);
             return mesas;
         } catch (error) {
             console.error('Error en getMesasByProfesorId:', error);
@@ -165,11 +161,6 @@ class MesaService {
                 notificacionService.getConfigByProfesor(data.vocal)
             ]);
 
-            console.log('Configuraciones de notificaciones:', {
-                profesor: configProfesor,
-                vocal: configVocal
-            });
-
             // Enviar notificaciones al profesor
             if (configProfesor) {
                 try {
@@ -187,13 +178,11 @@ class MesaService {
 
                     // Enviar notificaciones según la configuración
                     if (configProfesor.webPushEnabled) {
-                        console.log('Enviando notificación push al profesor:', data.profesor);
                         const pushNotification = notificationFactory.createNotification('push', notificationData);
                         await pushNotification.send();
                     }
 
                     if (profesorData.email && configProfesor.emailEnabled) {
-                        console.log('Enviando notificación email al profesor:', profesorData.email);
                         const emailNotification = notificationFactory.createNotification('email', {
                             ...notificationData,
                             recipient: profesorData.email
@@ -202,7 +191,6 @@ class MesaService {
                     }
 
                     if (profesorData.telefono && configProfesor.smsEnabled) {
-                        console.log('Enviando notificación WhatsApp al profesor:', profesorData.telefono);
                         const whatsappNotification = notificationFactory.createNotification('whatsapp', {
                             ...notificationData,
                             recipient: profesorData.telefono
@@ -230,13 +218,11 @@ class MesaService {
                     };
 
                     if (configVocal.webPushEnabled) {
-                        console.log('Enviando notificación push al vocal:', data.vocal);
                         const pushNotification = notificationFactory.createNotification('push', notificationData);
                         await pushNotification.send();
                     }
 
                     if (vocalData.email && configVocal.emailEnabled) {
-                        console.log('Enviando notificación email al vocal:', vocalData.email);
                         const emailNotification = notificationFactory.createNotification('email', {
                             ...notificationData,
                             recipient: vocalData.email
@@ -245,7 +231,6 @@ class MesaService {
                     }
 
                     if (vocalData.telefono && configVocal.smsEnabled) {
-                        console.log('Enviando notificación WhatsApp al vocal:', vocalData.telefono);
                         const whatsappNotification = notificationFactory.createNotification('whatsapp', {
                             ...notificationData,
                             recipient: vocalData.telefono
