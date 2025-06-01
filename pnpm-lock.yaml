@@ -112,7 +112,7 @@ importers:
         specifier: ^4.18.2
         version: 4.21.2
       redis:
-        specifier: ^5.0.1
+        specifier: ^5.1.0
         version: 5.1.0
       resend:
         specifier: ^4.5.1
