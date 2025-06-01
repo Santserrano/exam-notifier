@@ -10,21 +10,48 @@ export default function SignInPage() {
         afterSignInUrl="/"
         appearance={{
           elements: {
+            header: {
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              marginBottom: '0.1rem',
+              fontSize: 12,
+            },
             formButtonPrimary: {
-              fontSize: 14,
+              fontSize: 12,
               textTransform: 'none',
-              backgroundColor: '##00b521',
+              backgroundColor: '#00b521',
               '&:hover, &:focus, &:active': {
                 backgroundColor: '#1d4ed8',
               },
             },
-            signIn: {
-              start: {
-                title: 'Acceso a la Plataforma UCP',
-                subtitle: '¡Bienvenido de nuevo! Por favor, inicia sesión para continuar',
-                actionText: 'O usa tu correo electrónico',
-              },
+            socialButtonsBlockButton: {
+              display: 'none'
             },
+            footerActionLink: {
+              display: 'none'
+            },
+            footerAction: {
+              display: 'none'
+            },
+            dividerLine: {
+              display: 'none'
+            },
+            dividerText: {
+              display: 'none'
+            },
+            headerTitle: {
+              marginBottom: '0.25rem'
+            },
+            headerSubtitle: {
+              marginBottom: '0.25rem'
+            },
+            formField: {
+              marginTop: '0.1rem'
+            },
+            card: {
+              paddingTop: '2rem'
+            }
           },
         }}
       />
