@@ -63,7 +63,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       </div>
     </div>
 
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 justify-items-center items-center">
+    <div className="flex grid-cols-3 gap-2 justify-items-center items-center">
       <div className="relative w-full">
         <select
           value={carreraSeleccionada}

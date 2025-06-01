@@ -296,7 +296,7 @@ export default function MesasRoute() {
     <div className="mx-auto max-w-md pb-8">
       <HeaderClerk notificationConfig={notificationConfig} />
       <div className="mt-2 px-4">
-        <h2 className="mb-4 text-lg font-bold text-green-900">Mis Mesas</h2>
+        <h2 className="py-2 text-lg font-bold text-green-900 px-4">Mis Mesas</h2>
         <SearchBar
           searchValue={search}
           onSearchChange={(val) => actualizarFiltro("search", val)}
