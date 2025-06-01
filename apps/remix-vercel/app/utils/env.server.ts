@@ -1,4 +1,3 @@
-// env.server.ts
 import { z } from "zod";
 import dotenv from "dotenv";
 
@@ -28,9 +27,6 @@ export const env = {
   ..._serverEnv,
 };
 
-/**
- * Variables accesibles en el cliente. Inyéctalas en window.ENV desde el loader de root.
- */
 export function getClientEnv() {
   return {
     API_URL: _clientEnv.PUBLIC_API_URL,
@@ -39,9 +35,6 @@ export function getClientEnv() {
   };
 }
 
-/**
- * Variables accesibles en el servidor.
- */
 export function getServerEnv() {
   return {
     API_URL: process.env.PUBLIC_API_URL || "",
