@@ -2,11 +2,8 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
 
-import { notificationFactory } from './core/notifications/NotificationFactory.js'
-import { NotificationType } from './core/notifications/types.js'
 import diaryRouter from './routes/diaries.js'
 import notificationsRouter from './routes/notifications.js'
-import { notificacionService } from './service/NotificationService.js'
 
 // Cargar variables de entorno
 dotenv.config()

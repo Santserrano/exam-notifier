@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import express from 'express';
 
+import { notificationFactory } from '../core/notifications/NotificationFactory.js';
+import { NotificationType } from '../core/notifications/types.js';
 import { notificacionService } from '../service/NotificationService.js';
 
 const router = express.Router();
@@ -147,6 +149,22 @@ router.delete('/subscription/:id', async (req, res) => {
     return res.status(200).json(deletedSubscription);
   } catch (error) {
     return res.status(500).json({ error: 'Error al eliminar la suscripción' });
+  }
+});
+
+// POST /api/diaries/notificaciones/send
+router.post('/send', async (req, res) => {
+  try {
+    const { type, data } = req.body;
+    if (!type || !data) {
+      return res.status(400).json({ error: 'Faltan datos requeridos' });
+    }
+
+    const notification = notificationFactory.createNotification(type as NotificationType, data);
+    await notification.send();
+    res.json({ message: 'Notificación enviada' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al enviar la notificación' });
   }
 });
 
