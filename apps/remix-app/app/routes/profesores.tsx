@@ -66,35 +66,63 @@ export const loader = async (args: LoaderFunctionArgs) => {
 
     // Procesar los datos para asegurar que solo contengan strings o números
     const profesores = profesoresRaw.map((profesor: unknown) => {
-      const profesorProcesado = {
-        id: profesor.id,
-        nombre: profesor.nombre,
-        apellido: profesor.apellido,
-        carreras: Array.isArray(profesor.carreras) ? profesor.carreras.map((c: unknown) => ({
-          id: c.id,
-          nombre: c.nombre
+      if (typeof profesor !== 'object' || profesor === null) {
+        return {
+          id: '',
+          nombre: '',
+          apellido: '',
+          carreras: [],
+          materias: []
+        };
+      }
+
+      const p = profesor as {
+        id?: string;
+        nombre?: string;
+        apellido?: string;
+        carreras?: Array<{ id?: string; nombre?: string; }>;
+        materias?: Array<{ id?: string; nombre?: string; carreraId?: string; }>;
+      };
+
+      return {
+        id: p.id || '',
+        nombre: p.nombre || '',
+        apellido: p.apellido || '',
+        carreras: Array.isArray(p.carreras) ? p.carreras.map(c => ({
+          id: c.id || '',
+          nombre: c.nombre || ''
         })) : [],
-        materias: Array.isArray(profesor.materias) ? profesor.materias.map((m: unknown) => ({
-          id: m.id,
-          nombre: m.nombre,
-          carreraId: m.carreraId
+        materias: Array.isArray(p.materias) ? p.materias.map(m => ({
+          id: m.id || '',
+          nombre: m.nombre || '',
+          carreraId: m.carreraId || ''
         })) : []
       };
-      console.log('Profesor procesado:', profesorProcesado);
-      return profesorProcesado;
     });
 
     const carreras = carrerasRaw.map((carrera: unknown) => {
-      const carreraProcesada = {
-        id: carrera.id,
-        nombre: carrera.nombre,
-        materias: Array.isArray(carrera.materias) ? carrera.materias.map((m: unknown) => ({
-          id: m.id,
-          nombre: m.nombre
+      if (typeof carrera !== 'object' || carrera === null) {
+        return {
+          id: '',
+          nombre: '',
+          materias: []
+        };
+      }
+
+      const c = carrera as {
+        id?: string;
+        nombre?: string;
+        materias?: Array<{ id?: string; nombre?: string; }>;
+      };
+
+      return {
+        id: c.id || '',
+        nombre: c.nombre || '',
+        materias: Array.isArray(c.materias) ? c.materias.map(m => ({
+          id: m.id || '',
+          nombre: m.nombre || ''
         })) : []
       };
-      console.log('Carrera procesada:', carreraProcesada);
-      return carreraProcesada;
     });
 
     return json({ profesores, carreras });
