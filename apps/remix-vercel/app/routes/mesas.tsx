@@ -5,6 +5,7 @@ import {
   redirect,
   useLoaderData,
   useSearchParams,
+  useRouteError,
 } from "@remix-run/react";
 import { Building2, Calendar, Clock, Info, MapPin, User } from "lucide-react";
 
@@ -138,7 +139,11 @@ export const loader = async (args: LoaderFunctionArgs) => {
       userId,
       role,
       mesas,
-      notificationConfig,
+      notificationConfig: {
+        webPushEnabled: notificationConfig?.webPushEnabled ?? false,
+        smsEnabled: notificationConfig?.smsEnabled ?? false,
+        emailEnabled: notificationConfig?.emailEnabled ?? false,
+      },
     });
   } catch (error) {
     console.error("Error en el loader:", error);
@@ -146,7 +151,11 @@ export const loader = async (args: LoaderFunctionArgs) => {
       userId,
       role,
       mesas: [],
-      notificationConfig,
+      notificationConfig: {
+        webPushEnabled: false,
+        smsEnabled: false,
+        emailEnabled: false,
+      },
     });
   }
 };
@@ -488,4 +497,10 @@ export default function MesasRoute() {
       </div>
     </div>
   );
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  console.error(error);
+  return <div>Error: {error instanceof Error ? error.message : "Unknown error"}</div>;
 }

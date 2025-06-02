@@ -11,6 +11,7 @@ import {
   useActionData,
   useLoaderData,
   useNavigation,
+  useRouteError,
 } from "@remix-run/react";
 
 import { Button } from "@exam-notifier/ui/components/button";
@@ -618,3 +619,9 @@ export default function AdminRoute() {
     </div>
   );
 }
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  console.error(error);
+  return <div>Error: {error instanceof Error ? error.message : "Unknown error"}</div>;
+} 
