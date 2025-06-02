@@ -640,8 +640,8 @@ export default function AdminRoute() {
       <HeaderClerk notificationConfig={notificationConfig} userRole="admin" env={env} />
       <div className="mt-2 px-4">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-center text-lg font-bold">
-            Mesas - Administración
+          <h2 className="text-center text-base md:text-lg font-bold">
+            Administración
           </h2>
           <Link to="/profesores">
             <Button variant="outline">Gestionar Profesores</Button>

@@ -170,16 +170,16 @@ export default function AdminProfesoresRoute() {
   return (
     <div className="flex min-h-screen flex-col items-center bg-white py-10">
       <div className="w-full max-w-4xl">
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-8 flex items-center gap-4 px-2">
           <Link to="/admin">
             <Button
               variant="outline"
               className="hover:bg-muted rounded-2xl px-4 py-2 text-sm font-medium transition"
             >
-              Volver
+              ← Volver
             </Button>
           </Link>
-          <h1 className="ml-2 text-3xl font-extrabold tracking-tight text-green-900">
+          <h1 className="ml-2 text-base md:text-lg font-extrabold tracking-tight text-green-900">
             Gestión de Profesores
           </h1>
         </div>
