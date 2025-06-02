@@ -363,6 +363,9 @@ importers:
       '@exam-notifier/tsconfig':
         specifier: workspace:*
         version: link:../../config/tsconfig
+      '@playwright/test':
+        specifier: ^1.52.0
+        version: 1.52.0
       '@remix-run/dev':
         specifier: ^2.8.1
         version: 2.16.0(@remix-run/react@2.16.6)(@remix-run/serve@2.16.0)(@types/node@20.17.46)(typescript@5.8.3)(vite@5.4.19)
