@@ -33,31 +33,68 @@ export function HeaderClerk({ notificationConfig }: Props) {
     if (!user?.id) return;
 
     if (type === "webPushEnabled" && !notificationConfig?.webPushEnabled) {
-      if (!("serviceWorker" in navigator)) {
-        fetcher.data = { success: false, error: "Tu navegador no soporta notificaciones push" };
-        return;
+      try {
+        console.log("Iniciando activación de notificaciones web push...");
+        
+        if (!("serviceWorker" in navigator)) {
+          console.error("Service Worker no soportado");
+          fetcher.data = { success: false, error: "Tu navegador no soporta notificaciones push" };
+          return;
+        }
+
+        // Registrar el Service Worker si no está registrado
+        let registration;
+        try {
+          registration = await navigator.serviceWorker.register("/sw.js");
+          console.log("Service Worker registrado:", registration);
+        } catch (error) {
+          console.error("Error al registrar Service Worker:", error);
+          fetcher.data = { success: false, error: "Error al registrar el Service Worker" };
+          return;
+        }
+
+        // Esperar a que el Service Worker esté activo
+        if (!registration.active) {
+          console.log("Esperando a que el Service Worker esté activo...");
+          await new Promise((resolve) => {
+            if (registration.active) {
+              resolve(true);
+            } else {
+              registration.addEventListener("activate", () => resolve(true));
+            }
+          });
+        }
+
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          console.error("Permiso de notificaciones denegado");
+          fetcher.data = { success: false, error: "Permiso de notificaciones denegado" };
+          return;
+        }
+
+        console.log("Obteniendo suscripción push...");
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: ENV.VAPID_PUBLIC_KEY,
+        });
+
+        console.log("Suscripción obtenida:", subscription);
+
+        fetcher.submit(
+          {
+            type: "webPushEnabled",
+            subscription: JSON.stringify(subscription),
+            enabled: "true",
+          },
+          { method: "post" }
+        );
+      } catch (error) {
+        console.error("Error en el proceso de activación:", error);
+        fetcher.data = { 
+          success: false, 
+          error: error instanceof Error ? error.message : "Error al activar notificaciones" 
+        };
       }
-
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        fetcher.data = { success: false, error: "Permiso de notificaciones denegado" };
-        return;
-      }
-
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: ENV.VAPID_PUBLIC_KEY,
-      });
-
-      fetcher.submit(
-        {
-          type: "webPushEnabled",
-          subscription: JSON.stringify(subscription),
-          enabled: "true",
-        },
-        { method: "post" }
-      );
     } else {
       fetcher.submit(
         {
