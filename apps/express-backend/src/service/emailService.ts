@@ -12,7 +12,7 @@ export async function enviarEmailNotificacion(profesorEmail: string, contenido: 
 
     try {
         await resend.emails.send({
-            from: 'onboarding@resend.dev',
+            from: 'notificaciones@ucpmesas.site',
             to: profesorEmail,
             subject: 'Nueva mesa asignada',
             html: `<p>${contenido}</p>`,
