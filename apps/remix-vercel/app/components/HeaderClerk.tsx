@@ -51,6 +51,7 @@ export function HeaderClerk({ notificationConfig }: Props) {
 
       fetcher.submit(
         {
+          intent: "toggleNotifications",
           type,
           subscription: JSON.stringify(subscription),
           enabled: "true",
@@ -60,6 +61,7 @@ export function HeaderClerk({ notificationConfig }: Props) {
     } else {
       fetcher.submit(
         {
+          intent: "toggleNotifications",
           type,
           enabled: (!notificationConfig?.[type]).toString(),
         },
