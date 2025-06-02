@@ -14,17 +14,7 @@ import fontStyles from "./styles/font.css?url";
 import tailwindStyles from "./styles/tailwind.css?url";
 import { customEs } from "./localizations/customEs";
 
-export const loader: LoaderFunction = async (args) => {
-  const authData = await rootAuthLoader(args);
-  return {
-    ...authData,
-    ENV: {
-      VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
-      API_URL: process.env.API_URL,
-      INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
-    },
-  };
-};
+export const loader: LoaderFunction = rootAuthLoader;
 
 export const meta: MetaFunction = () => {
   return [
