@@ -172,6 +172,7 @@ export const action = async (args: ActionFunctionArgs) => {
     return redirect("/");
   }
 
+  const { API_URL, INTERNAL_API_KEY } = getServerEnv();
   const formData = await request.formData();
   const fecha = formData.get("fecha") as string;
   const materia = formData.get("asignatura") as string;
