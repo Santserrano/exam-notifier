@@ -4,12 +4,19 @@ import express from 'express'
 
 import diaryRouter from './routes/diaries.js'
 import notificationsRouter from './routes/notifications.js'
+import { initRedis } from './lib/redis.js'
 
 // Cargar variables de entorno
 dotenv.config()
 
 const app = express()
 const port = process.env.PORT ?? 3005
+
+// Inicializar Redis
+initRedis().catch(err => {
+  console.error('Error al inicializar Redis:', err);
+  process.exit(1);
+});
 
 // Configuración de CORS
 const corsOptions = {
