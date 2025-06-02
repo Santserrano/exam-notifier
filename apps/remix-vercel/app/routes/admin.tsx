@@ -230,7 +230,6 @@ export const action = async (args: ActionFunctionArgs) => {
 export default function AdminRoute() {
   const { userId, role, mesas, profesores, carreras, notificationConfig, env } =
     useLoaderData<typeof loader>();
-  console.log("Profesores cargados:", profesores);
   const actionData = useActionData<typeof action>();
   const [search, setSearch] = useState("");
   const [carrera, setCarrera] = useState("");
@@ -422,7 +421,7 @@ export default function AdminRoute() {
             {carreraSeleccionada &&
               carreras
                 .find((c: Carrera) => c.id === carreraSeleccionada)
-                ?.materias.map((m: { id: string; nombre: string }) => (
+                ?.materias?.map((m: { id: string; nombre: string }) => (
                   <option key={m.id} value={m.id}>
                     {m.nombre}
                   </option>
