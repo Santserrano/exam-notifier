@@ -123,6 +123,8 @@ self.addEventListener("push", function (event) {
         },
       ],
       timestamp: data.data?.timestamp ? new Date(data.data.timestamp).getTime() : Date.now(),
+      tag: data.data?.mesaId ? `mesa-${data.data.mesaId}` : undefined,
+      renotify: true
     };
 
     event.waitUntil(self.registration.showNotification(data.title, options));

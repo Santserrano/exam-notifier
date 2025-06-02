@@ -259,6 +259,24 @@ export default function MesasRoute() {
   const [searchParams, setSearchParams] = useSearchParams();
   const fetcher = useFetcher();
 
+  // Configurar el service worker al cargar el componente
+  if ('serviceWorker' in navigator && 'PushManager' in window) {
+    navigator.serviceWorker.ready.then(registration => {
+      registration.addEventListener('push', ((event: Event) => {
+        const pushEvent = event as PushEvent;
+        if (pushEvent.data) {
+          const data = pushEvent.data.json();
+          if (data.data?.mesaId) {
+            // Forzar recarga de datos
+            fetcher.load('/api/mesas');
+            // También recargar la página completa para asegurar que los datos estén actualizados
+            window.location.reload();
+          }
+        }
+      }) as EventListener);
+    });
+  }
+
   const search = searchParams.get("search") ?? "";
   const carrera = searchParams.get("carrera") ?? "";
   const fecha = searchParams.get("fecha") ?? "";
@@ -425,23 +443,6 @@ export default function MesasRoute() {
       </div>
     );
   }
-
-  useEffect(() => {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      navigator.serviceWorker.ready.then(registration => {
-        registration.addEventListener('push', ((event: Event) => {
-          const pushEvent = event as PushEvent;
-          if (pushEvent.data) {
-            const data = pushEvent.data.json();
-            if (data.data?.mesaId) {
-              // Forzar recarga de datos
-              fetcher.load('/api/mesas');
-            }
-          }
-        }) as EventListener);
-      });
-    }
-  }, [fetcher]);
 
   return (
     <div className="mx-auto max-w-md pb-8">
