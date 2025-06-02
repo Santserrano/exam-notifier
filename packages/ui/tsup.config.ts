@@ -123,7 +123,7 @@ export default defineConfig((opts) => {
   ];
 });
 
-type PackageJson = {
+interface PackageJson {
   name: string;
   exports: Record<
     string,
@@ -135,4 +135,4 @@ type PackageJson = {
   pnpm: {
     overrides: Record<string, string>;
   };
-};
+}

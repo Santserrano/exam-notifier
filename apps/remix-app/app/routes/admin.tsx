@@ -111,7 +111,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
           "Content-Type": "application/json"
         }
-      }).catch(error => {
+      }).catch((error: unknown) => {
         console.error("Error al obtener mesas:", error);
         return { ok: false, status: 500, json: () => [] };
       }),
@@ -120,7 +120,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
           "Content-Type": "application/json"
         }
-      }).catch(error => {
+      }).catch((error: unknown) => {
         console.error("Error al obtener profesores:", error);
         return { ok: false, status: 500, json: () => [] };
       }),
@@ -129,7 +129,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
           "Content-Type": "application/json"
         }
-      }).catch(error => {
+      }).catch((error: unknown) => {
         console.error("Error al obtener carreras:", error);
         return { ok: false, status: 500, json: () => [] };
       })

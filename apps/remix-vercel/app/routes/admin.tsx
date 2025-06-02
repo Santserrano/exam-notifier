@@ -93,7 +93,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
             "x-api-key": process.env.INTERNAL_API_KEY || "",
             "Content-Type": "application/json",
           },
-        }).catch((error) => {
+        }).catch((error: unknown) => {
           console.error("Error al obtener mesas:", error);
           return { ok: false, status: 500, json: () => [] };
         }),
@@ -102,7 +102,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
             "x-api-key": process.env.INTERNAL_API_KEY || "",
             "Content-Type": "application/json",
           },
-        }).catch((error) => {
+        }).catch((error: unknown) => {
           console.error("Error al obtener profesores:", error);
           return { ok: false, status: 500, json: () => [] };
         }),
@@ -111,7 +111,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
             "x-api-key": process.env.INTERNAL_API_KEY || "",
             "Content-Type": "application/json",
           },
-        }).catch((error) => {
+        }).catch((error: unknown) => {
           console.error("Error al obtener carreras:", error);
           return { ok: false, status: 500, json: () => [] };
         }),
@@ -298,7 +298,7 @@ export default function AdminRoute() {
     return {
       ...mesa,
       fecha: `${fechaObj.getDate()} ${meses[fechaObj.getMonth()]}`,
-      modalidad: (mesa.modalidad || "Presencial") as Modalidad,
+      modalidad: (mesa.modalidad ?? "Presencial") as Modalidad,
       color: mesa.modalidad === "Virtual" ? "blue" : "green",
     };
   });
@@ -324,16 +324,16 @@ export default function AdminRoute() {
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
     const [modalidad, setModalidad] = useState<Modalidad>(
-      mesa?.modalidad || "Presencial",
+      mesa?.modalidad ?? "Presencial",
     );
     const [carreraSeleccionada, setCarreraSeleccionada] = useState(
-      mesa?.carrera || "",
+      mesa?.carrera ?? "",
     );
     const [materiaSeleccionada, setMateriaSeleccionada] = useState(
-      mesa?.materia || "",
+      mesa?.materia ?? "",
     );
-    const [aula, setAula] = useState(mesa?.aula || "");
-    const [webexLink, setWebexLink] = useState(mesa?.webexLink || "");
+    const [aula, setAula] = useState(mesa?.aula ?? "");
+    const [webexLink, setWebexLink] = useState(mesa?.webexLink ?? "");
 
     // Resetear materia cuando cambia la carrera
     React.useEffect(() => {
@@ -384,7 +384,7 @@ export default function AdminRoute() {
             type="date"
             name="fecha"
             required
-            defaultValue={mesa?.fecha || ""}
+            defaultValue={mesa?.fecha ?? ""}
           />
           <label className="text-sm font-semibold text-green-900">
             Carrera
@@ -394,7 +394,7 @@ export default function AdminRoute() {
             className="rounded border px-2 py-2"
             required
             value={carreraSeleccionada}
-            onChange={(e) => setCarreraSeleccionada(e.target.value)}
+            onChange={(e) => { setCarreraSeleccionada(e.target.value); }}
           >
             <option value="">Seleccionar</option>
             {carreras.map((c: Carrera) => (
@@ -411,7 +411,7 @@ export default function AdminRoute() {
             className="rounded border px-2 py-2"
             required
             value={materiaSeleccionada}
-            onChange={(e) => setMateriaSeleccionada(e.target.value)}
+            onChange={(e) => { setMateriaSeleccionada(e.target.value); }}
             disabled={!carreraSeleccionada}
           >
             <option value="">Seleccionar</option>
@@ -431,7 +431,7 @@ export default function AdminRoute() {
             name="docenteTitular"
             className="rounded border px-2 py-2"
             required
-            defaultValue={mesa?.profesor || ""}
+            defaultValue={mesa?.profesor ?? ""}
             disabled={!materiaSeleccionada}
           >
             <option value="">Seleccionar</option>
@@ -448,7 +448,7 @@ export default function AdminRoute() {
             name="docenteVocal"
             className="rounded border px-2 py-2"
             required
-            defaultValue={mesa?.vocal || ""}
+            defaultValue={mesa?.vocal ?? ""}
             disabled={!materiaSeleccionada}
           >
             <option value="">Seleccionar</option>
@@ -463,7 +463,7 @@ export default function AdminRoute() {
             name="hora"
             className="rounded border px-2 py-2"
             required
-            defaultValue={mesa?.hora || ""}
+            defaultValue={mesa?.hora ?? ""}
           >
             <option value="">Seleccionar</option>
             {horas.map((h) => (
@@ -482,7 +482,7 @@ export default function AdminRoute() {
                 name="modalidad"
                 value="Presencial"
                 checked={modalidad === "Presencial"}
-                onChange={() => setModalidad("Presencial")}
+                onChange={() => { setModalidad("Presencial"); }}
               />
               Presencial
             </label>
@@ -492,7 +492,7 @@ export default function AdminRoute() {
                 name="modalidad"
                 value="Virtual"
                 checked={modalidad === "Virtual"}
-                onChange={() => setModalidad("Virtual")}
+                onChange={() => { setModalidad("Virtual"); }}
               />
               Virtual
             </label>
@@ -508,7 +508,7 @@ export default function AdminRoute() {
                 name="aula"
                 required
                 value={aula}
-                onChange={(e) => setAula(e.target.value)}
+                onChange={(e) => { setAula(e.target.value); }}
                 placeholder="Ej: 101, Laboratorio 2"
               />
             </div>
@@ -522,7 +522,7 @@ export default function AdminRoute() {
                 name="webexLink"
                 required
                 value={webexLink}
-                onChange={(e) => setWebexLink(e.target.value)}
+                onChange={(e) => { setWebexLink(e.target.value); }}
                 placeholder="https://webex.com/..."
               />
             </div>
@@ -583,7 +583,7 @@ export default function AdminRoute() {
         <SearchBar
           searchValue={search}
           onSearchChange={setSearch}
-          onAddMesa={() => setShowAddMesa(true)}
+          onAddMesa={() => { setShowAddMesa(true); }}
           carreras={carreras.map((c: Carrera) => c.nombre)}
           carreraSeleccionada={carrera}
           onCarreraChange={setCarrera}
@@ -597,11 +597,11 @@ export default function AdminRoute() {
         <style>{`
           select { max-height: 200px; overflow-y: auto; }
         `}</style>
-        <MesaModal open={showAddMesa} onClose={() => setShowAddMesa(false)} />
+        <MesaModal open={showAddMesa} onClose={() => { setShowAddMesa(false); }} />
         {mesaAEditar && (
           <MesaModal
             open={true}
-            onClose={() => setMesaAEditar(null)}
+            onClose={() => { setMesaAEditar(null); }}
             mesa={mesaAEditar}
           />
         )}
@@ -610,7 +610,7 @@ export default function AdminRoute() {
             <MesaCard
               key={mesa.id}
               {...mesa}
-              onClick={() => setMesaAEditar(mesa)}
+              onClick={() => { setMesaAEditar(mesa); }}
             />
           ))}
         </div>

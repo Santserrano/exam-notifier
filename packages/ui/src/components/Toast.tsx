@@ -34,7 +34,7 @@ export function Toast({ message, type = 'info', duration = 3000, onClose }: Toas
       onClose?.();
     }, duration);
 
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); };
   }, [duration, onClose]);
 
   if (!isVisible) return null;

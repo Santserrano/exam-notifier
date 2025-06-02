@@ -30,7 +30,7 @@ interface Carrera {
 interface ActionData {
   error?: string;
   message?: string;
-  profesor?: any;
+  profesor?: unknown;
 }
 
 export const loader = async (args: LoaderFunctionArgs) => {
@@ -243,7 +243,7 @@ export default function AdminProfesoresRoute() {
         <ConfiguracionProfesorModal
           profesor={profesorSeleccionado}
           carreras={carreras}
-          onClose={() => setShowModal(false)}
+          onClose={() => { setShowModal(false); }}
           onSave={handleSaveConfig}
         />
       )}
@@ -310,7 +310,7 @@ function ConfiguracionProfesorModal({
                 <input
                   type="checkbox"
                   checked={carrerasSeleccionadas.includes(carrera.id)}
-                  onChange={() => handleCarreraChange(carrera.id)}
+                  onChange={() => { handleCarreraChange(carrera.id); }}
                   className="accent-green-600"
                 />
                 <span className="text-green-900">{carrera.nombre}</span>
@@ -337,9 +337,7 @@ function ConfiguracionProfesorModal({
                       <input
                         type="checkbox"
                         checked={materiasSeleccionadas.includes(materia.id)}
-                        onChange={() =>
-                          handleMateriaChange(materia.id, carrera.id)
-                        }
+                        onChange={() => { handleMateriaChange(materia.id, carrera.id); }}
                         className="accent-blue-600"
                       />
                       <span className="text-blue-900">{materia.nombre}</span>
@@ -355,9 +353,7 @@ function ConfiguracionProfesorModal({
             Cancelar
           </Button>
           <Button
-            onClick={() =>
-              onSave(profesor.id, carrerasSeleccionadas, materiasSeleccionadas)
-            }
+            onClick={() => { onSave(profesor.id, carrerasSeleccionadas, materiasSeleccionadas); }}
             className="rounded bg-green-600 px-6 py-1 text-white shadow hover:bg-green-700"
           >
             Guardar

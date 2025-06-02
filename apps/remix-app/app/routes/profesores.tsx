@@ -23,7 +23,7 @@ interface Carrera {
 interface ActionData {
   error?: string;
   message?: string;
-  profesor?: any;
+  profesor?: unknown;
 }
 
 export const loader = async (args: LoaderFunctionArgs) => {
@@ -65,36 +65,64 @@ export const loader = async (args: LoaderFunctionArgs) => {
     console.log('Carreras raw:', carrerasRaw);
 
     // Procesar los datos para asegurar que solo contengan strings o números
-    const profesores = profesoresRaw.map((profesor: any) => {
-      const profesorProcesado = {
-        id: profesor.id,
-        nombre: profesor.nombre,
-        apellido: profesor.apellido,
-        carreras: Array.isArray(profesor.carreras) ? profesor.carreras.map((c: any) => ({
-          id: c.id,
-          nombre: c.nombre
+    const profesores = profesoresRaw.map((profesor: unknown) => {
+      if (typeof profesor !== 'object' || profesor === null) {
+        return {
+          id: '',
+          nombre: '',
+          apellido: '',
+          carreras: [],
+          materias: []
+        };
+      }
+
+      const p = profesor as {
+        id?: string;
+        nombre?: string;
+        apellido?: string;
+        carreras?: Array<{ id?: string; nombre?: string; }>;
+        materias?: Array<{ id?: string; nombre?: string; carreraId?: string; }>;
+      };
+
+      return {
+        id: p.id || '',
+        nombre: p.nombre || '',
+        apellido: p.apellido || '',
+        carreras: Array.isArray(p.carreras) ? p.carreras.map(c => ({
+          id: c.id || '',
+          nombre: c.nombre || ''
         })) : [],
-        materias: Array.isArray(profesor.materias) ? profesor.materias.map((m: any) => ({
-          id: m.id,
-          nombre: m.nombre,
-          carreraId: m.carreraId
+        materias: Array.isArray(p.materias) ? p.materias.map(m => ({
+          id: m.id || '',
+          nombre: m.nombre || '',
+          carreraId: m.carreraId || ''
         })) : []
       };
-      console.log('Profesor procesado:', profesorProcesado);
-      return profesorProcesado;
     });
 
-    const carreras = carrerasRaw.map((carrera: any) => {
-      const carreraProcesada = {
-        id: carrera.id,
-        nombre: carrera.nombre,
-        materias: Array.isArray(carrera.materias) ? carrera.materias.map((m: any) => ({
-          id: m.id,
-          nombre: m.nombre
+    const carreras = carrerasRaw.map((carrera: unknown) => {
+      if (typeof carrera !== 'object' || carrera === null) {
+        return {
+          id: '',
+          nombre: '',
+          materias: []
+        };
+      }
+
+      const c = carrera as {
+        id?: string;
+        nombre?: string;
+        materias?: Array<{ id?: string; nombre?: string; }>;
+      };
+
+      return {
+        id: c.id || '',
+        nombre: c.nombre || '',
+        materias: Array.isArray(c.materias) ? c.materias.map(m => ({
+          id: m.id || '',
+          nombre: m.nombre || ''
         })) : []
       };
-      console.log('Carrera procesada:', carreraProcesada);
-      return carreraProcesada;
     });
 
     return json({ profesores, carreras });
@@ -236,7 +264,7 @@ export default function AdminProfesoresRoute() {
         <ConfiguracionProfesorModal
           profesor={profesorSeleccionado}
           carreras={carreras}
-          onClose={() => setShowModal(false)}
+          onClose={() => { setShowModal(false); }}
           onSave={handleSaveConfig}
         />
       )}
@@ -298,7 +326,7 @@ function ConfiguracionProfesorModal({
                 <input
                   type="checkbox"
                   checked={carrerasSeleccionadas.includes(carrera.id)}
-                  onChange={() => handleCarreraChange(carrera.id)}
+                  onChange={() => { handleCarreraChange(carrera.id); }}
                   className="accent-green-600"
                 />
                 <span className="text-green-900">{carrera.nombre}</span>
@@ -320,7 +348,7 @@ function ConfiguracionProfesorModal({
                       <input
                         type="checkbox"
                         checked={materiasSeleccionadas.includes(materia.id)}
-                        onChange={() => handleMateriaChange(materia.id, carrera.id)}
+                        onChange={() => { handleMateriaChange(materia.id, carrera.id); }}
                         className="accent-blue-600"
                       />
                       <span className="text-blue-900">{materia.nombre}</span>
@@ -336,7 +364,7 @@ function ConfiguracionProfesorModal({
             Cancelar
           </Button>
           <Button
-            onClick={() => onSave(profesor.id, carrerasSeleccionadas, materiasSeleccionadas)}
+            onClick={() => { onSave(profesor.id, carrerasSeleccionadas, materiasSeleccionadas); }}
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-1 rounded shadow"
           >
             Guardar

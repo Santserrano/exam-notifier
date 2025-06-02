@@ -68,7 +68,7 @@ export function HeaderClerk() {
       }
     };
 
-    fetchConfig();
+    void fetchConfig();
   }, [user?.id, env.INTERNAL_API_KEY, env.API_URL]);
 
   const showNotification = (message: string, type: 'success' | 'error') => {
@@ -237,7 +237,7 @@ export function HeaderClerk() {
                 )}
               </Button>
               <Button
-                onClick={() => setShowConfig(!showConfig)}
+                onClick={() => { setShowConfig(!showConfig); }}
                 className="w-10 h-10 rounded-full p-0 flex items-center justify-center bg-gray-600 hover:bg-gray-700"
                 title="Configuración de notificaciones"
               >
@@ -312,7 +312,7 @@ export function HeaderClerk() {
         <Toast
           message={toastMessage}
           type={toastType}
-          onClose={() => setShowToast(false)}
+          onClose={() => { setShowToast(false); }}
         />
       )}
     </header>

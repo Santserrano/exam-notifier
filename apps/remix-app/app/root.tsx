@@ -30,7 +30,7 @@ function Root() {
         .then(registration => {
           console.log('Service Worker registrado con éxito:', registration);
         })
-        .catch(error => {
+        .catch((error: unknown) => {
           console.error('Error al registrar el Service Worker:', error);
         });
     }
