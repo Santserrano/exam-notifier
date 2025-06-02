@@ -1,9 +1,9 @@
 import { PrismaClient } from '@prisma/client'
 import express from 'express'
 
+import { cacheMiddleware } from '../middleware/cache.js'
 import { mesaService } from '../service/mesaService.js'
 import { ProfesorService } from '../service/profesorService.js'
-import { cacheMiddleware } from '../middleware/cache.js'
 
 const router = express.Router()
 const prisma = new PrismaClient()

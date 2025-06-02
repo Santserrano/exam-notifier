@@ -1,4 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
+
 import { redis } from '../lib/redis.js';
 
 export const cacheMiddleware = (duration: number = 3600) => {
@@ -18,7 +19,7 @@ export const cacheMiddleware = (duration: number = 3600) => {
 
             // Guardar la respuesta original
             const originalJson = res.json;
-            res.json = function (body: any) {
+            res.json = function (body: unknown) {
                 redis.setEx(key, duration, JSON.stringify(body))
                     .catch(err => console.error('Error al guardar en caché:', err));
                 return originalJson.call(this, body);
