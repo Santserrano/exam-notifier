@@ -23,7 +23,10 @@ router.use(validateApiKey);
 
 // GET /api/diaries/notificaciones/config/:profesorId
 router.get('/config/:profesorId', cacheMiddleware(1800), async (req, res) => {
-  const { profesorId } = req.params;
+  const profesorId = req.params.profesorId;
+  if (!profesorId) {
+    return res.status(400).json({ error: 'ID de profesor no proporcionado' });
+  }
   try {
     const config = await notificacionService.getConfigByProfesor(profesorId);
     if (!config) {
@@ -133,8 +136,11 @@ router.post('/push-subscription', async (req, res) => {
 
 // GET /api/diaries/notificaciones/subscriptions/:profesorId
 router.get('/subscriptions/:profesorId', cacheMiddleware(1800), async (req, res) => {
+  const profesorId = req.params.profesorId;
+  if (!profesorId) {
+    return res.status(400).json({ error: 'ID de profesor no proporcionado' });
+  }
   try {
-    const { profesorId } = req.params;
     const subscriptions = await notificacionService.getWebPushSubscriptions(profesorId);
     return res.status(200).json(subscriptions);
   } catch (error) {

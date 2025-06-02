@@ -108,6 +108,7 @@ self.addEventListener("push", function (event) {
       data: {
         dateOfArrival: Date.now(),
         primaryKey: 1,
+        ...data.data
       },
       actions: [
         {
@@ -121,6 +122,7 @@ self.addEventListener("push", function (event) {
           icon: "/xmark.png",
         },
       ],
+      timestamp: data.data?.timestamp ? new Date(data.data.timestamp).getTime() : Date.now(),
     };
 
     event.waitUntil(self.registration.showNotification(data.title, options));

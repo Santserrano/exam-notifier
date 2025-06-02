@@ -6,8 +6,10 @@ import {
   useLoaderData,
   useSearchParams,
   useRouteError,
+  useFetcher,
 } from "@remix-run/react";
 import { Building2, Calendar, Clock, Info, MapPin, User } from "lucide-react";
+import { useEffect } from "react";
 
 import { Button } from "@exam-notifier/ui/components/button";
 import MesaCard from "@exam-notifier/ui/components/MesaCard";
@@ -57,6 +59,14 @@ interface MesaProcesada {
   profesorNombre: string;
   vocalNombre: string;
   aula: string;
+}
+
+interface PushEvent extends Event {
+  data: PushMessageData;
+}
+
+interface PushMessageData {
+  json(): any;
 }
 
 export const loader = async (args: LoaderFunctionArgs) => {
@@ -247,6 +257,7 @@ const alumnosMock = [
 export default function MesasRoute() {
   const { mesas, userId, notificationConfig, env } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const fetcher = useFetcher();
 
   const search = searchParams.get("search") ?? "";
   const carrera = searchParams.get("carrera") ?? "";
@@ -414,6 +425,23 @@ export default function MesasRoute() {
       </div>
     );
   }
+
+  useEffect(() => {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.addEventListener('push', ((event: Event) => {
+          const pushEvent = event as PushEvent;
+          if (pushEvent.data) {
+            const data = pushEvent.data.json();
+            if (data.data?.mesaId) {
+              // Forzar recarga de datos
+              fetcher.load('/api/mesas');
+            }
+          }
+        }) as EventListener);
+      });
+    }
+  }, [fetcher]);
 
   return (
     <div className="mx-auto max-w-md pb-8">

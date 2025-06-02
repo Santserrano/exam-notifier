@@ -28,7 +28,8 @@ export async function sendPushToProfesor(profesorId: string, title: string, body
             badge: '/icon-ucp.png',
             data: {
                 url: '/mesas',
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                mesaId: body.match(/mesa (\d+)/)?.[1] || null
             }
         });
 
