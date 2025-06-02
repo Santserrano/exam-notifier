@@ -29,7 +29,7 @@ export const meta: MetaFunction = () => {
 
 export const loader: LoaderFunction = async (args) => {
   const auth = await rootAuthLoader(args);
-  if (auth && 'userId' in auth && auth.userId) {
+  if (auth && 'userId' in auth && typeof auth.userId === 'string' && auth.userId) {
     const redirectUrl = await getRedirectUrl(auth.userId);
     return { ...auth, redirectUrl };
   }
@@ -60,4 +60,6 @@ export default ClerkApp(App, {
   localization: customEs,
   afterSignInUrl: "/",
   afterSignUpUrl: "/",
+  signInUrl: "/sign-in",
+  signUpUrl: "/sign-up"
 });
