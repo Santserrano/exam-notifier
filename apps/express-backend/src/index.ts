@@ -2,9 +2,9 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
 
+import { initRedis } from './lib/redis.js'
 import diaryRouter from './routes/diaries.js'
 import notificationsRouter from './routes/notifications.js'
-import { initRedis } from './lib/redis.js'
 
 // Cargar variables de entorno
 dotenv.config()

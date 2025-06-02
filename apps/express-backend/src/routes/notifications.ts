@@ -3,8 +3,8 @@ import express from 'express';
 
 import { notificationFactory } from '../core/notifications/NotificationFactory.js';
 import { NotificationType } from '../core/notifications/types.js';
-import { notificacionService } from '../service/NotificationService.js';
 import { cacheMiddleware } from '../middleware/cache.js';
+import { notificacionService } from '../service/NotificationService.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
