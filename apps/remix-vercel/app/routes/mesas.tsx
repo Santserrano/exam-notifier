@@ -398,7 +398,7 @@ export default function MesasRoute() {
 
   return (
     <div className="mx-auto max-w-md pb-8">
-      <HeaderClerk notificationConfig={notificationConfig} />
+      <HeaderClerk notificationConfig={notificationConfig} userRole="profesor" />
       <div className="mt-2 px-4">
         <h2 className="py-2 text-lg font-bold text-green-900 px-4">Mis Mesas</h2>
         <SearchBar
