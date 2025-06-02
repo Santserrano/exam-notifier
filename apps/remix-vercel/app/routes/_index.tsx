@@ -3,6 +3,7 @@ import { redirect, type LoaderFunctionArgs } from "@remix-run/node";
 import { isRouteErrorResponse, useRouteError } from "@remix-run/react";
 
 import { clerkClient } from "~/utils/clerk.server";
+import { HeaderClerk } from "~/components/HeaderClerk";
 
 export async function loader(args: LoaderFunctionArgs) {
   const { userId } = await getAuth(args);
@@ -11,7 +12,6 @@ export async function loader(args: LoaderFunctionArgs) {
     return redirect("/sign-in");
   }
 
-  // La llamada a clerk nos retrasa un poco, pero es la única forma de obtener el rol del usuario
   const user = await clerkClient.users.getUser(userId);
   const role = user.publicMetadata.role;
 

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useFetcher, useLoaderData } from "@remix-run/react";
+import { useState, useEffect } from "react";
+import { useFetcher } from "@remix-run/react";
 import {
   SignedIn,
   UserButton,
@@ -19,14 +19,23 @@ interface FetcherData {
   success?: boolean;
   error?: string;
   config?: NotificationConfig;
+  ENV?: {
+    VAPID_PUBLIC_KEY: string;
+    API_URL: string;
+    INTERNAL_API_KEY: string;
+  };
 }
 
 export function HeaderClerk({ notificationConfig }: Props) {
   const [showConfig, setShowConfig] = useState(false);
   const { user } = useUser();
-  const { ENV } = useLoaderData<{ ENV: { VAPID_PUBLIC_KEY: string; API_URL: string; INTERNAL_API_KEY: string } }>();
+  const envFetcher = useFetcher<FetcherData>();
   const fetcher = useFetcher<FetcherData>();
   const isSubmitting = fetcher.state === "submitting";
+
+  useEffect(() => {
+    envFetcher.load("/env");
+  }, []);
 
   const handleToggleNotification = async (type: keyof NotificationConfig) => {
     if (!user?.id) return;
@@ -41,7 +50,7 @@ export function HeaderClerk({ notificationConfig }: Props) {
           return;
         }
 
-        if (!ENV.VAPID_PUBLIC_KEY) {
+        if (!envFetcher.data?.ENV?.VAPID_PUBLIC_KEY) {
           console.error("VAPID_PUBLIC_KEY no definida");
           fetcher.data = { success: false, error: "Error de configuración: VAPID_PUBLIC_KEY no definida" };
           return;
@@ -80,7 +89,7 @@ export function HeaderClerk({ notificationConfig }: Props) {
         console.log("Obteniendo suscripción push...");
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: ENV.VAPID_PUBLIC_KEY,
+          applicationServerKey: envFetcher.data.ENV.VAPID_PUBLIC_KEY,
         });
 
         console.log("Suscripción obtenida:", subscription);
