@@ -22,7 +22,7 @@ import { SearchBar } from "@exam-notifier/ui/components/SearchBar";
 
 import { clerkClient } from "~/utils/clerk.server";
 import HeaderClerk from "../components/HeaderClerk";
-import { getClientEnv } from "~/utils/env.server";
+import { getServerEnv } from "~/utils/env.server";
 import { getNotificationConfig } from "~/utils/notification.server";
 type Modalidad = "Virtual" | "Presencial";
 
@@ -68,8 +68,6 @@ interface Profesor {
   materias: Materia[];
 }
 
-const { API_URL } = getClientEnv();
-
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
 
@@ -84,14 +82,16 @@ export const loader = async (args: LoaderFunctionArgs) => {
     return redirect("/");
   }
 
+  const { API_URL, INTERNAL_API_KEY, VAPID_PUBLIC_KEY } = getServerEnv();
   const notificationConfig = await getNotificationConfig(args);
+
   try {
     // Obtener las mesas y profesores del backend
     const [mesasResponse, profesoresResponse, carrerasResponse] =
       await Promise.all([
         fetch(`${API_URL}/api/diaries/mesas`, {
           headers: {
-            "x-api-key": process.env.INTERNAL_API_KEY || "",
+            "x-api-key": INTERNAL_API_KEY,
             "Content-Type": "application/json",
           },
         }).catch((error: unknown) => {
@@ -100,7 +100,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
         }),
         fetch(`${API_URL}/api/diaries/profesores`, {
           headers: {
-            "x-api-key": process.env.INTERNAL_API_KEY || "",
+            "x-api-key": INTERNAL_API_KEY,
             "Content-Type": "application/json",
           },
         }).catch((error: unknown) => {
@@ -109,7 +109,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
         }),
         fetch(`${API_URL}/api/diaries/carreras`, {
           headers: {
-            "x-api-key": process.env.INTERNAL_API_KEY || "",
+            "x-api-key": INTERNAL_API_KEY,
             "Content-Type": "application/json",
           },
         }).catch((error: unknown) => {
@@ -132,8 +132,9 @@ export const loader = async (args: LoaderFunctionArgs) => {
       carreras: Array.isArray(carreras) ? carreras : [],
       notificationConfig,
       env: {
-        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
-        VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
+        VAPID_PUBLIC_KEY,
+        API_URL,
+        INTERNAL_API_KEY,
       },
     };
 
@@ -148,8 +149,9 @@ export const loader = async (args: LoaderFunctionArgs) => {
       carreras: [],
       notificationConfig,
       env: {
-        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
-        VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
+        VAPID_PUBLIC_KEY,
+        API_URL,
+        INTERNAL_API_KEY,
       },
     });
   }
@@ -225,7 +227,7 @@ export const action = async (args: ActionFunctionArgs) => {
 };
 
 export default function AdminRoute() {
-  const { userId, role, mesas, profesores, carreras, notificationConfig } =
+  const { userId, role, mesas, profesores, carreras, notificationConfig, env } =
     useLoaderData<typeof loader>();
   console.log("Profesores cargados:", profesores);
   const actionData = useActionData<typeof action>();
@@ -571,7 +573,7 @@ export default function AdminRoute() {
 
   return (
     <div className="mx-auto max-w-md pb-8">
-      <HeaderClerk notificationConfig={notificationConfig} userRole="admin" />
+      <HeaderClerk notificationConfig={notificationConfig} userRole="admin" env={env} />
       <div className="mt-2 px-4">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-center text-lg font-bold">

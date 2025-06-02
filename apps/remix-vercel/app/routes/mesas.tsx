@@ -67,7 +67,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
   const role = user.publicMetadata.role;
   if (role !== "profesor") return redirect("/");
 
-  const { API_URL, INTERNAL_API_KEY } = getServerEnv();
+  const { API_URL, INTERNAL_API_KEY, VAPID_PUBLIC_KEY } = getServerEnv();
   const notificationConfig = await getNotificationConfig(args);
 
   try {
@@ -144,6 +144,11 @@ export const loader = async (args: LoaderFunctionArgs) => {
         smsEnabled: notificationConfig?.smsEnabled ?? false,
         emailEnabled: notificationConfig?.emailEnabled ?? false,
       },
+      env: {
+        VAPID_PUBLIC_KEY,
+        API_URL,
+        INTERNAL_API_KEY,
+      },
     });
   } catch (error) {
     console.error("Error en el loader:", error);
@@ -155,6 +160,11 @@ export const loader = async (args: LoaderFunctionArgs) => {
         webPushEnabled: false,
         smsEnabled: false,
         emailEnabled: false,
+      },
+      env: {
+        VAPID_PUBLIC_KEY,
+        API_URL,
+        INTERNAL_API_KEY,
       },
     });
   }
@@ -235,7 +245,7 @@ const alumnosMock = [
 ];
 
 export default function MesasRoute() {
-  const { mesas, userId, notificationConfig } = useLoaderData<typeof loader>();
+  const { mesas, userId, notificationConfig, env } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const search = searchParams.get("search") ?? "";
@@ -407,7 +417,7 @@ export default function MesasRoute() {
 
   return (
     <div className="mx-auto max-w-md pb-8">
-      <HeaderClerk notificationConfig={notificationConfig} userRole="profesor" />
+      <HeaderClerk notificationConfig={notificationConfig} userRole="profesor" env={env} />
       <div className="mt-2 px-4">
         <h2 className="py-2 text-lg font-bold text-green-900 px-4">Mis Mesas</h2>
         <SearchBar
