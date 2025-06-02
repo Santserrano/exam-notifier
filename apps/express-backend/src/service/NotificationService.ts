@@ -24,6 +24,21 @@ class NotificationService {
 
     async getConfigByProfesor(profesorId: string) {
         try {
+            // Verificar que el profesor existe
+            const profesor = await this.prisma.profesor.findUnique({
+                where: { id: profesorId }
+            });
+
+            if (!profesor) {
+                console.error('Profesor no encontrado:', profesorId);
+                return {
+                    webPushEnabled: false,
+                    emailEnabled: false,
+                    smsEnabled: false,
+                    avisoPrevioHoras: 24
+                };
+            }
+
             const config = await this.prisma.notificacionConfig.findUnique({
                 where: { profesorId }
             });
@@ -45,7 +60,12 @@ class NotificationService {
             return config;
         } catch (error) {
             console.error('Error en getConfigByProfesor:', error);
-            throw new Error('Error al obtener la configuración');
+            return {
+                webPushEnabled: false,
+                emailEnabled: false,
+                smsEnabled: false,
+                avisoPrevioHoras: 24
+            };
         }
     }
 
