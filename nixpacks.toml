@@ -2,16 +2,26 @@
 nixPkgs = ["nodejs", "pnpm"]
 
 [phases.install]
-cmds = ["pnpm install --no-frozen-lockfile --filter=express-backend --filter=@exam-notifier/database"]
+cmds = [
+  "cd /app",
+  "pnpm install --frozen-lockfile --filter=express-backend --filter=@exam-notifier/database"
+]
 
 [phases.build]
 cmds = [
-  "cd packages/database && NODE_OPTIONS='--max-old-space-size=2048' pnpm prisma generate",
-  "cd ../.. && pnpm turbo run build --filter=express-backend --filter=@exam-notifier/database"
+  "cd /app/packages/database && NODE_OPTIONS='--max-old-space-size=2048' pnpm prisma generate",
+  "cd /app && pnpm turbo run build --filter=express-backend --filter=@exam-notifier/database"
 ]
 
 [start]
-cmd = "cd apps/express-backend && cross-env NODE_ENV=production PORT=$PORT pnpm start"
+cmd = "cd /app/apps/express-backend && node dist/index.js"
+
+[phases.setup]
+cacheDirectories = [
+  "node_modules",
+  ".pnpm-store",
+  ".turbo"
+]
 
 [build]
 memory = "2GB" 
