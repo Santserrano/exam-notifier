@@ -34,6 +34,11 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.use(express.json())
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 // Middleware para validar API key
 const validateApiKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const apiKey = req.headers['x-api-key']
@@ -61,6 +66,10 @@ app.use((err: Error, req: express.Request, res: express.Response, _next: express
   }
 })
 
-app.listen(port, () => {
-  console.log(`Servidor corriendo en http://localhost:${port}`)
-})
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(port, () => {
+    console.log(`Servidor corriendo en http://localhost:${port}`)
+  })
+}
+
+export { app }
