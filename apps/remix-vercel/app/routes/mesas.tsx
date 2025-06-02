@@ -156,36 +156,57 @@ export const action = async (args: ActionFunctionArgs) => {
   if (!userId) return redirect("/sign-in");
 
   const formData = await args.request.formData();
-  const intent = formData.get("intent");
+  const type = formData.get("type") as string;
+  const subscription = formData.get("subscription");
+  const enabled = formData.get("enabled") === "true";
 
-  if (intent === "toggleNotifications") {
-    const { API_URL, INTERNAL_API_KEY } = getServerEnv();
-    
-    try {
-      const response = await fetch(
-        `${API_URL}/api/notifications/toggle/${userId}`,
-        {
-          method: "POST",
-          headers: {
-            "x-api-key": INTERNAL_API_KEY,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+  const { API_URL, INTERNAL_API_KEY } = getServerEnv();
+
+  try {
+    if (type === "webPushEnabled" && subscription) {
+      // Guardar la suscripción push
+      const response = await fetch(`${API_URL}/api/diaries/notificaciones/push-subscription`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": INTERNAL_API_KEY,
+        },
+        body: JSON.stringify({
+          profesorId: userId,
+          subscription: JSON.parse(subscription as string),
+        }),
+      });
 
       if (!response.ok) {
-        throw new Error(`Error al actualizar notificaciones: ${response.statusText}`);
+        throw new Error("Error al guardar suscripción");
       }
-
-      const data = await response.json();
-      return json({ success: true, notificationsEnabled: data.enabled });
-    } catch (error) {
-      console.error("Error en la acción:", error);
-      return json({ success: false, error: "Error al actualizar notificaciones" }, { status: 500 });
     }
-  }
 
-  return json({ success: false, error: "Acción no válida" }, { status: 400 });
+    // Actualizar la configuración
+    const configResponse = await fetch(`${API_URL}/api/diaries/notificaciones/config/${userId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": INTERNAL_API_KEY,
+      },
+      body: JSON.stringify({
+        [type]: enabled,
+      }),
+    });
+
+    if (!configResponse.ok) {
+      throw new Error("Error al actualizar configuración");
+    }
+
+    const updatedConfig = await configResponse.json();
+    return json({ success: true, config: updatedConfig });
+  } catch (error) {
+    console.error("Error en la acción:", error);
+    return json(
+      { success: false, error: error instanceof Error ? error.message : "Error al actualizar notificaciones" },
+      { status: 500 }
+    );
+  }
 };
 
 const carreras = [
