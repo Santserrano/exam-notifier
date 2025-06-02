@@ -1,5 +1,5 @@
 import { getAuth } from "@clerk/remix/ssr.server";
-import { LoaderFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import {
   json,
   redirect,
@@ -149,6 +149,43 @@ export const loader = async (args: LoaderFunctionArgs) => {
       notificationConfig,
     });
   }
+};
+
+export const action = async (args: ActionFunctionArgs) => {
+  const { userId } = await getAuth(args);
+  if (!userId) return redirect("/sign-in");
+
+  const formData = await args.request.formData();
+  const intent = formData.get("intent");
+
+  if (intent === "toggleNotifications") {
+    const { API_URL, INTERNAL_API_KEY } = getServerEnv();
+    
+    try {
+      const response = await fetch(
+        `${API_URL}/api/notifications/toggle/${userId}`,
+        {
+          method: "POST",
+          headers: {
+            "x-api-key": INTERNAL_API_KEY,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error al actualizar notificaciones: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return json({ success: true, notificationsEnabled: data.enabled });
+    } catch (error) {
+      console.error("Error en la acción:", error);
+      return json({ success: false, error: "Error al actualizar notificaciones" }, { status: 500 });
+    }
+  }
+
+  return json({ success: false, error: "Acción no válida" }, { status: 400 });
 };
 
 const carreras = [
