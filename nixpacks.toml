@@ -1,5 +1,10 @@
 [phases.setup]
 nixPkgs = ["nodejs", "pnpm"]
+cacheDirectories = [
+  "node_modules",
+  ".pnpm-store",
+  ".turbo"
+]
 
 [phases.install]
 cmds = [
@@ -15,13 +20,6 @@ cmds = [
 
 [start]
 cmd = "cd /app/apps/express-backend && node dist/index.js"
-
-[phases.setup]
-cacheDirectories = [
-  "node_modules",
-  ".pnpm-store",
-  ".turbo"
-]
 
 [build]
 memory = "2GB" 
