@@ -13,23 +13,28 @@ import {
 import fontStyles from "./styles/font.css?url";
 import tailwindStyles from "./styles/tailwind.css?url";
 import { customEs } from "./localizations/customEs";
-
-export const loader: LoaderFunction = rootAuthLoader;
-
-export const meta: MetaFunction = () => {
-  return [
-    { title: "Universidad de la Cuenca del Plata - Sistema de Notificaciones" },
-    {
-      name: "description",
-      content: "Sistema de Notificaciones de Mesas para la Universidad de la Cuenca del Plata",
-    },
-  ];
-};
+import { getRedirectUrl } from "./utils/clerk.server";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: tailwindStyles },
   { rel: "stylesheet", href: fontStyles },
 ];
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "Exam Notifier" },
+    { name: "description", content: "Sistema de notificación de mesas de examen" },
+  ];
+};
+
+export const loader: LoaderFunction = async (args) => {
+  const auth = await rootAuthLoader(args);
+  if (auth && 'userId' in auth && auth.userId) {
+    const redirectUrl = await getRedirectUrl(auth.userId);
+    return { ...auth, redirectUrl };
+  }
+  return auth;
+};
 
 function App() {
   return (
@@ -53,4 +58,6 @@ function App() {
 export default ClerkApp(App, {
   publishableKey: import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
   localization: customEs,
+  afterSignInUrl: "/",
+  afterSignUpUrl: "/",
 });

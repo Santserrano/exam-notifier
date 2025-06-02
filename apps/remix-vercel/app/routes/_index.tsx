@@ -15,24 +15,20 @@ export async function loader(args: LoaderFunctionArgs) {
   const user = await clerkClient.users.getUser(userId);
   const role = user.publicMetadata.role;
 
-  let redirectUrl = "/sin-rol";
-  if (role === "admin") {
-    redirectUrl = "/admin";
-  } else if (role === "profesor") {
-    redirectUrl = "/mesas";
+  if (!role) {
+    return redirect("/sin-rol");
   }
 
-  return redirect(redirectUrl);
+  return redirect(role === "admin" ? "/admin" : "/mesas");
 }
 
 export default function Index() {
-  return null; // Nunca se renderiza home, siempre redirige
+  return null;
 }
 
 export function ErrorBoundary() {
   const error = useRouteError();
 
-  // `CatchBoundary` de Remix - Maneja errores de rutas
   if (isRouteErrorResponse(error)) {
     return (
       <div>
