@@ -24,13 +24,14 @@ class NotificationService {
 
     async getConfigByProfesor(profesorId: string) {
         try {
-            // Verificar que el profesor existe
+            // Verificar que el profesor existe en nuestra DB
             const profesor = await this.prisma.profesor.findUnique({
                 where: { id: profesorId }
             });
 
+            // Si no existe en nuestra DB, es un admin u otro tipo de usuario
             if (!profesor) {
-                console.error('Profesor no encontrado:', profesorId);
+                console.log('Usuario no registrado en DB (posiblemente admin):', profesorId);
                 return {
                     webPushEnabled: false,
                     emailEnabled: false,
@@ -39,13 +40,13 @@ class NotificationService {
                 };
             }
 
+            // Si es profesor, buscar o crear su configuración
             const config = await this.prisma.notificacionConfig.findUnique({
                 where: { profesorId }
             });
 
             if (!config) {
                 try {
-                    // Si no existe configuración, crear una por defecto
                     return await this.prisma.notificacionConfig.create({
                         data: {
                             profesorId,
@@ -57,7 +58,6 @@ class NotificationService {
                     });
                 } catch (createError) {
                     console.error('Error al crear configuración:', createError);
-                    // Si falla la creación, devolver configuración por defecto
                     return {
                         webPushEnabled: false,
                         emailEnabled: false,

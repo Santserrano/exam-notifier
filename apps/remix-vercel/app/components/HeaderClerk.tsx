@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useFetcher } from "@remix-run/react";
 import {
   SignedIn,
@@ -18,31 +18,29 @@ interface Props {
     emailEnabled?: boolean;
   } | null;
   userRole?: string;
-}
-
-interface FetcherData {
-  success?: boolean;
-  error?: string;
-  config?: NotificationConfig;
-  ENV?: {
+  env?: {
     VAPID_PUBLIC_KEY: string;
     API_URL: string;
     INTERNAL_API_KEY: string;
   };
 }
 
-export function HeaderClerk({ notificationConfig, userRole }: Props) {
+interface FetcherData {
+  success?: boolean;
+  error?: string;
+  config?: NotificationConfig;
+}
+
+export function HeaderClerk({ notificationConfig, userRole, env }: Props) {
   const [showConfig, setShowConfig] = useState(false);
   const { user } = useUser();
-  const envFetcher = useFetcher<FetcherData>();
   const fetcher = useFetcher<FetcherData>();
   const isSubmitting = fetcher.state === "submitting";
 
-  useEffect(() => {
-    envFetcher.load("/env");
-  }, []);
-
   const handleToggleNotification = async (type: keyof NotificationConfig) => {
+    // No permitir activar notificaciones si es admin
+    if (userRole !== "profesor") return;
+
     if (!user?.id) return;
 
     if (type === "webPushEnabled" && !notificationConfig?.webPushEnabled) {
@@ -55,7 +53,7 @@ export function HeaderClerk({ notificationConfig, userRole }: Props) {
           return;
         }
 
-        if (!envFetcher.data?.ENV?.VAPID_PUBLIC_KEY) {
+        if (!env?.VAPID_PUBLIC_KEY) {
           console.error("VAPID_PUBLIC_KEY no definida");
           fetcher.data = { success: false, error: "Error de configuración: VAPID_PUBLIC_KEY no definida" };
           return;
@@ -94,7 +92,7 @@ export function HeaderClerk({ notificationConfig, userRole }: Props) {
         console.log("Obteniendo suscripción push...");
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: envFetcher.data.ENV.VAPID_PUBLIC_KEY,
+          applicationServerKey: env.VAPID_PUBLIC_KEY,
         });
 
         console.log("Suscripción obtenida:", subscription);
