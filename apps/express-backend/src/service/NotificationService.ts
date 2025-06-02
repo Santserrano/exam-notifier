@@ -44,16 +44,27 @@ class NotificationService {
             });
 
             if (!config) {
-                // Si no existe configuración, crear una por defecto
-                return await this.prisma.notificacionConfig.create({
-                    data: {
-                        profesorId,
+                try {
+                    // Si no existe configuración, crear una por defecto
+                    return await this.prisma.notificacionConfig.create({
+                        data: {
+                            profesorId,
+                            webPushEnabled: false,
+                            emailEnabled: false,
+                            smsEnabled: false,
+                            avisoPrevioHoras: 24
+                        }
+                    });
+                } catch (createError) {
+                    console.error('Error al crear configuración:', createError);
+                    // Si falla la creación, devolver configuración por defecto
+                    return {
                         webPushEnabled: false,
                         emailEnabled: false,
                         smsEnabled: false,
                         avisoPrevioHoras: 24
-                    }
-                });
+                    };
+                }
             }
 
             console.log('Configuración encontrada:', config);
