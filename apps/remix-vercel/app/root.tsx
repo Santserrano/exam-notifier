@@ -8,13 +8,24 @@ import {
   Scripts,
   ScrollRestoration,
   LiveReload,
+  useLoaderData,
 } from "@remix-run/react";
 
 import fontStyles from "./styles/font.css?url";
 import tailwindStyles from "./styles/tailwind.css?url";
 import { customEs } from "./localizations/customEs";
 
-export const loader: LoaderFunction = rootAuthLoader;
+export const loader: LoaderFunction = async (args) => {
+  const authData = await rootAuthLoader(args);
+  return {
+    ...authData,
+    ENV: {
+      VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
+      API_URL: process.env.API_URL,
+      INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
+    },
+  };
+};
 
 export const meta: MetaFunction = () => {
   return [
@@ -32,6 +43,7 @@ export const links: LinksFunction = () => [
 ];
 
 function App() {
+  const { ENV } = useLoaderData<typeof loader>();
   return (
     <html lang="es" className="h-full">
       <head>
@@ -41,7 +53,7 @@ function App() {
         <Links />
       </head>
       <body className="h-full">
-        <Outlet />
+        <Outlet context={{ ENV }} />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
