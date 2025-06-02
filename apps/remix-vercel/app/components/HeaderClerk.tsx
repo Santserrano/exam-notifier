@@ -17,8 +17,9 @@ interface Props {
 }
 
 interface FetcherData {
+  success?: boolean;
   error?: string;
-  message?: string;
+  config?: NotificationConfig;
 }
 
 export function HeaderClerk({ notificationConfig }: Props) {
@@ -33,13 +34,13 @@ export function HeaderClerk({ notificationConfig }: Props) {
 
     if (type === "webPushEnabled" && !notificationConfig?.webPushEnabled) {
       if (!("serviceWorker" in navigator)) {
-        fetcher.data = { error: "Tu navegador no soporta notificaciones push" };
+        fetcher.data = { success: false, error: "Tu navegador no soporta notificaciones push" };
         return;
       }
 
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        fetcher.data = { error: "Permiso de notificaciones denegado" };
+        fetcher.data = { success: false, error: "Permiso de notificaciones denegado" };
         return;
       }
 
@@ -221,10 +222,17 @@ export function HeaderClerk({ notificationConfig }: Props) {
         </SignedIn>
         <img src="/icon-ucp.png" alt="Logo" className="h-12 w-12" />
       </div>
-      {fetcher.data?.message && (
+      {fetcher.data?.error && (
         <Toast
-          message={fetcher.data.message}
-          type={fetcher.data.error ? "error" : "success"}
+          message={fetcher.data.error}
+          type="error"
+          onClose={() => fetcher.data = undefined}
+        />
+      )}
+      {fetcher.data?.success && (
+        <Toast
+          message="Configuración actualizada correctamente"
+          type="success"
           onClose={() => fetcher.data = undefined}
         />
       )}
