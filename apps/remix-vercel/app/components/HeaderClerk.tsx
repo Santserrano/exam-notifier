@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useFetcher, useOutletContext } from "@remix-run/react";
+import { useFetcher, useLoaderData } from "@remix-run/react";
 import {
   SignedIn,
   UserButton,
@@ -21,18 +21,10 @@ interface FetcherData {
   config?: NotificationConfig;
 }
 
-interface ContextType {
-  ENV: {
-    VAPID_PUBLIC_KEY: string;
-    API_URL: string;
-    INTERNAL_API_KEY: string;
-  };
-}
-
 export function HeaderClerk({ notificationConfig }: Props) {
   const [showConfig, setShowConfig] = useState(false);
   const { user } = useUser();
-  const { ENV } = useOutletContext<ContextType>();
+  const { ENV } = useLoaderData<{ ENV: { VAPID_PUBLIC_KEY: string; API_URL: string; INTERNAL_API_KEY: string } }>();
   const fetcher = useFetcher<FetcherData>();
   const isSubmitting = fetcher.state === "submitting";
 

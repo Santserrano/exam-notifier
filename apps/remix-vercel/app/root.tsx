@@ -8,7 +8,6 @@ import {
   Scripts,
   ScrollRestoration,
   LiveReload,
-  useLoaderData,
 } from "@remix-run/react";
 
 import fontStyles from "./styles/font.css?url";
@@ -43,7 +42,6 @@ export const links: LinksFunction = () => [
 ];
 
 function App() {
-  const { ENV } = useLoaderData<typeof loader>();
   return (
     <html lang="es" className="h-full">
       <head>
@@ -53,7 +51,7 @@ function App() {
         <Links />
       </head>
       <body className="h-full">
-        <Outlet context={{ ENV }} />
+        <Outlet />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
