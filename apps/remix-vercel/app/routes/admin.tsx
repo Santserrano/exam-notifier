@@ -570,7 +570,7 @@ export default function AdminRoute() {
 
   return (
     <div className="mx-auto max-w-md pb-8">
-      <HeaderClerk notificationConfig={notificationConfig} />
+      <HeaderClerk notificationConfig={notificationConfig} userRole="admin" />
       <div className="mt-2 px-4">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-center text-lg font-bold">
