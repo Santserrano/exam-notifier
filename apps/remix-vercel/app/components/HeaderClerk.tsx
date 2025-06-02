@@ -12,7 +12,11 @@ import { Toast } from "@exam-notifier/ui/components/Toast";
 import { NotificationConfig } from "~/utils/notification.server";
 
 interface Props {
-  notificationConfig: NotificationConfig | null;
+  notificationConfig: {
+    webPushEnabled?: boolean;
+    smsEnabled?: boolean;
+    emailEnabled?: boolean;
+  } | null;
   userRole?: string;
 }
 
