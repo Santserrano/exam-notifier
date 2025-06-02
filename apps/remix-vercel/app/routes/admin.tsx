@@ -26,27 +26,9 @@ import { getServerEnv } from "~/utils/env.server";
 import { getNotificationConfig } from "~/utils/notification.server";
 type Modalidad = "Virtual" | "Presencial";
 
-interface Mesa {
-  id: number;
-  profesor: string;
-  vocal: string;
-  carrera: string;
-  materia: string;
-  fecha: string;
-  descripcion: string;
-  cargo: string;
-  verification: boolean;
-  modalidad?: Modalidad;
-  color?: string;
-  hora?: string;
-  aula?: string;
-  webexLink?: string;
-}
-
-interface MesaFormateada extends Mesa {
-  fecha: string;
-  modalidad: Modalidad;
-  color: string;
+interface Materia {
+  id: string;
+  nombre: string;
 }
 
 interface Carrera {
@@ -54,10 +36,55 @@ interface Carrera {
   nombre: string;
 }
 
-interface Materia {
+interface MesaRaw {
+  id: string | number;
+  fecha: string;
+  modalidad?: string;
+  materia?: {
+    nombre?: string;
+    carrera?: {
+      nombre?: string;
+    };
+  } | string;
+  carrera?: {
+    nombre?: string;
+    id?: string;
+  } | string;
+  sede?: string;
+  profesor?: {
+    nombre?: string;
+    apellido?: string;
+  } | string;
+  vocal?: {
+    nombre?: string;
+    apellido?: string;
+  } | string;
+  aula?: string;
+  hora?: string;
+  webexLink?: string;
+  descripcion?: string;
+  cargo?: string;
+  verification?: boolean;
+}
+
+interface MesaProcesada {
   id: string;
-  nombre: string;
-  carreraId: string;
+  materia: string;
+  carrera: string;
+  fecha: string;
+  fechaOriginal: string;
+  futura: boolean;
+  modalidad: "Presencial" | "Virtual";
+  color: string;
+  sede: string;
+  profesorNombre: string;
+  vocalNombre: string;
+  aula: string;
+  hora?: string;
+  webexLink?: string;
+  descripcion?: string;
+  cargo?: string;
+  verification?: boolean;
 }
 
 interface Profesor {
@@ -237,7 +264,7 @@ export default function AdminRoute() {
   const [fecha, setFecha] = useState("");
   const [sede, setSede] = useState("");
   const [showAddMesa, setShowAddMesa] = useState(false);
-  const [mesaAEditar, setMesaAEditar] = useState<Mesa | null>(null);
+  const [mesaAEditar, setMesaAEditar] = useState<MesaRaw | null>(null);
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
 
@@ -282,7 +309,7 @@ export default function AdminRoute() {
   }, [profesores, carrera, materia]);
 
   // Formatear las mesas para mostrarlas
-  const mesasFormateadas = mesas.map((mesa: Mesa): MesaFormateada => {
+  const mesasFormateadas = mesas.map((mesa: MesaRaw, index: number): MesaProcesada => {
     const fechaObj = new Date(mesa.fecha);
     const meses = [
       "ene.",
@@ -298,17 +325,46 @@ export default function AdminRoute() {
       "nov.",
       "dic.",
     ];
+    const fechaFormateada = `${fechaObj.getDate()} ${meses[fechaObj.getMonth()]}`;
+    const futura = fechaObj > new Date();
+    const modalidad = (mesa.modalidad === "Virtual" ? "Virtual" : "Presencial") as "Presencial" | "Virtual";
+
+    const materiaNombre = typeof mesa.materia === 'object' ? mesa.materia?.nombre || '' : mesa.materia || '';
+    const carreraNombre = typeof mesa.carrera === 'object' 
+      ? mesa.carrera?.nombre || mesa.carrera?.id || ''
+      : mesa.carrera || '';
+    
+    const profesorObj = typeof mesa.profesor === 'object' ? mesa.profesor : null;
+    const vocalObj = typeof mesa.vocal === 'object' ? mesa.vocal : null;
+
     return {
-      ...mesa,
-      fecha: `${fechaObj.getDate()} ${meses[fechaObj.getMonth()]}`,
-      modalidad: (mesa.modalidad ?? "Presencial") as Modalidad,
-      color: mesa.modalidad === "Virtual" ? "blue" : "green",
+      id: mesa.id?.toString() || `mesa-${index}`,
+      materia: materiaNombre,
+      carrera: carreraNombre,
+      fecha: fechaFormateada,
+      fechaOriginal: mesa.fecha,
+      futura,
+      modalidad,
+      color: modalidad === "Virtual" ? "blue" : "green",
+      sede: mesa.sede || "Central",
+      profesorNombre: profesorObj 
+        ? `${profesorObj.nombre || ''} ${profesorObj.apellido || ''}`
+        : typeof mesa.profesor === 'string' ? mesa.profesor : '',
+      vocalNombre: vocalObj
+        ? `${vocalObj.nombre || ''} ${vocalObj.apellido || ''}`
+        : typeof mesa.vocal === 'string' ? mesa.vocal : '',
+      aula: mesa.aula || "Aula por confirmar",
+      hora: mesa.hora,
+      webexLink: mesa.webexLink,
+      descripcion: mesa.descripcion,
+      cargo: mesa.cargo,
+      verification: mesa.verification,
     };
   });
 
   // Filtro simple
   const mesasFiltradas = mesasFormateadas.filter(
-    (m: MesaFormateada) =>
+    (m: MesaProcesada) =>
       (!search || m.materia.toLowerCase().includes(search.toLowerCase())) &&
       (!carrera || m.carrera === carrera) &&
       (!fecha || m.fecha.includes(fecha)),
@@ -321,19 +377,25 @@ export default function AdminRoute() {
   }: {
     open: boolean;
     onClose: () => void;
-    mesa?: Mesa;
+    mesa?: MesaRaw;
   }) {
     const isEdit = !!mesa;
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
     const [modalidad, setModalidad] = useState<Modalidad>(
-      mesa?.modalidad ?? "Presencial",
+      mesa?.modalidad === "Virtual" ? "Virtual" : "Presencial",
     );
-    const [carreraSeleccionada, setCarreraSeleccionada] = useState(
-      mesa?.carrera ?? "",
+    const [carreraSeleccionada, setCarreraSeleccionada] = useState<string>(
+      typeof mesa?.carrera === 'object' ? mesa.carrera.id || '' : mesa?.carrera || '',
     );
-    const [materiaSeleccionada, setMateriaSeleccionada] = useState(
-      mesa?.materia ?? "",
+    const [materiaSeleccionada, setMateriaSeleccionada] = useState<string>(
+      typeof mesa?.materia === 'object' ? mesa.materia.nombre || '' : mesa?.materia || '',
+    );
+    const [profesorSeleccionado, setProfesorSeleccionado] = useState<string>(
+      typeof mesa?.profesor === 'object' ? `${mesa.profesor.nombre || ''} ${mesa.profesor.apellido || ''}` : mesa?.profesor || '',
+    );
+    const [vocalSeleccionado, setVocalSeleccionado] = useState<string>(
+      typeof mesa?.vocal === 'object' ? `${mesa.vocal.nombre || ''} ${mesa.vocal.apellido || ''}` : mesa?.vocal || '',
     );
     const [aula, setAula] = useState(mesa?.aula ?? "");
     const [webexLink, setWebexLink] = useState(mesa?.webexLink ?? "");
@@ -434,7 +496,8 @@ export default function AdminRoute() {
             name="docenteTitular"
             className="rounded border px-2 py-2"
             required
-            defaultValue={mesa?.profesor ?? ""}
+            value={profesorSeleccionado}
+            onChange={(e) => setProfesorSeleccionado(e.target.value)}
             disabled={!materiaSeleccionada}
           >
             <option value="">Seleccionar</option>
@@ -451,7 +514,8 @@ export default function AdminRoute() {
             name="docenteVocal"
             className="rounded border px-2 py-2"
             required
-            defaultValue={mesa?.vocal ?? ""}
+            value={vocalSeleccionado}
+            onChange={(e) => setVocalSeleccionado(e.target.value)}
             disabled={!materiaSeleccionada}
           >
             <option value="">Seleccionar</option>
@@ -609,11 +673,11 @@ export default function AdminRoute() {
           />
         )}
         <div>
-          {mesasFiltradas.map((mesa: MesaFormateada) => (
+          {mesasFiltradas.map((mesa: MesaProcesada) => (
             <MesaCard
               key={mesa.id}
               {...mesa}
-              onClick={() => { setMesaAEditar(mesa); }}
+              onClick={() => { setMesaAEditar(mesa as MesaRaw); }}
             />
           ))}
         </div>
