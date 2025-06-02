@@ -4,6 +4,7 @@ import express from 'express';
 import { notificationFactory } from '../core/notifications/NotificationFactory.js';
 import { NotificationType } from '../core/notifications/types.js';
 import { notificacionService } from '../service/NotificationService.js';
+import { cacheMiddleware } from '../middleware/cache.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -21,7 +22,7 @@ const validateApiKey = (req: express.Request, res: express.Response, next: expre
 router.use(validateApiKey);
 
 // GET /api/diaries/notificaciones/config/:profesorId
-router.get('/config/:profesorId', async (req, res) => {
+router.get('/config/:profesorId', cacheMiddleware(1800), async (req, res) => {
   const { profesorId } = req.params;
   try {
     const config = await notificacionService.getConfigByProfesor(profesorId);
@@ -131,7 +132,7 @@ router.post('/push-subscription', async (req, res) => {
 });
 
 // GET /api/diaries/notificaciones/subscriptions/:profesorId
-router.get('/subscriptions/:profesorId', async (req, res) => {
+router.get('/subscriptions/:profesorId', cacheMiddleware(1800), async (req, res) => {
   try {
     const { profesorId } = req.params;
     const subscriptions = await notificacionService.getWebPushSubscriptions(profesorId);

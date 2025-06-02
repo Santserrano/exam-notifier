@@ -643,7 +643,7 @@ export default function AdminRoute() {
           <h2 className="text-center text-base md:text-lg font-bold">
             Administración
           </h2>
-          <Link to="/profesores">
+          <Link to="/profesores" prefetch="intent">
             <Button variant="outline">Gestionar Profesores</Button>
           </Link>
         </div>

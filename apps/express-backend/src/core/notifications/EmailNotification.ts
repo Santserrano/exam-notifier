@@ -10,7 +10,7 @@ export class EmailNotification implements Notification {
     async send(): Promise<void> {
         try {
             await this.resend.emails.send({
-                from: 'onboarding@resend.dev',
+                from: 'notificaciones@ucpmesas.site',
                 to: this.data.recipient,
                 subject: this.data.title,
                 html: `<p>${this.data.body}</p>`,

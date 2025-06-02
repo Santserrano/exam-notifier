@@ -3,6 +3,7 @@ import express from 'express'
 
 import { mesaService } from '../service/mesaService.js'
 import { ProfesorService } from '../service/profesorService.js'
+import { cacheMiddleware } from '../middleware/cache.js'
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -24,7 +25,7 @@ const validateApiKey = (req: express.Request, res: express.Response, next: expre
 router.use(validateApiKey);
 
 // Obtener todas las carreras
-router.get('/carreras', async (req, res) => {
+router.get('/carreras', cacheMiddleware(3600), async (req, res) => {
   try {
     const carreras = await prisma.carrera.findMany({
       include: {
@@ -43,7 +44,7 @@ router.get('/carreras', async (req, res) => {
 });
 
 // Obtener todos los profesores
-router.get('/profesores', async (req, res) => {
+router.get('/profesores', cacheMiddleware(3600), async (req, res) => {
   try {
     const profesores = await profesorService.getAllProfesores();
     res.json(profesores);
@@ -53,7 +54,7 @@ router.get('/profesores', async (req, res) => {
 });
 
 // Obtener todas las mesas
-router.get('/mesas', async (req, res) => {
+router.get('/mesas', cacheMiddleware(1800), async (req, res) => {
   try {
     const mesas = await mesaService.getAllMesas();
     res.json(mesas);
@@ -63,10 +64,13 @@ router.get('/mesas', async (req, res) => {
 });
 
 // Obtener una mesa por ID
-router.get('/mesas/:id', async (req, res) => {
+router.get('/mesas/:id', cacheMiddleware(1800), async (req, res) => {
   try {
-    const id = parseInt(req.params.id)
-    const mesa = await mesaService.getMesaById(id)
+    const id = req.params.id;
+    if (!id) {
+      return res.status(400).json({ error: 'ID no proporcionado' });
+    }
+    const mesa = await mesaService.getMesaById(parseInt(id))
 
     if (!mesa) {
       return res.status(404).json({ error: 'Mesa no encontrada' })
@@ -161,9 +165,12 @@ router.delete('/mesas/:id', async (req, res) => {
 })
 
 // Obtener mesas de un profesor específico
-router.get('/mesas/profesor/:profesorId', async (req, res) => {
+router.get('/mesas/profesor/:profesorId', cacheMiddleware(1800), async (req, res) => {
   try {
-    const { profesorId } = req.params;
+    const profesorId = req.params.profesorId;
+    if (!profesorId) {
+      return res.status(400).json({ error: 'ID de profesor no proporcionado' });
+    }
     const mesas = await mesaService.getMesasByProfesorId(profesorId);
     res.json(mesas);
   } catch (error) {
