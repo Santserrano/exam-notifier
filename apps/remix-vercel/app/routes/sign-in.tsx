@@ -29,33 +29,6 @@ export default function SignInPage() {
                 backgroundColor: "#1d4ed8",
               },
             },
-            headerTitle: {
-              fontSize: "1.5rem",
-              fontWeight: "600",
-              color: "#1a1a1a",
-              "@media (max-width: 640px)": {
-                fontSize: "1.25rem",
-              },
-            },
-            card: {
-              width: "100%",
-              maxWidth: "400px",
-              margin: "0 1rem",
-              "@media (max-width: 640px)": {
-                margin: "0 0.5rem",
-              },
-            },
-            header: {
-              padding: "1rem",
-              "@media (max-width: 640px)": {
-                padding: "0.75rem",
-              },
-            },
-          },
-          layout: {
-            socialButtonsPlacement: "bottom",
-            socialButtonsVariant: "iconButton",
-            shimmer: false,
           },
         }}
       />
