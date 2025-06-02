@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { useFetcher } from "@remix-run/react";
+import { useFetcher, useOutletContext } from "@remix-run/react";
 import {
   SignedIn,
   UserButton,
   useUser,
 } from "@clerk/remix";
-import { useLoaderData } from "@remix-run/react";
 import { Bell, BellOff, Settings } from "lucide-react";
 
 import { Button } from "@exam-notifier/ui/components/button";
@@ -22,10 +21,18 @@ interface FetcherData {
   config?: NotificationConfig;
 }
 
+interface ContextType {
+  ENV: {
+    VAPID_PUBLIC_KEY: string;
+    API_URL: string;
+    INTERNAL_API_KEY: string;
+  };
+}
+
 export function HeaderClerk({ notificationConfig }: Props) {
   const [showConfig, setShowConfig] = useState(false);
   const { user } = useUser();
-  const { ENV } = useLoaderData<{ ENV: { API_URL: string; VAPID_PUBLIC_KEY: string; INTERNAL_API_KEY: string } }>();
+  const { ENV } = useOutletContext<ContextType>();
   const fetcher = useFetcher<FetcherData>();
   const isSubmitting = fetcher.state === "submitting";
 
@@ -39,6 +46,12 @@ export function HeaderClerk({ notificationConfig }: Props) {
         if (!("serviceWorker" in navigator)) {
           console.error("Service Worker no soportado");
           fetcher.data = { success: false, error: "Tu navegador no soporta notificaciones push" };
+          return;
+        }
+
+        if (!ENV.VAPID_PUBLIC_KEY) {
+          console.error("VAPID_PUBLIC_KEY no definida");
+          fetcher.data = { success: false, error: "Error de configuración: VAPID_PUBLIC_KEY no definida" };
           return;
         }
 
