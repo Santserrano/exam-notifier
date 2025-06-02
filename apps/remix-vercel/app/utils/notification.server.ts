@@ -8,9 +8,15 @@ export interface NotificationConfig {
     emailEnabled: boolean;
 }
 
+const DEFAULT_CONFIG: NotificationConfig = {
+    webPushEnabled: false,
+    smsEnabled: false,
+    emailEnabled: false,
+};
+
 export async function getNotificationConfig(args: LoaderFunctionArgs) {
     const { userId } = await getAuth(args);
-    if (!userId) return null;
+    if (!userId) return DEFAULT_CONFIG;
 
     const { API_URL, INTERNAL_API_KEY } = getServerEnv();
 
@@ -26,16 +32,18 @@ export async function getNotificationConfig(args: LoaderFunctionArgs) {
         );
 
         if (!response.ok) {
-            throw new Error(`Error al obtener configuración: ${response.statusText}`);
+            console.error(`Error al obtener configuración: ${response.status} ${response.statusText}`);
+            return DEFAULT_CONFIG;
         }
 
-        return await response.json();
+        const config = await response.json();
+        return {
+            webPushEnabled: config.webPushEnabled ?? false,
+            smsEnabled: config.smsEnabled ?? false,
+            emailEnabled: config.emailEnabled ?? false,
+        };
     } catch (error) {
         console.error("Error al obtener configuración:", error);
-        return {
-            webPushEnabled: false,
-            smsEnabled: false,
-            emailEnabled: false,
-        };
+        return DEFAULT_CONFIG;
     }
 } 
