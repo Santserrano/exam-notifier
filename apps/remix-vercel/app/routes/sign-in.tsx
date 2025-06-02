@@ -18,7 +18,7 @@ export default function SignInPage() {
         path="/sign-in"
         routing="path"
         signUpUrl="/sign-up"
-        afterSignInUrl="/"
+        afterSignInUrl="/sign-in.sso-callback"
         appearance={{
           elements: {
             formButtonPrimary: {

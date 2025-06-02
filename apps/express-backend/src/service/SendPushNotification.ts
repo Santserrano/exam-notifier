@@ -29,7 +29,15 @@ export async function sendPushToProfesor(profesorId: string, title: string, body
             data: {
                 url: '/mesas',
                 timestamp: new Date().toISOString(),
-                mesaId: body.match(/mesa (\d+)/)?.[1] || null
+                mesaId: body.match(/mesa (\d+)/)?.[1] || null,
+                fecha: new Date().toLocaleString('es-AR', {
+                    timeZone: 'America/Argentina/Buenos_Aires',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })
             }
         });
 
