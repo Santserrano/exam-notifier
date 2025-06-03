@@ -3,7 +3,7 @@ import express from 'express';
 
 import { notificationFactory } from '../core/notifications/NotificationFactory.js';
 import { NotificationType } from '../core/notifications/types.js';
-import { cacheMiddleware } from '../middleware/cache.js';
+import { cacheMiddleware, invalidateCache } from '../middleware/cache.js';
 import { notificacionService } from '../service/NotificationService.js';
 
 const router = express.Router();
@@ -73,6 +73,10 @@ router.patch('/config/:profesorId', async (req, res) => {
       ...updates
     });
 
+    // Invalidar la caché de la configuración
+    await invalidateCache(`/config/${profesorId}`);
+    await invalidateCache(`/subscriptions/${profesorId}`);
+
     return res.status(200).json(updated);
   } catch (error) {
     return res.status(500).json({
@@ -118,6 +122,10 @@ router.post('/push-subscription', async (req, res) => {
       ...currentConfig,
       webPushEnabled: true
     });
+
+    // Invalidar la caché
+    await invalidateCache(`/config/${profesorId}`);
+    await invalidateCache(`/subscriptions/${profesorId}`);
 
     return res.status(201).json({
       message: 'Suscripción guardada exitosamente',
