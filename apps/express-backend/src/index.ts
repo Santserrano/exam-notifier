@@ -2,27 +2,19 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
 
-import { initRedis } from './lib/redis.js'
 import diaryRouter from './routes/diaries.js'
-import notificationsRouter from './routes/notifications.js'
 
 // Cargar variables de entorno
 dotenv.config()
 
 const app = express()
-const port = process.env.PORT ?? 3005
-
-// Inicializar Redis
-initRedis().catch(err => {
-  console.error('Error al inicializar Redis:', err);
-  process.exit(1);
-});
+const port = process.env.PORT || 3005
 
 // Configuración de CORS
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? [process.env.FRONTEND_URL ?? 'https://exam-notifier.vercel.app']
-    : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: process.env.NODE_ENV === 'production' 
+    ? [process.env.FRONTEND_URL || 'https://ucpmesas.site']
+    : ['http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'x-api-key', 'Authorization'],
   credentials: true,
@@ -34,19 +26,17 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.use(express.json())
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
-
 // Middleware para validar API key
 const validateApiKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const apiKey = req.headers['x-api-key']
+  console.log('Validando API key:', apiKey)
 
   if (!apiKey || apiKey !== process.env.INTERNAL_API_KEY) {
+    console.error('API key inválida')
     return res.status(401).json({ error: 'API key inválida' })
   }
 
+  console.log('API key válida')
   next()
 }
 
@@ -55,10 +45,16 @@ app.use('/api', validateApiKey)
 
 // Rutas
 app.use('/api/diaries', diaryRouter)
-app.use('/api/diaries/notificaciones', notificationsRouter)
+
+// Ruta de prueba
+app.get('/api/health', (req, res) => {
+  console.log('Health check realizado')
+  res.json({ status: 'ok' })
+})
 
 // Manejo de errores CORS
 app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('Error:', err)
   if (err.name === 'CORSError') {
     res.status(403).json({ error: 'CORS error' })
   } else {
@@ -66,10 +62,6 @@ app.use((err: Error, req: express.Request, res: express.Response, _next: express
   }
 })
 
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(port, () => {
-    console.log(`Servidor corriendo en http://localhost:${port}`)
-  })
-}
-
-export { app }
+app.listen(port, () => {
+  console.log(`Servidor corriendo en el puerto ${port}`)
+})

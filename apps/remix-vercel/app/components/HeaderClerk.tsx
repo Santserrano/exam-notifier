@@ -31,8 +31,9 @@ interface FetcherData {
   config?: NotificationConfig;
 }
 
-export function HeaderClerk({ notificationConfig, userRole, env }: Props) {
+export function HeaderClerk({ notificationConfig: initialNotificationConfig, userRole, env }: Props) {
   const [showConfig, setShowConfig] = useState(false);
+  const [notificationConfig, setNotificationConfig] = useState(initialNotificationConfig);
   const { user } = useUser();
   const fetcher = useFetcher<FetcherData>();
   const isSubmitting = fetcher.state === "submitting";
