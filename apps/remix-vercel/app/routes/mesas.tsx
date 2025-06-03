@@ -10,6 +10,7 @@ import {
 } from "@remix-run/react";
 import { Building2, Calendar, Clock, Info, MapPin, User } from "lucide-react";
 import { useEffect } from "react";
+import { useUser } from "@clerk/remix";
 
 import { Button } from "@exam-notifier/ui/components/button";
 import MesaCard from "@exam-notifier/ui/components/MesaCard";
@@ -56,9 +57,12 @@ interface MesaProcesada {
   modalidad: "Presencial" | "Virtual";
   color: string;
   sede: string;
+  profesorId: string;
+  vocalId: string;
   profesorNombre: string;
   vocalNombre: string;
   aula: string;
+  estadoAceptacion: "PENDIENTE" | "ACEPTADA" | "RECHAZADA";
 }
 
 interface PushEvent extends Event {
@@ -97,6 +101,18 @@ export const loader = async (args: LoaderFunctionArgs) => {
 
     const mesasRaw = await response.json();
 
+    const aceptacionesResponse = await fetch(
+      `${API_URL}/api/diaries/mesas/aceptaciones/profesor/${userId}`,
+      {
+        headers: {
+          "x-api-key": INTERNAL_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const aceptaciones = aceptacionesResponse.ok ? await aceptacionesResponse.json() : [];
+
     const meses = [
       "ene.",
       "feb.",
@@ -125,6 +141,8 @@ export const loader = async (args: LoaderFunctionArgs) => {
       const profesorObj = typeof m.profesor === 'object' ? m.profesor : null;
       const vocalObj = typeof m.vocal === 'object' ? m.vocal : null;
 
+      const aceptacion = aceptaciones.find((a: any) => a.mesaId === m.id);
+
       return {
         id: m.id?.toString() || `mesa-${index}`,
         materia: materiaNombre,
@@ -142,6 +160,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
           ? `${vocalObj.nombre || ''} ${vocalObj.apellido || ''}`
           : typeof m.vocal === 'string' ? m.vocal : '',
         aula: m.aula || "Aula por confirmar",
+        estadoAceptacion: aceptacion?.estado || "PENDIENTE",
       };
     });
 
@@ -188,12 +207,38 @@ export const action = async (args: ActionFunctionArgs) => {
   const type = formData.get("type") as string;
   const subscription = formData.get("subscription");
   const enabled = formData.get("enabled") === "true";
+  const mesaId = formData.get("mesaId");
+  const estado = formData.get("estado");
 
   const { API_URL, INTERNAL_API_KEY } = getServerEnv();
 
   try {
+    // Manejar aceptación de mesa
+    if (type === "aceptacion" && mesaId && estado) {
+      const response = await fetch(
+        `${API_URL}/api/diaries/mesas/${mesaId}/aceptacion`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": INTERNAL_API_KEY,
+          },
+          body: JSON.stringify({
+            profesorId: userId,
+            estado,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Error al actualizar aceptación");
+      }
+
+      return json({ success: true });
+    }
+
+    // Manejar configuración de notificaciones
     if (type === "webPushEnabled" && subscription) {
-      // Guardar la suscripción push
       const response = await fetch(`${API_URL}/api/diaries/notificaciones/push-subscription`, {
         method: "POST",
         headers: {
@@ -232,7 +277,7 @@ export const action = async (args: ActionFunctionArgs) => {
   } catch (error) {
     console.error("Error en la acción:", error);
     return json(
-      { success: false, error: error instanceof Error ? error.message : "Error al actualizar notificaciones" },
+      { success: false, error: error instanceof Error ? error.message : "Error al actualizar" },
       { status: 500 }
     );
   }
@@ -308,10 +353,21 @@ export default function MesasRoute() {
       m.id === detalleId || m.id === alumnosId,
   );
 
-  console.log("Mesa detalle encontrada:", mesaDetalle); // Debug log
-
   function DetalleMesa({ mesa }: { mesa: MesaProcesada }) {
-    console.log("Renderizando DetalleMesa con mesa:", mesa); // Debug log
+    const [searchParams, setSearchParams] = useSearchParams();
+    const fetcher = useFetcher();
+    const { user } = useUser();
+
+    const esProfesorAsignado = user?.id === mesa.profesorId || user?.id === mesa.vocalId;
+
+    const handleAceptacion = (estado: "ACEPTADA" | "RECHAZADA") => {
+      const formData = new FormData();
+      formData.append("type", "aceptacion");
+      formData.append("mesaId", mesa.id);
+      formData.append("estado", estado);
+      fetcher.submit(formData, { method: "post" });
+    };
+
     const fechaObj = new Date(mesa.fechaOriginal);
     const diasSemana = [
       "Domingo",
@@ -392,6 +448,39 @@ export default function MesasRoute() {
         <div className="flex items-center gap-2 text-sm">
           <Building2 className="h-4 w-4" /> {mesa.aula}
         </div>
+        <hr />
+        
+        {/* Estado de aceptación */}
+        {esProfesorAsignado && (
+          <div className="flex flex-col gap-4">
+            <div className="text-sm font-semibold text-gray-700">
+              Estado de aceptación:
+            </div>
+            {mesa.estadoAceptacion === "PENDIENTE" ? (
+              <div className="flex gap-4">
+                <Button
+                  onClick={() => handleAceptacion("ACEPTADA")}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Aceptar Mesa
+                </Button>
+                <Button
+                  onClick={() => handleAceptacion("RECHAZADA")}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Rechazar Mesa
+                </Button>
+              </div>
+            ) : (
+              <div className={`text-sm font-medium ${
+                mesa.estadoAceptacion === "ACEPTADA" ? "text-green-600" : "text-red-600"
+              }`}>
+                Mesa {mesa.estadoAceptacion === "ACEPTADA" ? "aceptada" : "rechazada"}
+              </div>
+            )}
+          </div>
+        )}
+        
         <hr />
         <div className="flex items-center gap-2 text-sm">
           <Info className="h-4 w-4" /> Recibirás un recordatorio 1 día antes

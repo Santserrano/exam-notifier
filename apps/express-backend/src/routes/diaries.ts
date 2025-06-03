@@ -252,4 +252,89 @@ router.put('/profesores/:profesorId/config', async (req, res) => {
   }
 });
 
+// Actualizar estado de aceptación de una mesa
+router.post('/mesas/:mesaId/aceptacion', validateApiKey, async (req, res) => {
+  try {
+    const { mesaId } = req.params;
+    const { profesorId, estado } = req.body;
+
+    if (!mesaId || !profesorId || !estado) {
+      return res.status(400).json({ error: 'Faltan datos requeridos' });
+    }
+
+    // Verificar que el estado sea válido
+    if (!['ACEPTADA', 'RECHAZADA'].includes(estado)) {
+      return res.status(400).json({ error: 'Estado inválido' });
+    }
+
+    // Verificar que el profesor esté asignado a la mesa
+    const mesa = await prisma.mesaDeExamen.findFirst({
+      where: {
+        id: parseInt(mesaId),
+        OR: [
+          { profesorId },
+          { vocalId: profesorId }
+        ]
+      }
+    });
+
+    if (!mesa) {
+      return res.status(404).json({ error: 'Mesa no encontrada o profesor no asignado' });
+    }
+
+    // Crear o actualizar la aceptación
+    const aceptacion = await prisma.mesaAceptacion.upsert({
+      where: {
+        mesaId_profesorId: {
+          mesaId: parseInt(mesaId),
+          profesorId
+        }
+      },
+      update: {
+        estado
+      },
+      create: {
+        mesaId: parseInt(mesaId),
+        profesorId,
+        estado
+      }
+    });
+
+    // Invalidar la caché de las mesas
+    await invalidateCache('/mesas*');
+
+    res.json(aceptacion);
+  } catch (error) {
+    console.error('Error al actualizar aceptación:', error);
+    res.status(500).json({ error: 'Error al actualizar la aceptación' });
+  }
+});
+
+// Obtener estado de aceptación de una mesa
+router.get('/mesas/:mesaId/aceptaciones', validateApiKey, async (req, res) => {
+  try {
+    const { mesaId } = req.params;
+
+    const aceptaciones = await prisma.mesaAceptacion.findMany({
+      where: {
+        mesaId: parseInt(mesaId)
+      },
+      include: {
+        profesor: {
+          select: {
+            id: true,
+            nombre: true,
+            apellido: true
+          }
+        }
+      }
+    });
+
+    res.json(aceptaciones);
+  } catch (error) {
+    console.error('Error al obtener aceptaciones:', error);
+    res.status(500).json({ error: 'Error al obtener las aceptaciones' });
+  }
+});
+
 export default router

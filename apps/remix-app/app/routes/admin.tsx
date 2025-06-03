@@ -304,7 +304,6 @@ export const action = async (args: ActionFunctionArgs) => {
 
 export default function AdminRoute() {
   const { userId, role, mesas, profesores, carreras } = useLoaderData<typeof loader>();
-  console.log('Profesores cargados:', profesores);
   const actionData = useActionData<typeof action>();
   const [search, setSearch] = useState("");
   const [carrera, setCarrera] = useState("");

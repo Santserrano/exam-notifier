@@ -2,9 +2,24 @@ import { NextFunction, Request, Response } from 'express';
 
 import { redis } from '../lib/redis.js';
 
+export const invalidateCache = async (pattern: string) => {
+    try {
+        const keys = await redis.keys(`cache:${pattern}`);
+        if (keys.length > 0) {
+            await redis.del(keys);
+        }
+    } catch (error) {
+        console.error('Error al invalidar caché:', error);
+    }
+};
+
 export const cacheMiddleware = (duration: number = 3600) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         if (req.method !== 'GET') {
+            // Si es una operación POST, PUT o DELETE, invalidar las claves relevantes
+            if (req.path.includes('/mesas')) {
+                await invalidateCache('/mesas*');
+            }
             return next();
         }
 
