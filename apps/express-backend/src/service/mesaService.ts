@@ -3,27 +3,7 @@ import { MesaDeExamen, PrismaClient } from '@prisma/client';
 import { notificationFactory } from '../core/notifications/NotificationFactory.js';
 import { notificacionService } from './NotificationService.js';
 
-interface MesaData {
-    id: number;
-    profesor: string;
-    vocal: string;
-    carrera: string;
-    materia: string;
-    fecha: Date;
-    descripcion: string;
-    cargo: string;
-    verification: boolean;
-    createdAt: Date;
-    modalidad?: string | null;
-    aula?: string | null;
-    webexLink?: string | null;
-}
-
-interface MesaResponse {
-    success: boolean;
-    data?: MesaData;
-    error?: string;
-}
+import { MesaData, MesaResponse } from '../interfaces/interface'
 
 class MesaService {
     private prisma: PrismaClient;
@@ -47,7 +27,6 @@ class MesaService {
             });
             return mesas;
         } catch (error) {
-            console.error('Error en getAllMesas:', error);
             throw new Error('Error al obtener las mesas');
         }
     }
@@ -74,7 +53,6 @@ class MesaService {
             });
             return mesas;
         } catch (error) {
-            console.error('Error en getMesasByProfesorId:', error);
             throw new Error('Error al obtener las mesas del profesor');
         }
     }
@@ -198,7 +176,7 @@ class MesaService {
                         await whatsappNotification.send();
                     }
                 } catch (error) {
-                    console.error('Error al enviar notificaciones al profesor:', error);
+                    throw new Error('Error al enviar notificaciones al profesor:');
                 }
             }
 
@@ -238,7 +216,7 @@ class MesaService {
                         await whatsappNotification.send();
                     }
                 } catch (error) {
-                    console.error('Error al enviar notificaciones al vocal:', error);
+                    throw new Error('Error al enviar notificaciones al vocal:');
                 }
             }
 
@@ -261,7 +239,6 @@ class MesaService {
                 }
             };
         } catch (error) {
-            console.error('Error en createMesa:', error);
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Error al crear la mesa'
@@ -317,7 +294,6 @@ class MesaService {
                 }
             };
         } catch (error) {
-            console.error('Error en updateMesa:', error);
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Error al actualizar la mesa'
@@ -331,7 +307,6 @@ class MesaService {
                 where: { id }
             });
         } catch (error) {
-            console.error('Error en deleteMesa:', error);
             throw new Error('Error al eliminar la mesa');
         }
     }

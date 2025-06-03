@@ -31,7 +31,6 @@ class NotificationService {
 
             // Si no existe en nuestra DB, es un admin u otro tipo de usuario
             if (!profesor) {
-                console.log('Usuario no registrado en DB (posiblemente admin):', profesorId);
                 return {
                     webPushEnabled: false,
                     emailEnabled: false,
@@ -67,10 +66,8 @@ class NotificationService {
                 }
             }
 
-            console.log('Configuración encontrada:', config);
             return config;
         } catch (error) {
-            console.error('Error en getConfigByProfesor:', error);
             return {
                 webPushEnabled: false,
                 emailEnabled: false,
@@ -114,7 +111,6 @@ class NotificationService {
             });
             return updatedConfig;
         } catch (error) {
-            console.error('Error en updateConfig:', error);
             throw new Error('Error al actualizar la configuración');
         }
     }
@@ -151,7 +147,6 @@ class NotificationService {
             }
             return savedSubscription;
         } catch (error) {
-            console.error('Error en saveWebPushSubscription:', error);
             throw new Error('Error al guardar la suscripción');
         }
     }
@@ -163,7 +158,6 @@ class NotificationService {
             });
             return subscriptions;
         } catch (error) {
-            console.error('Error en getWebPushSubscriptions:', error);
             throw new Error('Error al obtener las suscripciones');
         }
     }
@@ -175,7 +169,6 @@ class NotificationService {
             });
             return deletedSubscription;
         } catch (error) {
-            console.error('Error en deleteWebPushSubscription:', error);
             throw new Error('Error al eliminar la suscripción');
         }
     }
