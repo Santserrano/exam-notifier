@@ -1,5 +1,5 @@
-import React from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
+import React from "react";
 
 export interface MesaCardProps {
   fecha: string;

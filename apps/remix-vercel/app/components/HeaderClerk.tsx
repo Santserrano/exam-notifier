@@ -39,16 +39,36 @@ export function HeaderClerk({ notificationConfig: initialNotificationConfig, use
   const isSubmitting = fetcher.state === "submitting";
 
   const handleToggleNotification = async (type: keyof NotificationConfig) => {
-    // No permitir activar notificaciones si es admin
-    if (userRole !== "profesor") return;
+    console.log("Iniciando toggle de notificación:", type);
+    console.log("Estado actual:", notificationConfig);
+    console.log("Rol de usuario:", userRole);
 
-    if (!user?.id) return;
+    // No permitir activar notificaciones si es admin
+    if (userRole !== "profesor") {
+      console.log("Usuario no es profesor, no puede activar notificaciones");
+      return;
+    }
+
+    if (!user?.id) {
+      console.log("No hay usuario autenticado");
+      return;
+    }
 
     if (type === "webPushEnabled" && !notificationConfig?.[type]) {
       try {
-        const registration = await navigator.serviceWorker.ready;
+        console.log("Verificando soporte de service worker...");
+        if (!('serviceWorker' in navigator)) {
+          throw new Error("Tu navegador no soporta notificaciones push");
+        }
 
+        console.log("Obteniendo registro de service worker...");
+        const registration = await navigator.serviceWorker.ready;
+        console.log("Service worker registrado:", registration);
+
+        console.log("Solicitando permiso de notificaciones...");
         const permission = await Notification.requestPermission();
+        console.log("Permiso de notificaciones:", permission);
+
         if (permission !== "granted") {
           console.error("Permiso de notificaciones denegado");
           fetcher.data = { success: false, error: "Permiso de notificaciones denegado" };
@@ -69,6 +89,7 @@ export function HeaderClerk({ notificationConfig: initialNotificationConfig, use
           [type]: true
         }));
 
+        console.log("Enviando suscripción al servidor...");
         fetcher.submit(
           {
             type: "webPushEnabled",
@@ -78,18 +99,19 @@ export function HeaderClerk({ notificationConfig: initialNotificationConfig, use
           { method: "post" }
         );
       } catch (error) {
+        console.error("Error en el proceso de activación:", error);
         // Revertir el estado local en caso de error
         setNotificationConfig(prev => ({
           ...prev,
           [type]: false
         }));
-        console.error("Error en el proceso de activación:", error);
         fetcher.data = { 
           success: false, 
           error: error instanceof Error ? error.message : "Error al activar notificaciones" 
         };
       }
     } else {
+      console.log("Actualizando estado de notificación:", type);
       // Actualizar el estado local inmediatamente
       setNotificationConfig(prev => ({
         ...prev,
