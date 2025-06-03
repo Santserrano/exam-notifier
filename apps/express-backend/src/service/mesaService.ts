@@ -3,27 +3,7 @@ import { MesaDeExamen, PrismaClient } from '@prisma/client';
 import { notificationFactory } from '../core/notifications/NotificationFactory.js';
 import { notificacionService } from './NotificationService.js';
 
-interface MesaData {
-    id: number;
-    profesor: string;
-    vocal: string;
-    carrera: string;
-    materia: string;
-    fecha: Date;
-    descripcion: string;
-    cargo: string;
-    verification: boolean;
-    createdAt: Date;
-    modalidad?: string | null;
-    aula?: string | null;
-    webexLink?: string | null;
-}
-
-interface MesaResponse {
-    success: boolean;
-    data?: MesaData;
-    error?: string;
-}
+import { MesaData, MesaResponse } from '../interfaces/interface'
 
 class MesaService {
     private prisma: PrismaClient;
