@@ -47,7 +47,6 @@ class MesaService {
             });
             return mesas;
         } catch (error) {
-            console.error('Error en getAllMesas:', error);
             throw new Error('Error al obtener las mesas');
         }
     }
@@ -74,7 +73,6 @@ class MesaService {
             });
             return mesas;
         } catch (error) {
-            console.error('Error en getMesasByProfesorId:', error);
             throw new Error('Error al obtener las mesas del profesor');
         }
     }
@@ -198,7 +196,7 @@ class MesaService {
                         await whatsappNotification.send();
                     }
                 } catch (error) {
-                    console.error('Error al enviar notificaciones al profesor:', error);
+                    throw new Error('Error al enviar notificaciones al profesor:');
                 }
             }
 
@@ -238,7 +236,7 @@ class MesaService {
                         await whatsappNotification.send();
                     }
                 } catch (error) {
-                    console.error('Error al enviar notificaciones al vocal:', error);
+                    throw new Error('Error al enviar notificaciones al vocal:');
                 }
             }
 
@@ -261,7 +259,6 @@ class MesaService {
                 }
             };
         } catch (error) {
-            console.error('Error en createMesa:', error);
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Error al crear la mesa'
@@ -317,7 +314,6 @@ class MesaService {
                 }
             };
         } catch (error) {
-            console.error('Error en updateMesa:', error);
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Error al actualizar la mesa'
@@ -331,7 +327,6 @@ class MesaService {
                 where: { id }
             });
         } catch (error) {
-            console.error('Error en deleteMesa:', error);
             throw new Error('Error al eliminar la mesa');
         }
     }
