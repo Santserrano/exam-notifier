@@ -11,11 +11,14 @@ export class WhatsAppNotification implements Notification {
 
     async send(): Promise<void> {
         try {
+            // Formatear el número de teléfono si es necesario
+            const to = this.formatPhoneNumber(this.data.recipient);
+
             await axios.post(
                 this.VONAGE_API_URL,
                 {
                     from: this.VONAGE_FROM,
-                    to: this.data.recipient,
+                    to,
                     message_type: 'text',
                     text: this.data.body,
                     channel: 'whatsapp',
@@ -23,13 +26,26 @@ export class WhatsAppNotification implements Notification {
                 {
                     headers: {
                         'Content-Type': 'application/json',
-                        Accept: 'application/json',
-                        'Authorization': `Basic ${this.VONAGE_API_KEY}`
-                    },
+                        'Accept': 'application/json',
+                        'Authorization': `Basic ${Buffer.from(this.VONAGE_API_KEY).toString('base64')}`
+                    }
                 }
             );
         } catch (error) {
             console.error('Error al enviar WhatsApp:', error);
+            throw error;
         }
     }
-} 
+
+    private formatPhoneNumber(phone: string): string {
+        // Eliminar cualquier carácter que no sea número
+        const cleaned = phone.replace(/\D/g, '');
+
+        // Si el número no comienza con el código de país, agregarlo
+        if (!cleaned.startsWith('54')) {
+            return `54${cleaned}`;
+        }
+
+        return cleaned;
+    }
+}

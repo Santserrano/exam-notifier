@@ -43,44 +43,9 @@ export function HeaderClerk({ notificationConfig, userRole, env }: Props) {
 
     if (!user?.id) return;
 
-    if (type === "webPushEnabled" && !notificationConfig?.webPushEnabled) {
+    if (type === "webPushEnabled" && !notificationConfig?.[type]) {
       try {
-        console.log("Iniciando activación de notificaciones web push...");
-        
-        if (!("serviceWorker" in navigator)) {
-          console.error("Service Worker no soportado");
-          fetcher.data = { success: false, error: "Tu navegador no soporta notificaciones push" };
-          return;
-        }
-
-        if (!env?.VAPID_PUBLIC_KEY) {
-          console.error("VAPID_PUBLIC_KEY no definida");
-          fetcher.data = { success: false, error: "Error de configuración: VAPID_PUBLIC_KEY no definida" };
-          return;
-        }
-
-        // Registrar el Service Worker si no está registrado
-        let registration;
-        try {
-          registration = await navigator.serviceWorker.register("/sw.js");
-          console.log("Service Worker registrado:", registration);
-        } catch (error) {
-          console.error("Error al registrar Service Worker:", error);
-          fetcher.data = { success: false, error: "Error al registrar el Service Worker" };
-          return;
-        }
-
-        // Esperar a que el Service Worker esté activo
-        if (!registration.active) {
-          console.log("Esperando a que el Service Worker esté activo...");
-          await new Promise((resolve) => {
-            if (registration.active) {
-              resolve(true);
-            } else {
-              registration.addEventListener("activate", () => resolve(true));
-            }
-          });
-        }
+        const registration = await navigator.serviceWorker.ready;
 
         const permission = await Notification.requestPermission();
         if (permission !== "granted") {
@@ -97,6 +62,12 @@ export function HeaderClerk({ notificationConfig, userRole, env }: Props) {
 
         console.log("Suscripción obtenida:", subscription);
 
+        // Actualizar el estado local inmediatamente
+        setNotificationConfig(prev => ({
+          ...prev,
+          [type]: true
+        }));
+
         fetcher.submit(
           {
             type: "webPushEnabled",
@@ -106,6 +77,11 @@ export function HeaderClerk({ notificationConfig, userRole, env }: Props) {
           { method: "post" }
         );
       } catch (error) {
+        // Revertir el estado local en caso de error
+        setNotificationConfig(prev => ({
+          ...prev,
+          [type]: false
+        }));
         console.error("Error en el proceso de activación:", error);
         fetcher.data = { 
           success: false, 
@@ -113,6 +89,12 @@ export function HeaderClerk({ notificationConfig, userRole, env }: Props) {
         };
       }
     } else {
+      // Actualizar el estado local inmediatamente
+      setNotificationConfig(prev => ({
+        ...prev,
+        [type]: !prev?.[type]
+      }));
+
       fetcher.submit(
         {
           type,

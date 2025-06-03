@@ -42,6 +42,7 @@ model Profesor {
   materias     Materia[]      // Relación muchos a muchos con Materia
   mesasTitular MesaDeExamen[] @relation("ProfesorTitular")
   mesasVocal   MesaDeExamen[] @relation("ProfesorVocal")
+  aceptaciones MesaAceptacion[]
 
   notificacionConfig   NotificacionConfig?
   webPushSubscriptions WebPushSubscription[]
@@ -68,6 +69,7 @@ model MesaDeExamen {
   aula         String?    // solo si modalidad es Presencial
   webexLink    String?    // solo si modalidad es Virtual
   alumnos      Alumno[]   @relation("AlumnosEnMesa")
+  aceptaciones MesaAceptacion[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 }
@@ -101,4 +103,23 @@ model Alumno {
   carrera   String
   dni       String         @unique
   mesas     MesaDeExamen[] @relation("AlumnosEnMesa")
+}
+
+model MesaAceptacion {
+  id        String    @id @default(uuid())
+  mesaId    Int
+  mesa      MesaDeExamen @relation(fields: [mesaId], references: [id])
+  profesorId String
+  profesor  Profesor  @relation(fields: [profesorId], references: [id])
+  estado    EstadoAceptacion @default(PENDIENTE)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([mesaId, profesorId])
+}
+
+enum EstadoAceptacion {
+  PENDIENTE
+  ACEPTADA
+  RECHAZADA
 }
