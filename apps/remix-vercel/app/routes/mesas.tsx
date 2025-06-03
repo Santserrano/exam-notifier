@@ -381,6 +381,12 @@ export default function MesasRoute() {
       fetcher.submit(formData, { method: "post" });
     };
 
+    const handleVolver = () => {
+      searchParams.delete("detalle");
+      searchParams.delete("alumnos");
+      setSearchParams(searchParams);
+    };
+
     const fechaObj = new Date(mesa.fechaOriginal);
     const diasSemana = [
       "Domingo",
@@ -415,10 +421,7 @@ export default function MesasRoute() {
       <div className="flex flex-col gap-6 p-2">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => {
-              searchParams.delete("detalle");
-              setSearchParams(searchParams);
-            }}
+            onClick={handleVolver}
             className="text-2xl text-green-900"
           >
             ←
@@ -434,7 +437,6 @@ export default function MesasRoute() {
         <Button
           className="bg-blue-800 text-white"
           onClick={() => {
-            searchParams.delete("detalle");
             searchParams.set("alumnos", mesa.id);
             setSearchParams(searchParams);
           }}
@@ -503,17 +505,21 @@ export default function MesasRoute() {
   }
 
   function ListaAlumnos({ mesa }: { mesa: MesaProcesada }) {
+    const [searchParams, setSearchParams] = useSearchParams();
     const alumnosFiltrados = alumnosMock.filter((a) =>
       a.nombre.toLowerCase().includes(filtroAlumno.toLowerCase()),
     );
+
+    const handleVolver = () => {
+      searchParams.delete("alumnos");
+      setSearchParams(searchParams);
+    };
+
     return (
       <div className="flex flex-col gap-2 p-2">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => {
-              searchParams.delete("alumnos");
-              setSearchParams(searchParams);
-            }}
+            onClick={handleVolver}
             className="text-2xl text-green-900"
           >
             ←

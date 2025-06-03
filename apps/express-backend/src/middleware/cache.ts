@@ -20,6 +20,9 @@ export const cacheMiddleware = (duration: number = 3600) => {
             if (req.path.includes('/mesas')) {
                 await invalidateCache('/mesas*');
             }
+            if (req.path.includes('/notificaciones')) {
+                await invalidateCache('/notificaciones*');
+            }
             return next();
         }
 
