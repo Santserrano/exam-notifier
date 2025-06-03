@@ -289,7 +289,20 @@ const carreras = [
   "Lic. en Nutrición",
   "Lic. en Publicidad",
 ];
-const fechas = ["mar.", "abr."];
+const fechas = [
+  "ene.",
+  "feb.",
+  "mar.",
+  "abr.",
+  "may.",
+  "jun.",
+  "jul.",
+  "ago.",
+  "sep.",
+  "oct.",
+  "nov.",
+  "dic."
+];
 const sedes = ["Corrientes", "Sáenz Peña", "Posadas", "Resistencia"];
 const alumnosMock = [
   { nombre: "Juan Pérez" },
