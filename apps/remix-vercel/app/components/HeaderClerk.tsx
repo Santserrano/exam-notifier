@@ -18,7 +18,7 @@ interface Props {
     emailEnabled?: boolean;
   } | null;
   userRole?: string;
-  env?: {
+  env: {
     VAPID_PUBLIC_KEY: string;
     API_URL: string;
     INTERNAL_API_KEY: string;
