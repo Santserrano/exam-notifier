@@ -33,15 +33,13 @@ interface FetcherData {
 
 export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }: Props) {
   const [showConfig, setShowConfig] = useState(false);
-  const [notificationConfig, setNotificationConfig] = useState(initialConfig);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
   const fetcher = useFetcher<FetcherData>();
   const isSubmitting = fetcher.state === "submitting";
 
-  useEffect(() => {
-    setNotificationConfig(initialConfig);
-  }, [initialConfig]);
+  // Usar el estado del fetcher directamente
+  const notificationConfig = fetcher.data?.config || initialConfig;
 
   const handleToggleNotification = async (type: keyof NotificationConfig) => {
     if (userRole !== "profesor" || !user?.id) return;
@@ -49,19 +47,23 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
     if (type === "webPushEnabled" && !notificationConfig?.[type]) {
       setIsLoading(true);
       try {
+        // Verificar soporte de Service Worker
         if (!("serviceWorker" in navigator)) {
           throw new Error("Tu navegador no soporta notificaciones push");
         }
 
+        // Verificar permisos
         const permission = await Notification.requestPermission();
         if (permission !== "granted") {
           throw new Error("Permiso de notificaciones denegado");
         }
 
+        // Registrar Service Worker
         console.log("Registrando Service Worker...");
         const registration = await navigator.serviceWorker.register("/sw.js");
         console.log("Service Worker registrado:", registration);
 
+        // Esperar a que el Service Worker esté activo
         if (!registration.active) {
           console.log("Esperando a que el Service Worker esté activo...");
           await new Promise((resolve) => {
@@ -73,6 +75,7 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
           });
         }
 
+        // Obtener suscripción
         console.log("Intentando obtener suscripción...");
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
@@ -81,6 +84,7 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
 
         console.log("Suscripción obtenida:", subscription);
 
+        // Enviar suscripción al backend
         const response = await fetch(
           `${env?.API_URL}/api/diaries/notificaciones/push-subscription`,
           {
@@ -103,11 +107,6 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
           throw new Error(data.error || data.details || "Error al guardar la suscripción");
         }
 
-        setNotificationConfig(prev => ({
-          ...prev,
-          [type]: true
-        }));
-
         fetcher.submit(
           {
             type: "webPushEnabled",
@@ -117,10 +116,6 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
         );
       } catch (error) {
         console.error("Error al activar notificaciones:", error);
-        setNotificationConfig(prev => ({
-          ...prev,
-          [type]: false
-        }));
         fetcher.data = { 
           success: false, 
           error: error instanceof Error ? error.message : "Error al activar notificaciones" 
@@ -129,11 +124,6 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
         setIsLoading(false);
       }
     } else {
-      setNotificationConfig(prev => ({
-        ...prev,
-        [type]: !prev?.[type]
-      }));
-
       fetcher.submit(
         {
           type,
