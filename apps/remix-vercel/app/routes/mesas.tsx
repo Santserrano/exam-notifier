@@ -429,6 +429,7 @@ export default function MesasRoute() {
       <div className="flex flex-col gap-6 p-2">
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={handleVolver}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl text-green-900 hover:bg-gray-200"
           >
@@ -443,6 +444,7 @@ export default function MesasRoute() {
         </div>
         <div className="text-sm text-gray-500">{mesa.carrera}</div>
         <Button
+          type="button"
           className="w-full bg-blue-800 text-white hover:bg-blue-900"
           onClick={handleVerAlumnos}
         >
@@ -526,6 +528,7 @@ export default function MesasRoute() {
       <div className="flex flex-col gap-2 p-2">
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={handleVolver}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl text-green-900 hover:bg-gray-200"
           >
