@@ -1,12 +1,9 @@
 import express, { Router } from 'express'
 import { prisma } from '../lib/prisma.js'
-
-import { cacheMiddleware, invalidateCache } from '../middleware/cache.js'
 import { mesaService } from '../service/mesaService.js'
 import { ProfesorService } from '../service/profesorService.js'
 import { CarreraService } from '../service/carreraService.js'
 import { MateriaService } from '../service/materiaService.js'
-import { cache } from '../lib/cache.js'
 import { validateApiKey } from '../middleware/auth.js'
 
 const router = Router()
@@ -15,21 +12,10 @@ const carreraService = new CarreraService()
 const materiaService = new MateriaService()
 
 // Middleware para validar API key
-const validateApiKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const apiKey = req.headers["x-api-key"];
-
-  if (!apiKey || apiKey !== process.env.INTERNAL_API_KEY) {
-    return res.status(401).json({ error: 'API key inválida' });
-  }
-
-  return next();
-};
-
-// Aplicar middleware a todas las rutas
 router.use(validateApiKey);
 
 // Obtener todas las carreras
-router.get('/carreras', cacheMiddleware(3600), async (req, res) => {
+router.get('/carreras', async (req, res) => {
   try {
     const carreras = await prisma.carrera.findMany({
       include: {
@@ -48,7 +34,7 @@ router.get('/carreras', cacheMiddleware(3600), async (req, res) => {
 });
 
 // Obtener todos los profesores
-router.get('/profesores', cacheMiddleware(3600), async (req, res) => {
+router.get('/profesores', async (req, res) => {
   try {
     const profesores = await profesorService.getAllProfesores();
     res.json(profesores);
@@ -60,15 +46,7 @@ router.get('/profesores', cacheMiddleware(3600), async (req, res) => {
 // Obtener todas las mesas
 router.get('/mesas', async (req, res) => {
   try {
-    const cacheKey = 'mesas';
-    const cachedData = await cache.get(cacheKey);
-
-    if (cachedData) {
-      return res.json(cachedData);
-    }
-
     const mesas = await mesaService.getAllMesas();
-    await cache.set(cacheKey, mesas);
     res.json(mesas);
   } catch (error) {
     console.error('Error al obtener mesas:', error);
@@ -77,7 +55,7 @@ router.get('/mesas', async (req, res) => {
 });
 
 // Obtener una mesa por ID
-router.get('/mesas/:id', cacheMiddleware(1800), async (req, res) => {
+router.get('/mesas/:id', async (req, res) => {
   try {
     const id = req.params.id;
     if (!id) {
@@ -150,9 +128,6 @@ router.post('/mesas', async (req, res) => {
       webexLink,
     });
 
-    // Invalidar caché
-    await cache.del('mesas');
-
     res.status(201).json(mesa);
   } catch (error) {
     console.error('Error al crear mesa:', error);
@@ -191,7 +166,7 @@ router.delete('/mesas/:id', async (req, res) => {
 })
 
 // Obtener mesas de un profesor específico
-router.get('/mesas/profesor/:profesorId', cacheMiddleware(1800), async (req, res) => {
+router.get('/mesas/profesor/:profesorId', async (req, res) => {
   try {
     const profesorId = req.params.profesorId;
     if (!profesorId) {
@@ -204,163 +179,4 @@ router.get('/mesas/profesor/:profesorId', cacheMiddleware(1800), async (req, res
   }
 });
 
-// Actualizar configuración de profesor
-router.put('/profesores/:profesorId/config', async (req, res) => {
-  try {
-    const { profesorId } = req.params;
-    const { carreras, materias } = req.body;
-
-    if (!Array.isArray(carreras) || !Array.isArray(materias)) {
-      return res.status(400).json({ error: 'Las carreras y materias deben ser arrays' });
-    }
-
-    // Verificar que el profesor existe
-    const profesor = await prisma.profesor.findUnique({
-      where: { id: profesorId }
-    });
-
-    if (!profesor) {
-      return res.status(404).json({ error: 'Profesor no encontrado' });
-    }
-
-    // Verificar que todas las carreras existen
-    const carrerasExistentes = await prisma.carrera.findMany({
-      where: {
-        id: {
-          in: carreras
-        }
-      }
-    });
-
-    if (carrerasExistentes.length !== carreras.length) {
-      return res.status(400).json({ error: 'Una o más carreras no existen' });
-    }
-
-    // Verificar que todas las materias existen y pertenecen a las carreras seleccionadas
-    const materiasExistentes = await prisma.materia.findMany({
-      where: {
-        id: {
-          in: materias
-        },
-        carreraId: {
-          in: carreras
-        }
-      }
-    });
-
-    if (materiasExistentes.length !== materias.length) {
-      return res.status(400).json({ error: 'Una o más materias no existen o no pertenecen a las carreras seleccionadas' });
-    }
-
-    // Actualizar las carreras y materias del profesor
-    const updatedProfesor = await prisma.profesor.update({
-      where: { id: profesorId },
-      data: {
-        carreras: {
-          set: carreras.map((id: string) => ({ id }))
-        },
-        materias: {
-          set: materias.map((id: string) => ({ id }))
-        }
-      },
-      include: {
-        carreras: true,
-        materias: true
-      }
-    });
-
-    return res.json({
-      message: 'Configuración actualizada exitosamente',
-      profesor: updatedProfesor
-    });
-  } catch (error) {
-    return res.status(500).json({ error: 'Error al actualizar la configuración' });
-  }
-});
-
-// Actualizar estado de aceptación de una mesa
-router.post('/mesas/:mesaId/aceptacion', validateApiKey, async (req, res) => {
-  try {
-    const { mesaId } = req.params;
-    const { profesorId, estado } = req.body;
-
-    if (!mesaId || !profesorId || !estado) {
-      return res.status(400).json({ error: 'Faltan datos requeridos' });
-    }
-
-    // Verificar que el estado sea válido
-    if (!['ACEPTADA', 'RECHAZADA'].includes(estado)) {
-      return res.status(400).json({ error: 'Estado inválido' });
-    }
-
-    // Verificar que el profesor esté asignado a la mesa
-    const mesa = await prisma.mesaDeExamen.findFirst({
-      where: {
-        id: parseInt(mesaId),
-        OR: [
-          { profesorId },
-          { vocalId: profesorId }
-        ]
-      }
-    });
-
-    if (!mesa) {
-      return res.status(404).json({ error: 'Mesa no encontrada o profesor no asignado' });
-    }
-
-    // Crear o actualizar la aceptación
-    const aceptacion = await prisma.mesaAceptacion.upsert({
-      where: {
-        mesaId_profesorId: {
-          mesaId: parseInt(mesaId),
-          profesorId
-        }
-      },
-      update: {
-        estado
-      },
-      create: {
-        mesaId: parseInt(mesaId),
-        profesorId,
-        estado
-      }
-    });
-
-    // Invalidar la caché de las mesas
-    await invalidateCache('/mesas*');
-
-    res.json(aceptacion);
-  } catch (error) {
-    console.error('Error al actualizar aceptación:', error);
-    res.status(500).json({ error: 'Error al actualizar la aceptación' });
-  }
-});
-
-// Obtener estado de aceptación de una mesa
-router.get('/mesas/:mesaId/aceptaciones', validateApiKey, async (req, res) => {
-  try {
-    const { mesaId } = req.params;
-
-    const aceptaciones = await prisma.mesaAceptacion.findMany({
-      where: {
-        mesaId: parseInt(mesaId)
-      },
-      include: {
-        profesor: {
-          select: {
-            id: true,
-            nombre: true,
-            apellido: true
-          }
-        }
-      }
-    });
-
-    res.json(aceptaciones);
-  } catch (error) {
-    console.error('Error al obtener aceptaciones:', error);
-    res.status(500).json({ error: 'Error al obtener las aceptaciones' });
-  }
-});
-
-export default router
+export default router;
