@@ -46,12 +46,24 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
     emailEnabled: initialConfig?.emailEnabled ?? false
   });
 
-  // Sincronizar con el estado del servidor
+  // Sincronizar con el estado del servidor al cargar y después de cada actualización
+  useEffect(() => {
+    if (initialConfig) {
+      setLocalConfig({
+        webPushEnabled: initialConfig.webPushEnabled ?? false,
+        smsEnabled: initialConfig.smsEnabled ?? false,
+        emailEnabled: initialConfig.emailEnabled ?? false
+      });
+    }
+  }, [initialConfig]);
+
+  // Sincronizar con las respuestas del fetcher
   useEffect(() => {
     if (fetcher.data?.config) {
       setLocalConfig(fetcher.data.config);
+      revalidator.revalidate();
     }
-  }, [fetcher.data]);
+  }, [fetcher.data, revalidator]);
 
   // Manejar la activación de web push
   const handleWebPushActivation = async () => {
@@ -133,6 +145,9 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
         },
         { method: "post" }
       );
+
+      // Revalidar para asegurar que el estado se mantiene
+      revalidator.revalidate();
     } catch (error) {
       console.error("Error al activar notificaciones:", error);
       fetcher.data = { 
@@ -162,6 +177,9 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
       },
       { method: "post" }
     );
+
+    // Revalidar para asegurar que el estado se mantiene
+    revalidator.revalidate();
   };
 
   const getNotificationMessage = (
