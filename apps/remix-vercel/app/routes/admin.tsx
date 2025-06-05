@@ -218,7 +218,7 @@ export const action = async (args: ActionFunctionArgs) => {
     const response = await fetch(`${API_URL}/api/diaries/mesas`, {
       method: "POST",
       headers: {
-        "x-api-key": process.env.INTERNAL_API_KEY || "",
+        "x-api-key": INTERNAL_API_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
