@@ -9,6 +9,7 @@ export interface MesaCardProps {
   color: string;
   onClick?: () => void;
   mesaId?: string;
+  userId?: string;
 }
 
 export const MesaCard: React.FC<MesaCardProps> = ({
@@ -19,14 +20,15 @@ export const MesaCard: React.FC<MesaCardProps> = ({
   color,
   onClick,
   mesaId,
+  userId,
 }) => {
   const [dia, mes] = fecha.split(" ");
   const fetcher = useFetcher();
 
   // Prefetch al hacer hover
   const handleMouseEnter = () => {
-    if (mesaId) {
-      fetcher.load(`/api/mesas/${mesaId}`);
+    if (mesaId && userId) {
+      fetcher.load(`/api/mesas/${mesaId}?userId=${userId}`);
     }
   };
 

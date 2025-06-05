@@ -1,17 +1,23 @@
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { getServerEnv } from "~/utils/env.server";
 
-export const loader = async ({ params }: LoaderFunctionArgs) => {
+export const loader = async ({ params, request }: LoaderFunctionArgs) => {
   const { API_URL, INTERNAL_API_KEY } = getServerEnv();
   const mesaId = params.mesaId;
+  const url = new URL(request.url);
+  const userId = url.searchParams.get("userId");
 
   if (!mesaId) {
     return json({ error: "ID de mesa no proporcionado" }, { status: 400 });
   }
 
+  if (!userId) {
+    return json({ error: "ID de usuario no proporcionado" }, { status: 400 });
+  }
+
   try {
     const response = await fetch(
-      `${API_URL}/api/diaries/mesas/${mesaId}`,
+      `${API_URL}/api/diaries/mesas/${mesaId}?userId=${userId}`,
       {
         headers: {
           "x-api-key": INTERNAL_API_KEY,

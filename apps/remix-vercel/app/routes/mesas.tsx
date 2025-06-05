@@ -322,7 +322,7 @@ export default function MesasRoute() {
         if (pushEvent.data) {
           const data = pushEvent.data.json();
           if (data.data?.mesaId) {
-            fetcher.load('/api/mesas');
+            fetcher.load(`/api/mesas?userId=${userId}`);
             window.location.reload();
           }
         }
@@ -333,17 +333,17 @@ export default function MesasRoute() {
   // Efecto para recargar los datos cuando se crea una nueva mesa
   useEffect(() => {
     if (searchParams.get("refresh") === "true") {
-      fetcher.load('/api/mesas');
+      fetcher.load(`/api/mesas?userId=${userId}`);
       searchParams.delete("refresh");
       setSearchParams(searchParams);
     }
-  }, [searchParams, fetcher]);
+  }, [searchParams, fetcher, userId]);
 
   // Prefetch de datos comunes
   useEffect(() => {
     // Prefetch de la lista de mesas
-    fetcher.load('/api/mesas');
-  }, []);
+    fetcher.load(`/api/mesas?userId=${userId}`);
+  }, [userId]);
 
   const search = searchParams.get("search") ?? "";
   const carrera = searchParams.get("carrera") ?? "";
@@ -495,6 +495,7 @@ export default function MesasRoute() {
                 modalidad={mesa.modalidad}
                 color={mesa.color}
                 mesaId={mesa.id}
+                userId={userId}
                 onClick={() => handleNavigation('detalle', mesa.id)}
               />
             ))
