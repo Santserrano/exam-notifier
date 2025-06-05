@@ -237,7 +237,7 @@ export const action = async (args: ActionFunctionArgs) => {
         fecha: fechaHora.toISOString(),
         descripcion: "Mesa de examen",
         cargo: "Titular",
-        verification: true,
+        verification: false,
         modalidad,
         aula: modalidad === "Presencial" ? aula : undefined,
         webexLink: modalidad === "Virtual" ? webexLink : undefined,
