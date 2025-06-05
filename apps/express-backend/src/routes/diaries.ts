@@ -105,9 +105,9 @@ router.post('/mesas', async (req, res) => {
       });
     }
 
-    // Asegurar que verification sea un booleano
+    // Convertir verification a entero (1 para true, 0 para false)
     if (mesaData.verification !== undefined) {
-      mesaData.verification = Boolean(mesaData.verification);
+      mesaData.verification = mesaData.verification ? 1 : 0;
     }
 
     const resultado = await mesaService.createMesa(mesaData);

@@ -12,7 +12,7 @@ interface MesaData {
     fecha: Date;
     descripcion: string;
     cargo: string;
-    verification: boolean;
+    verification: number;
     createdAt: Date;
     modalidad?: string | null;
     aula?: string | null;
@@ -21,7 +21,7 @@ interface MesaData {
 
 interface MesaResponse {
     success: boolean;
-    data?: MesaData;
+    data?: Omit<MesaData, 'verification'> & { verification: boolean };
     error?: string;
 }
 
@@ -153,7 +153,7 @@ class MesaService {
                 fecha: new Date(data.fecha),
                 descripcion: data.descripcion || 'Mesa de examen',
                 cargo: data.cargo || 'Titular',
-                verification: data.verification || false,
+                verification: 1,
                 modalidad: data.modalidad,
                 aula: data.aula,
                 webexLink: data.webexLink
@@ -168,7 +168,7 @@ class MesaService {
                     fecha: new Date(data.fecha),
                     descripcion: data.descripcion || 'Mesa de examen',
                     cargo: data.cargo || 'Titular',
-                    verification: data.verification || false,
+                    verification: 1,
                     modalidad: data.modalidad,
                     aula: data.aula,
                     webexLink: data.webexLink
@@ -198,7 +198,7 @@ class MesaService {
                     fecha: nuevaMesa.fecha,
                     descripcion: nuevaMesa.descripcion,
                     cargo: nuevaMesa.cargo,
-                    verification: nuevaMesa.verification,
+                    verification: nuevaMesa.verification === 1,
                     createdAt: nuevaMesa.createdAt,
                     modalidad: nuevaMesa.modalidad,
                     aula: nuevaMesa.aula,
