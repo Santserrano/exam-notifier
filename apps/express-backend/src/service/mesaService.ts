@@ -1,12 +1,25 @@
-import { MesaDeExamen } from '@prisma/client';
+import { MesaDeExamen, Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { notificationFactory } from '../core/notifications/NotificationFactory.js';
 import { notificacionService } from './NotificationService.js';
 
 import { MesaData, MesaResponse } from '../interfaces/interface'
 
+type MesaWithRelations = Prisma.MesaDeExamenGetPayload<{
+    include: {
+        profesor: true;
+        vocal: true;
+        materia: {
+            include: {
+                carrera: true;
+            };
+        };
+        carrera: true;
+    };
+}>;
+
 class MesaService {
-    async getAllMesas(): Promise<MesaDeExamen[]> {
+    async getAllMesas(): Promise<MesaWithRelations[]> {
         try {
             const mesas = await prisma.mesaDeExamen.findMany({
                 include: {
@@ -16,7 +29,8 @@ class MesaService {
                         include: {
                             carrera: true
                         }
-                    }
+                    },
+                    carrera: true
                 }
             });
             return mesas;
@@ -109,34 +123,32 @@ class MesaService {
                 throw new Error('Carrera no encontrada');
             }
 
-            console.log('Creando nueva mesa con datos:', {
-                profesorId: data.profesor,
-                vocalId: data.vocal,
-                carreraId: data.carrera,
-                materiaId: data.materia,
+            const mesaData: Prisma.MesaDeExamenCreateInput = {
+                profesor: {
+                    connect: { id: data.profesor }
+                },
+                vocal: {
+                    connect: { id: data.vocal }
+                },
+                carrera: {
+                    connect: { id: data.carrera }
+                },
+                materia: {
+                    connect: { id: data.materia }
+                },
                 fecha: new Date(data.fecha),
                 descripcion: data.descripcion || 'Mesa de examen',
                 cargo: data.cargo || 'Titular',
-                verification: data.verification ?? true,
+                verification: data.verification || false,
                 modalidad: data.modalidad,
                 aula: data.aula,
                 webexLink: data.webexLink
-            });
+            };
+
+            console.log('Creando nueva mesa con datos:', mesaData);
 
             const nuevaMesa = await prisma.mesaDeExamen.create({
-                data: {
-                    profesorId: data.profesor,
-                    vocalId: data.vocal,
-                    carreraId: data.carrera,
-                    materiaId: data.materia,
-                    fecha: new Date(data.fecha),
-                    descripcion: data.descripcion || 'Mesa de examen',
-                    cargo: data.cargo || 'Titular',
-                    verification: data.verification ?? true,
-                    modalidad: data.modalidad,
-                    aula: data.aula,
-                    webexLink: data.webexLink
-                },
+                data: mesaData,
                 include: {
                     profesor: true,
                     vocal: true,
@@ -150,7 +162,6 @@ class MesaService {
             });
 
             console.log('Mesa creada exitosamente:', nuevaMesa);
-
             // Obtener datos del profesor y vocal
             const [profesorData, vocalData] = await Promise.all([
                 prisma.profesor.findUnique({ where: { id: data.profesor } }),
