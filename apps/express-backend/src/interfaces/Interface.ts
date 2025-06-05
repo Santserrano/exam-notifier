@@ -1,4 +1,4 @@
-interface MesaData {
+export interface MesaData {
     id: number;
     profesor: string;
     vocal: string;
@@ -14,7 +14,7 @@ interface MesaData {
     webexLink?: string | null;
 }
 
-interface MesaResponse {
+export interface MesaResponse {
     success: boolean;
     data?: MesaData;
     error?: string;
