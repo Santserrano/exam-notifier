@@ -9,7 +9,7 @@ import {
   useFetcher,
   useNavigate,
 } from "@remix-run/react";
-import { Building2, Calendar, Clock, Info, MapPin, User } from "lucide-react";
+import { Building2, Calendar, Clock, Info, MapPin, User, CheckCircle2, XCircle } from "lucide-react";
 import { useEffect } from "react";
 import { useUser } from "@clerk/remix";
 
@@ -621,24 +621,36 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
             Estado de aceptación:
           </div>
           {mesa.estadoAceptacion === "PENDIENTE" ? (
-            <div className="flex gap-4">
-              <Button
-                onClick={() => handleAceptacion("ACEPTADA")}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-              >
-                Aceptar Mesa
-              </Button>
-              <Button
-                onClick={() => handleAceptacion("RECHAZADA")}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-              >
-                Rechazar Mesa
-              </Button>
+            <div className="flex flex-col gap-2">
+              <div className="text-xs text-gray-500 mb-2">
+                Por favor, confirma tu disponibilidad para esta mesa:
+              </div>
+              <div className="flex gap-4">
+                <Button
+                  onClick={() => handleAceptacion("ACEPTADA")}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  disabled={fetcher.state === "submitting"}
+                >
+                  {fetcher.state === "submitting" ? "Procesando..." : "Aceptar Mesa"}
+                </Button>
+                <Button
+                  onClick={() => handleAceptacion("RECHAZADA")}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  disabled={fetcher.state === "submitting"}
+                >
+                  {fetcher.state === "submitting" ? "Procesando..." : "Rechazar Mesa"}
+                </Button>
+              </div>
             </div>
           ) : (
-            <div className={`text-sm font-medium ${
+            <div className={`flex items-center gap-2 text-sm font-medium ${
               mesa.estadoAceptacion === "ACEPTADA" ? "text-green-600" : "text-red-600"
             }`}>
+              {mesa.estadoAceptacion === "ACEPTADA" ? (
+                <CheckCircle2 className="h-5 w-5" />
+              ) : (
+                <XCircle className="h-5 w-5" />
+              )}
               Mesa {mesa.estadoAceptacion === "ACEPTADA" ? "aceptada" : "rechazada"}
             </div>
           )}
