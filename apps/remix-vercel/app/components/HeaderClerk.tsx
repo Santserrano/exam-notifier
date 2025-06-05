@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFetcher, useRevalidator } from "@remix-run/react";
 import {
   SignedIn,
@@ -47,9 +47,11 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
   };
 
   // Revalidar cuando el fetcher tenga éxito
-  if (fetcher.data?.success) {
-    revalidator.revalidate();
-  }
+  useEffect(() => {
+    if (fetcher.data?.success) {
+      revalidator.revalidate();
+    }
+  }, [fetcher.data, revalidator]);
 
   const handleToggleNotification = async (type: keyof NotificationConfig) => {
     if (userRole !== "profesor" || !user?.id) return;
