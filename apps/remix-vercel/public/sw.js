@@ -115,7 +115,7 @@ self.addEventListener("push", function (event) {
           title: "Cerrar"
         }
       ],
-      timestamp: data.data?.timestamp ? new Date(data.data.timestamp).getTime() : Date.now(),
+      timestamp: data.data?.fecha ? new Date(data.data.fecha).getTime() : Date.now(),
       tag: data.data?.mesaId ? `mesa-${data.data.mesaId}` : undefined,
       renotify: true
     };
