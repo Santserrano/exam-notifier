@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useFetcher } from "@remix-run/react";
+import { useState } from "react";
+import { useFetcher, useRevalidator } from "@remix-run/react";
 import {
   SignedIn,
   UserButton,
@@ -36,10 +36,20 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
   const fetcher = useFetcher<FetcherData>();
+  const revalidator = useRevalidator();
   const isSubmitting = fetcher.state === "submitting";
 
-  // Usar el estado del fetcher directamente
-  const notificationConfig = fetcher.data?.config || initialConfig;
+  // Usar el estado del fetcher directamente, con fallback a initialConfig
+  const notificationConfig = {
+    webPushEnabled: fetcher.data?.config?.webPushEnabled ?? initialConfig?.webPushEnabled ?? false,
+    smsEnabled: fetcher.data?.config?.smsEnabled ?? initialConfig?.smsEnabled ?? false,
+    emailEnabled: fetcher.data?.config?.emailEnabled ?? initialConfig?.emailEnabled ?? false
+  };
+
+  // Revalidar cuando el fetcher tenga éxito
+  if (fetcher.data?.success) {
+    revalidator.revalidate();
+  }
 
   const handleToggleNotification = async (type: keyof NotificationConfig) => {
     if (userRole !== "profesor" || !user?.id) return;
