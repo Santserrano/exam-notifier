@@ -10,7 +10,7 @@ import {
   useNavigate,
 } from "@remix-run/react";
 import { Building2, Calendar, Clock, Info, MapPin, User, CheckCircle2, XCircle } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@clerk/remix";
 
 import { Button } from "@exam-notifier/ui/components/button";
@@ -330,6 +330,15 @@ export default function MesasRoute() {
     });
   }
 
+  // Efecto para recargar los datos cuando se crea una nueva mesa
+  useEffect(() => {
+    if (searchParams.get("refresh") === "true") {
+      fetcher.load('/api/mesas');
+      searchParams.delete("refresh");
+      setSearchParams(searchParams);
+    }
+  }, [searchParams, fetcher]);
+
   const search = searchParams.get("search") ?? "";
   const carrera = searchParams.get("carrera") ?? "";
   const fecha = searchParams.get("fecha") ?? "";
@@ -509,6 +518,7 @@ interface DetalleMesaProps {
 function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
   const fetcher = useFetcher();
   const { user } = useUser();
+  const [estadoAceptacion, setEstadoAceptacion] = useState(mesa.estadoAceptacion);
 
   const esProfesorAsignado = user?.id === mesa.profesorId || user?.id === mesa.vocalId;
 
@@ -518,6 +528,7 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
     formData.append("mesaId", mesa.id);
     formData.append("estado", estado);
     fetcher.submit(formData, { method: "post" });
+    setEstadoAceptacion(estado);
   };
 
   const fechaObj = new Date(mesa.fechaOriginal);
@@ -603,7 +614,7 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
           <div className="text-sm font-semibold text-gray-700">
             Estado de aceptación:
           </div>
-          {mesa.estadoAceptacion === "PENDIENTE" ? (
+          {estadoAceptacion === "PENDIENTE" ? (
             <div className="flex flex-col gap-2">
               <div className="text-xs text-gray-500 mb-2">
                 Por favor, confirma tu disponibilidad para esta mesa:
@@ -627,14 +638,14 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
             </div>
           ) : (
             <div className={`flex items-center gap-2 text-sm font-medium ${
-              mesa.estadoAceptacion === "ACEPTADA" ? "text-green-600" : "text-red-600"
+              estadoAceptacion === "ACEPTADA" ? "text-green-600" : "text-red-600"
             }`}>
-              {mesa.estadoAceptacion === "ACEPTADA" ? (
+              {estadoAceptacion === "ACEPTADA" ? (
                 <CheckCircle2 className="h-5 w-5" />
               ) : (
                 <XCircle className="h-5 w-5" />
               )}
-              Mesa {mesa.estadoAceptacion === "ACEPTADA" ? "aceptada" : "rechazada"}
+              Mesa {estadoAceptacion === "ACEPTADA" ? "aceptada" : "rechazada"}
             </div>
           )}
         </div>
