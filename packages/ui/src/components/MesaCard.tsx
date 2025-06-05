@@ -1,4 +1,5 @@
 import React from "react";
+import { useFetcher } from "@remix-run/react";
 
 export interface MesaCardProps {
   fecha: string;
@@ -7,6 +8,7 @@ export interface MesaCardProps {
   modalidad: "Presencial" | "Virtual";
   color: string;
   onClick?: () => void;
+  mesaId?: string;
 }
 
 export const MesaCard: React.FC<MesaCardProps> = ({
@@ -16,8 +18,17 @@ export const MesaCard: React.FC<MesaCardProps> = ({
   modalidad,
   color,
   onClick,
+  mesaId,
 }) => {
   const [dia, mes] = fecha.split(" ");
+  const fetcher = useFetcher();
+
+  // Prefetch al hacer hover
+  const handleMouseEnter = () => {
+    if (mesaId) {
+      fetcher.load(`/api/mesas/${mesaId}`);
+    }
+  };
 
   type ColorType = "green" | "blue";
   const colorStyles: Record<ColorType, { bg: string; dot: string; text: string }> = {
@@ -37,6 +48,7 @@ export const MesaCard: React.FC<MesaCardProps> = ({
   return (
     <div
       onClick={onClick}
+      onMouseEnter={handleMouseEnter}
       className={`flex items-center gap-4 p-4 mb-4 rounded-3xl border ${color === "green" ? "border-green-200" : "border-blue-200"} shadow hover:shadow-md transition cursor-pointer bg-white ring-2 ring-transparent ${color === "green" ? "hover:ring-green-200" : "hover:ring-blue-200"}`}
     >
       {/* Fecha */}

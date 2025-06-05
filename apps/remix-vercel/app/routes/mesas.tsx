@@ -339,6 +339,12 @@ export default function MesasRoute() {
     }
   }, [searchParams, fetcher]);
 
+  // Prefetch de datos comunes
+  useEffect(() => {
+    // Prefetch de la lista de mesas
+    fetcher.load('/api/mesas');
+  }, []);
+
   const search = searchParams.get("search") ?? "";
   const carrera = searchParams.get("carrera") ?? "";
   const fecha = searchParams.get("fecha") ?? "";
@@ -488,6 +494,7 @@ export default function MesasRoute() {
                 carrera={mesa.carrera}
                 modalidad={mesa.modalidad}
                 color={mesa.color}
+                mesaId={mesa.id}
                 onClick={() => handleNavigation('detalle', mesa.id)}
               />
             ))
