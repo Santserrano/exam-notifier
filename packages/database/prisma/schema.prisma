@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "windows"]
 }
 
@@ -10,110 +10,108 @@ datasource db {
 }
 
 model Carrera {
-  id          String    @id @default(uuid())
-  nombre      String    @unique
-  materias    Materia[]
-  profesores  Profesor[]
-  mesas       MesaDeExamen[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String         @id @default(uuid())
+  nombre     String         @unique
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  materias   Materia[]
+  mesas      MesaDeExamen[]
+  profesores Profesor[]     @relation("CarreraToProfesor")
 }
 
 model Materia {
-  id          String    @id @default(uuid())
-  nombre      String
-  carreraId   String
-  carrera     Carrera   @relation(fields: [carreraId], references: [id])
-  profesores  Profesor[]
-  mesas       MesaDeExamen[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String         @id @default(uuid())
+  nombre     String
+  carreraId  String
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  carrera    Carrera        @relation(fields: [carreraId], references: [id])
+  mesas      MesaDeExamen[]
+  profesores Profesor[]     @relation("MateriaToProfesor")
 
   @@unique([nombre, carreraId])
 }
 
 model Profesor {
-  id           String         @id // clerk id
-  nombre       String
-  apellido     String
-  email        String         @unique
-  telefono     String?
-  carreras     Carrera[]      // Relación muchos a muchos con Carrera
-  materias     Materia[]      // Relación muchos a muchos con Materia
-  mesasTitular MesaDeExamen[] @relation("ProfesorTitular")
-  mesasVocal   MesaDeExamen[] @relation("ProfesorVocal")
-  aceptaciones MesaAceptacion[]
-
+  id                   String                @id
+  nombre               String
+  apellido             String
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  email                String                @unique
+  telefono             String?
+  aceptaciones         MesaAceptacion[]
+  mesasTitular         MesaDeExamen[]        @relation("ProfesorTitular")
+  mesasVocal           MesaDeExamen[]        @relation("ProfesorVocal")
   notificacionConfig   NotificacionConfig?
   webPushSubscriptions WebPushSubscription[]
-
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  carreras             Carrera[]             @relation("CarreraToProfesor")
+  materias             Materia[]             @relation("MateriaToProfesor")
 }
 
 model MesaDeExamen {
-  id           Int        @id @default(autoincrement())
-  profesorId   String
-  vocalId      String
-  profesor     Profesor   @relation("ProfesorTitular", fields: [profesorId], references: [id])
-  vocal        Profesor   @relation("ProfesorVocal", fields: [vocalId], references: [id])
-  carreraId    String
-  carrera      Carrera    @relation(fields: [carreraId], references: [id])
-  materiaId    String
-  materia      Materia    @relation(fields: [materiaId], references: [id])
+  id           Int              @id @default(autoincrement())
   fecha        DateTime
   descripcion  String
   cargo        String
-  verification Boolean @default(false)
-  modalidad    String?    @default("Presencial")
-  aula         String?    // solo si modalidad es Presencial
-  webexLink    String?    // solo si modalidad es Virtual
-  alumnos      Alumno[]   @relation("AlumnosEnMesa")
+  verification Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  modalidad    String?          @default("Presencial")
+  updatedAt    DateTime         @updatedAt
+  profesorId   String
+  vocalId      String
+  aula         String?
+  webexLink    String?
+  carreraId    String
+  materiaId    String
   aceptaciones MesaAceptacion[]
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  carrera      Carrera          @relation(fields: [carreraId], references: [id])
+  materia      Materia          @relation(fields: [materiaId], references: [id])
+  profesor     Profesor         @relation("ProfesorTitular", fields: [profesorId], references: [id])
+  vocal        Profesor         @relation("ProfesorVocal", fields: [vocalId], references: [id])
+  alumnos      Alumno[]         @relation("AlumnosEnMesa")
 }
 
 model NotificacionConfig {
-  id               String    @id @default(uuid())
+  id               String   @id @default(uuid())
   profesorId       String   @unique
-  profesor         Profesor @relation(fields: [profesorId], references: [id])
   webPushEnabled   Boolean  @default(false)
   emailEnabled     Boolean  @default(false)
   smsEnabled       Boolean  @default(false)
   avisoPrevioHoras Int      @default(24)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  profesor         Profesor @relation(fields: [profesorId], references: [id])
 }
 
 model WebPushSubscription {
-  id           String    @id @default(uuid())
-  profesorId   String
-  profesor     Profesor  @relation(fields: [profesorId], references: [id])
-  endpoint     String
-  auth         String
-  p256dh       String
-  createdAt    DateTime  @default(now())
+  id         String   @id @default(uuid())
+  profesorId String
+  endpoint   String
+  auth       String
+  p256dh     String
+  createdAt  DateTime @default(now())
+  profesor   Profesor @relation(fields: [profesorId], references: [id])
 }
 
 model Alumno {
-  id        Int            @id @default(autoincrement())
-  nombre    String
-  apellido  String
-  carrera   String
-  dni       String         @unique
-  mesas     MesaDeExamen[] @relation("AlumnosEnMesa")
+  id       Int            @id @default(autoincrement())
+  nombre   String
+  apellido String
+  carrera  String
+  dni      String         @unique
+  mesas    MesaDeExamen[] @relation("AlumnosEnMesa")
 }
 
 model MesaAceptacion {
-  id        String    @id @default(uuid())
-  mesaId    Int
-  mesa      MesaDeExamen @relation(fields: [mesaId], references: [id])
+  id         String           @id @default(uuid())
+  mesaId     Int
   profesorId String
-  profesor  Profesor  @relation(fields: [profesorId], references: [id])
-  estado    EstadoAceptacion @default(PENDIENTE)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  estado     EstadoAceptacion @default(PENDIENTE)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  mesa       MesaDeExamen     @relation(fields: [mesaId], references: [id])
+  profesor   Profesor         @relation(fields: [profesorId], references: [id])
 
   @@unique([mesaId, profesorId])
 }
