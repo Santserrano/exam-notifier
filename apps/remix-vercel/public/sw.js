@@ -93,8 +93,10 @@ self.addEventListener("fetch", (event) => {
 });
 
 self.addEventListener("push", function (event) {
+  console.log("[Service Worker] Push recibido:", event);
   if (event.data) {
     const data = event.data.json();
+    console.log("[Service Worker] Datos de la notificación:", data);
     const options = {
       body: data.body,
       icon: "/icon-ucp.png",
@@ -127,6 +129,7 @@ self.addEventListener("push", function (event) {
       renotify: true
     };
 
+    console.log("[Service Worker] Opciones de la notificación:", options);
     event.waitUntil(self.registration.showNotification(data.title, options));
   }
 });

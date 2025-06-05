@@ -168,7 +168,7 @@ export function ActivarNotificaciones() {
 
       // Enviar suscripción al backend
       const response = await fetch(
-        `${env.API_URL}/api/notificaciones/push-subscription`,
+        `${env.API_URL}/api/diaries/notificaciones/push-subscription`,
         {
           method: "POST",
           headers: {
