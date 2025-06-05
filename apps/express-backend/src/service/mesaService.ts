@@ -53,7 +53,6 @@ class MesaService {
             });
             return mesas;
         } catch (error) {
-            console.error('Error en getAllMesas:', error);
             throw new Error('Error al obtener las mesas');
         }
     }
@@ -80,7 +79,6 @@ class MesaService {
             });
             return mesas;
         } catch (error) {
-            console.error('Error en getMesasByProfesorId:', error);
             throw new Error('Error al obtener las mesas del profesor');
         }
     }
@@ -147,7 +145,7 @@ class MesaService {
             }
 
             console.log("Creando nueva mesa de examen...");
-            const mesa = await prisma.mesaDeExamen.create({
+            const nuevaMesa = await prisma.mesaDeExamen.create({
                 data: {
                     profesor: { connect: { id: data.profesor } },
                     vocal: { connect: { id: data.vocal } },
@@ -173,15 +171,123 @@ class MesaService {
                 },
             });
 
-            console.log("Mesa creada exitosamente:", mesa);
+            console.log('Mesa creada exitosamente:', nuevaMesa);
+            // Obtener datos del profesor y vocal
+            const [profesorData, vocalData] = await Promise.all([
+                prisma.profesor.findUnique({ where: { id: data.profesor } }),
+                prisma.profesor.findUnique({ where: { id: data.vocal } })
+            ]);
+
+            if (!profesorData || !vocalData) {
+                throw new Error('Profesor o vocal no encontrado');
+            }
+
+            // Preparar datos comunes para las notificaciones
+            const fechaObj = new Date(data.fecha);
+            const fechaFormateada = fechaObj.toLocaleDateString();
+            const horaFormateada = fechaObj.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Obtener configuraciones de notificaciones
+            const [configProfesor, configVocal] = await Promise.all([
+                notificacionService.getConfigByProfesor(data.profesor),
+                notificacionService.getConfigByProfesor(data.vocal)
+            ]);
+
+            // Enviar notificaciones al profesor
+            if (configProfesor) {
+                try {
+                    const notificationData = {
+                        title: 'Nueva mesa asignada',
+                        body: `Hola ${profesorData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada} a las ${horaFormateada}`,
+                        recipient: data.profesor,
+                        metadata: {
+                            mesaId: nuevaMesa.id,
+                            materia: nuevaMesa.materia.nombre,
+                            fecha: fechaFormateada,
+                            hora: horaFormateada
+                        }
+                    };
+
+                    // Enviar notificaciones según la configuración
+                    if (configProfesor.webPushEnabled) {
+                        const pushNotification = notificationFactory.createNotification('push', notificationData);
+                        await pushNotification.send();
+                    }
+
+                    if (profesorData.email && configProfesor.emailEnabled) {
+                        const emailNotification = notificationFactory.createNotification('email', {
+                            ...notificationData,
+                            recipient: profesorData.email
+                        });
+                        await emailNotification.send();
+                    }
+
+                    if (profesorData.telefono && configProfesor.smsEnabled) {
+                        const whatsappNotification = notificationFactory.createNotification('whatsapp', {
+                            ...notificationData,
+                            recipient: profesorData.telefono
+                        });
+                        await whatsappNotification.send();
+                    }
+                } catch (error) {
+                    throw new Error('Error al enviar notificaciones al profesor:');
+                }
+            }
+
+            // Enviar notificaciones al vocal
+            if (configVocal) {
+                try {
+                    const notificationData = {
+                        title: 'Nueva mesa asignada',
+                        body: `Hola ${vocalData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada} a las ${horaFormateada}`,
+                        recipient: data.vocal,
+                        metadata: {
+                            mesaId: nuevaMesa.id,
+                            materia: nuevaMesa.materia.nombre,
+                            fecha: fechaFormateada,
+                            hora: horaFormateada
+                        }
+                    };
+
+                    // Enviar notificaciones según la configuración
+                    if (configVocal.webPushEnabled) {
+                        const pushNotification = notificationFactory.createNotification('push', notificationData);
+                        await pushNotification.send();
+                    }
+
+                    if (vocalData.email && configVocal.emailEnabled) {
+                        const emailNotification = notificationFactory.createNotification('email', {
+                            ...notificationData,
+                            recipient: vocalData.email
+                        });
+                        await emailNotification.send();
+                    }
+
+                    if (vocalData.telefono && configVocal.smsEnabled) {
+                        const whatsappNotification = notificationFactory.createNotification('whatsapp', {
+                            ...notificationData,
+                            recipient: vocalData.telefono
+                        });
+                        await whatsappNotification.send();
+                    }
+                } catch (error) {
+                    throw new Error('Error al enviar notificaciones al vocal:');
+                }
+            }
 
             return {
                 success: true,
-                data: mesa,
+                data: nuevaMesa
             };
         } catch (error) {
-            console.error("Error al crear mesa:", error);
-            throw error;
+            console.error('Error al crear la mesa:', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Error al crear la mesa'
+            };
         }
     }
 
@@ -230,7 +336,6 @@ class MesaService {
                 where: { id }
             });
         } catch (error) {
-            console.error('Error en deleteMesa:', error);
             throw new Error('Error al eliminar la mesa');
         }
     }

@@ -36,7 +36,6 @@ export class ProfesorService {
             });
             return profesores;
         } catch (error) {
-            console.error('Error en getAllProfesores:', error);
             throw new Error('Error al obtener los profesores');
         }
     }
@@ -48,7 +47,6 @@ export class ProfesorService {
             });
             return profesor;
         } catch (error) {
-            console.error('Error en getProfesorById:', error);
             throw new Error('Error al obtener el profesor');
         }
     }
@@ -79,7 +77,6 @@ export class ProfesorService {
                 }
             });
         } catch (error) {
-            console.error('Error al obtener profesores por carrera:', error);
             throw new Error('Error al obtener los profesores por carrera');
         }
     }
@@ -110,7 +107,6 @@ export class ProfesorService {
                 }
             });
         } catch (error) {
-            console.error('Error al obtener profesores por materia:', error);
             throw new Error('Error al obtener los profesores por materia');
         }
     }
