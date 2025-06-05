@@ -1,20 +1,14 @@
-import { MesaDeExamen, PrismaClient } from '@prisma/client';
-
+import { MesaDeExamen } from '@prisma/client';
+import { prisma } from '../lib/prisma.js';
 import { notificationFactory } from '../core/notifications/NotificationFactory.js';
 import { notificacionService } from './NotificationService.js';
 
 import { MesaData, MesaResponse } from '../interfaces/interface'
 
 class MesaService {
-    private prisma: PrismaClient;
-
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
-
     async getAllMesas(): Promise<MesaDeExamen[]> {
         try {
-            const mesas = await this.prisma.mesaDeExamen.findMany({
+            const mesas = await prisma.mesaDeExamen.findMany({
                 include: {
                     profesor: true,
                     vocal: true,
@@ -33,7 +27,7 @@ class MesaService {
 
     async getMesasByProfesorId(profesorId: string): Promise<MesaDeExamen[]> {
         try {
-            const mesas = await this.prisma.mesaDeExamen.findMany({
+            const mesas = await prisma.mesaDeExamen.findMany({
                 where: {
                     OR: [
                         { profesorId },
@@ -59,7 +53,7 @@ class MesaService {
 
     async getMesaById(id: number): Promise<MesaDeExamen | null> {
         try {
-            return await this.prisma.mesaDeExamen.findUnique({
+            return await prisma.mesaDeExamen.findUnique({
                 where: { id },
                 include: {
                     profesor: true,
@@ -78,13 +72,15 @@ class MesaService {
 
     async createMesa(data: Omit<MesaData, 'id' | 'createdAt'>): Promise<MesaResponse> {
         try {
+            console.log('Datos recibidos en createMesa:', data);
+
             // Validar datos requeridos
             if (!data.profesor || !data.vocal || !data.carrera || !data.materia || !data.fecha) {
                 throw new Error('Faltan datos requeridos');
             }
 
             // Verificar que la materia existe
-            const materia = await this.prisma.materia.findUnique({
+            const materia = await prisma.materia.findUnique({
                 where: {
                     id: data.materia
                 }
@@ -96,8 +92,8 @@ class MesaService {
 
             // Verificar que los profesores existen
             const [profesor, vocal] = await Promise.all([
-                this.prisma.profesor.findUnique({ where: { id: data.profesor } }),
-                this.prisma.profesor.findUnique({ where: { id: data.vocal } })
+                prisma.profesor.findUnique({ where: { id: data.profesor } }),
+                prisma.profesor.findUnique({ where: { id: data.vocal } })
             ]);
 
             if (!profesor || !vocal) {
@@ -105,7 +101,7 @@ class MesaService {
             }
 
             // Verificar que la carrera existe
-            const carrera = await this.prisma.carrera.findUnique({
+            const carrera = await prisma.carrera.findUnique({
                 where: { id: data.carrera }
             });
 
@@ -113,7 +109,21 @@ class MesaService {
                 throw new Error('Carrera no encontrada');
             }
 
-            const nuevaMesa = await this.prisma.mesaDeExamen.create({
+            console.log('Creando nueva mesa con datos:', {
+                profesorId: data.profesor,
+                vocalId: data.vocal,
+                carreraId: data.carrera,
+                materiaId: data.materia,
+                fecha: new Date(data.fecha),
+                descripcion: data.descripcion || 'Mesa de examen',
+                cargo: data.cargo || 'Titular',
+                verification: data.verification ?? true,
+                modalidad: data.modalidad,
+                aula: data.aula,
+                webexLink: data.webexLink
+            });
+
+            const nuevaMesa = await prisma.mesaDeExamen.create({
                 data: {
                     profesorId: data.profesor,
                     vocalId: data.vocal,
@@ -139,10 +149,12 @@ class MesaService {
                 }
             });
 
+            console.log('Mesa creada exitosamente:', nuevaMesa);
+
             // Obtener datos del profesor y vocal
             const [profesorData, vocalData] = await Promise.all([
-                this.prisma.profesor.findUnique({ where: { id: data.profesor } }),
-                this.prisma.profesor.findUnique({ where: { id: data.vocal } })
+                prisma.profesor.findUnique({ where: { id: data.profesor } }),
+                prisma.profesor.findUnique({ where: { id: data.vocal } })
             ]);
 
             if (!profesorData || !vocalData) {
@@ -272,7 +284,7 @@ class MesaService {
 
     async updateMesa(id: number, data: Partial<MesaData>): Promise<MesaResponse> {
         try {
-            const mesaActualizada = await this.prisma.mesaDeExamen.update({
+            const mesaActualizada = await prisma.mesaDeExamen.update({
                 where: { id },
                 data: {
                     profesorId: data.profesor,
@@ -327,7 +339,7 @@ class MesaService {
 
     async deleteMesa(id: number): Promise<MesaDeExamen | null> {
         try {
-            return await this.prisma.mesaDeExamen.delete({
+            return await prisma.mesaDeExamen.delete({
                 where: { id }
             });
         } catch (error) {

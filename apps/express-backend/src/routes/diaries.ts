@@ -1,13 +1,11 @@
-import { PrismaClient } from '@prisma/client'
 import express from 'express'
+import { prisma } from '../lib/prisma.js'
 
 import { cacheMiddleware, invalidateCache } from '../middleware/cache.js'
 import { mesaService } from '../service/mesaService.js'
 import { ProfesorService } from '../service/profesorService.js'
 
 const router = express.Router()
-const prisma = new PrismaClient()
-
 const profesorService = new ProfesorService()
 
 // Middleware para validar API key
@@ -84,52 +82,45 @@ router.get('/mesas/:id', cacheMiddleware(1800), async (req, res) => {
 // Crear una nueva mesa
 router.post('/mesas', async (req, res) => {
   try {
+    console.log('Recibida solicitud para crear mesa:', req.body);
     const mesaData = req.body;
+
     // Validar datos requeridos
     const camposRequeridos = ['profesor', 'vocal', 'carrera', 'materia', 'fecha', 'modalidad'];
     const camposFaltantes = camposRequeridos.filter(campo => !mesaData[campo]);
 
     if (camposFaltantes.length > 0) {
+      console.error('Campos faltantes:', camposFaltantes);
       return res.status(400).json({
-        error: 'Campos requeridos faltantes'
+        error: 'Campos requeridos faltantes',
+        camposFaltantes
       });
     }
 
     // Validar formato de fecha
     if (isNaN(new Date(mesaData.fecha).getTime())) {
+      console.error('Fecha inválida:', mesaData.fecha);
       return res.status(400).json({
         error: 'Formato de fecha inválido'
       });
     }
 
-    // Validar que la materia existe
-    const materia = await prisma.materia.findUnique({
-      where: { id: mesaData.materia }
-    });
+    const resultado = await mesaService.createMesa(mesaData);
 
-    if (!materia) {
-      return res.status(400).json({
-        error: 'Materia no encontrada'
-      });
+    if (!resultado.success) {
+      console.error('Error al crear mesa:', resultado.error);
+      return res.status(400).json({ error: resultado.error });
     }
 
-    // Validar que los profesores existen
-    const [profesor, vocal] = await Promise.all([
-      prisma.profesor.findUnique({ where: { id: mesaData.profesor } }),
-      prisma.profesor.findUnique({ where: { id: mesaData.vocal } })
-    ]);
+    // Invalidar la caché
+    await invalidateCache('/mesas*');
 
-    if (!profesor || !vocal) {
-      return res.status(400).json({
-        error: 'Uno o ambos profesores no existen'
-      });
-    }
-
-    const nuevaMesa = await mesaService.createMesa(mesaData);
-    return res.status(201).json(nuevaMesa);
+    return res.status(201).json(resultado.data);
   } catch (error) {
+    console.error('Error en POST /mesas:', error);
     return res.status(500).json({
-      error: 'Error al crear la mesa'
+      error: 'Error al crear la mesa',
+      details: error instanceof Error ? error.message : 'Error desconocido'
     });
   }
 });
