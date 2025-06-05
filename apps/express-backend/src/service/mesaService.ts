@@ -180,8 +180,11 @@ class MesaService {
 
             // Preparar datos comunes para las notificaciones
             const fechaObj = new Date(data.fecha);
-            const fechaFormateada = fechaObj.toLocaleDateString();
-            const horaFormateada = fechaObj.toLocaleTimeString([], {
+            const fechaFormateada = fechaObj.toLocaleString('es-AR', {
+                timeZone: 'America/Argentina/Buenos_Aires',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
                 hour: '2-digit',
                 minute: '2-digit'
             });
@@ -197,13 +200,12 @@ class MesaService {
                 try {
                     const notificationData = {
                         title: 'Nueva mesa asignada',
-                        body: `Hola ${profesorData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada} a las ${horaFormateada}`,
+                        body: `Hola ${profesorData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada}`,
                         recipient: data.profesor,
                         metadata: {
                             mesaId: nuevaMesa.id,
                             materia: nuevaMesa.materia.nombre,
-                            fecha: fechaFormateada,
-                            hora: horaFormateada
+                            fecha: fechaFormateada
                         }
                     };
 
@@ -238,13 +240,12 @@ class MesaService {
                 try {
                     const notificationData = {
                         title: 'Nueva mesa asignada',
-                        body: `Hola ${vocalData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada} a las ${horaFormateada}`,
+                        body: `Hola ${vocalData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada}`,
                         recipient: data.vocal,
                         metadata: {
                             mesaId: nuevaMesa.id,
                             materia: nuevaMesa.materia.nombre,
-                            fecha: fechaFormateada,
-                            hora: horaFormateada
+                            fecha: fechaFormateada
                         }
                     };
 

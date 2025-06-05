@@ -115,7 +115,14 @@ self.addEventListener("push", function (event) {
           title: "Cerrar"
         }
       ],
-      timestamp: data.data?.fecha ? new Date(data.data.fecha).getTime() : Date.now(),
+      timestamp: data.data?.fecha ? new Date(data.data.fecha).toLocaleString('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : Date.now(),
       tag: data.data?.mesaId ? `mesa-${data.data.mesaId}` : undefined,
       renotify: true
     };
