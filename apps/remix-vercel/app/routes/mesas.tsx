@@ -337,21 +337,18 @@ export default function MesasRoute() {
           if (pushEvent.data) {
             const data = pushEvent.data.json();
             if (data.data?.mesaId) {
-              // Recargar los datos inmediatamente
-              fetcher.load(`/api/mesas?userId=${userId}`);
-              // Mostrar una notificación al usuario
-              if (Notification.permission === 'granted') {
-                new Notification('Nueva Mesa Asignada', {
-                  body: 'Has sido asignado a una nueva mesa de examen',
-                  icon: '/icon.png'
-                });
+              // Si estamos en una vista detallada o de alumnos, volver a la vista principal
+              if (currentView !== 'list') {
+                navigate('/mesas');
               }
+              // Forzar la recarga de la página
+              window.location.reload();
             }
           }
         }) as EventListener);
       });
     }
-  }, [userId, fetcher]);
+  }, [currentView, navigate]);
 
   // Efecto para recargar los datos cuando se crea una nueva mesa
   useEffect(() => {
