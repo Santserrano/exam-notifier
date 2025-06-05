@@ -12,23 +12,26 @@ dotenv.config()
 const app = express()
 const port = process.env.PORT ?? 3005
 
-// Inicializar Redis
+// Inicializar Redis (ahora con soporte para modo deshabilitado)
 initRedis().catch(err => {
   console.error('Error al inicializar Redis:', err);
-  process.exit(1);
+  // No terminamos el proceso si Redis está deshabilitado
+  if (process.env.REDIS_ENABLED === 'true') {
+    process.exit(1);
+  }
 });
 
 // Configuración de CORS
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
     ? [process.env.FRONTEND_URL ?? 'https://ucpmesas.site']
-    : ['http://localhost:3000'], 
+    : ['http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'x-api-key', 'Authorization'],
   credentials: true,
   preflightContinue: false,
   optionsSuccessStatus: 204
-} 
+}
 
 // Aplicar CORS antes de cualquier middleware
 app.use(cors(corsOptions))

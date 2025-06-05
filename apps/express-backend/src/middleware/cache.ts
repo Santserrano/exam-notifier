@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-
 import { redis } from '../lib/redis.js';
 
+// Implementación temporal sin Redis
 export const invalidateCache = async (pattern: string) => {
     try {
         const keys = await redis.keys(`cache:${pattern}`);
