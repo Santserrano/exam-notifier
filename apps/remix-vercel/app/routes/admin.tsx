@@ -211,8 +211,10 @@ export const action = async (args: ActionFunctionArgs) => {
   const aula = formData.get("aula") as string;
   const webexLink = formData.get("webexLink") as string;
 
-  // Combinar fecha y hora
-  const fechaHora = new Date(`${fecha}T${hora}`);
+  // Combinar fecha y hora correctamente
+  const [year, month, day] = fecha.split('-').map(Number);
+  const [hours, minutes] = hora.split(':').map(Number);
+  const fechaHora = new Date(year, month - 1, day, hours, minutes);
 
   try {
     const response = await fetch(`${API_URL}/api/diaries/mesas`, {
@@ -226,7 +228,7 @@ export const action = async (args: ActionFunctionArgs) => {
         vocal: vocalId,
         carrera,
         materia,
-        fecha: fechaHora,
+        fecha: fechaHora.toISOString(),
         descripcion: "Mesa de examen",
         cargo: "Titular",
         verification: true,
