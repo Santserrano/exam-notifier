@@ -18,7 +18,7 @@ interface Props {
     emailEnabled?: boolean;
   } | null;
   userRole?: string;
-  env: {
+  env?: {
     VAPID_PUBLIC_KEY: string;
     API_URL: string;
     INTERNAL_API_KEY: string;
@@ -31,76 +31,92 @@ interface FetcherData {
   config?: NotificationConfig;
 }
 
-export function HeaderClerk({ notificationConfig: initialNotificationConfig, userRole, env }: Props) {
+export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }: Props) {
   const [showConfig, setShowConfig] = useState(false);
-  const [notificationConfig, setNotificationConfig] = useState(initialNotificationConfig);
+  const [notificationConfig, setNotificationConfig] = useState(initialConfig);
   const { user } = useUser();
   const fetcher = useFetcher<FetcherData>();
   const isSubmitting = fetcher.state === "submitting";
 
   const handleToggleNotification = async (type: keyof NotificationConfig) => {
-    console.log("Iniciando toggle de notificación:", type);
-    console.log("Estado actual:", notificationConfig);
-    console.log("Rol de usuario:", userRole);
-
-    // No permitir activar notificaciones si es admin
-    if (userRole !== "profesor") {
-      console.log("Usuario no es profesor, no puede activar notificaciones");
-      return;
-    }
-
-    if (!user?.id) {
-      console.log("No hay usuario autenticado");
-      return;
-    }
+    if (userRole !== "profesor" || !user?.id) return;
 
     if (type === "webPushEnabled" && !notificationConfig?.[type]) {
       try {
-        console.log("Verificando soporte de service worker...");
-        if (!('serviceWorker' in navigator)) {
+        // Verificar soporte de Service Worker
+        if (!("serviceWorker" in navigator)) {
           throw new Error("Tu navegador no soporta notificaciones push");
         }
 
-        console.log("Obteniendo registro de service worker...");
-        const registration = await navigator.serviceWorker.ready;
-        console.log("Service worker registrado:", registration);
-
-        console.log("Solicitando permiso de notificaciones...");
+        // Verificar permisos
         const permission = await Notification.requestPermission();
-        console.log("Permiso de notificaciones:", permission);
-
         if (permission !== "granted") {
-          console.error("Permiso de notificaciones denegado");
-          fetcher.data = { success: false, error: "Permiso de notificaciones denegado" };
-          return;
+          throw new Error("Permiso de notificaciones denegado");
         }
 
-        console.log("Obteniendo suscripción push...");
+        // Registrar Service Worker
+        console.log("Registrando Service Worker...");
+        const registration = await navigator.serviceWorker.register("/sw.js");
+        console.log("Service Worker registrado:", registration);
+
+        // Esperar a que el Service Worker esté activo
+        if (!registration.active) {
+          console.log("Esperando a que el Service Worker esté activo...");
+          await new Promise((resolve) => {
+            if (registration.active) {
+              resolve(true);
+            } else {
+              registration.addEventListener("activate", () => resolve(true));
+            }
+          });
+        }
+
+        // Obtener suscripción
+        console.log("Intentando obtener suscripción...");
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: env.VAPID_PUBLIC_KEY,
+          applicationServerKey: env?.VAPID_PUBLIC_KEY,
         });
 
         console.log("Suscripción obtenida:", subscription);
 
-        // Actualizar el estado local inmediatamente
+        // Enviar suscripción al backend
+        const response = await fetch(
+          `${env?.API_URL}/api/notificaciones/push-subscription`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": env?.INTERNAL_API_KEY || "",
+            },
+            body: JSON.stringify({
+              profesorId: user?.id,
+              subscription: subscription.toJSON(),
+            }),
+          }
+        );
+
+        const data = await response.json();
+        console.log("Respuesta del servidor:", data);
+
+        if (!response.ok) {
+          throw new Error(data.error || data.details || "Error al guardar la suscripción");
+        }
+
         setNotificationConfig(prev => ({
           ...prev,
           [type]: true
         }));
 
-        console.log("Enviando suscripción al servidor...");
         fetcher.submit(
           {
             type: "webPushEnabled",
-            subscription: JSON.stringify(subscription),
             enabled: "true",
           },
           { method: "post" }
         );
       } catch (error) {
-        console.error("Error en el proceso de activación:", error);
-        // Revertir el estado local en caso de error
+        console.error("Error al activar notificaciones:", error);
         setNotificationConfig(prev => ({
           ...prev,
           [type]: false
@@ -111,8 +127,6 @@ export function HeaderClerk({ notificationConfig: initialNotificationConfig, use
         };
       }
     } else {
-      console.log("Actualizando estado de notificación:", type);
-      // Actualizar el estado local inmediatamente
       setNotificationConfig(prev => ({
         ...prev,
         [type]: !prev?.[type]
@@ -194,11 +208,6 @@ export function HeaderClerk({ notificationConfig: initialNotificationConfig, use
                   <Settings className="h-5 w-5 text-white" />
                 </Button>
               </div>
-              {fetcher.data?.error && (
-                <div className="absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded bg-red-100 p-2 text-xs text-red-600 shadow-lg">
-                  {fetcher.data.error}
-                </div>
-              )}
               {showConfig && (
                 <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-lg border bg-white p-4 shadow-lg">
                   <h3 className="mb-4 font-semibold text-gray-800">
