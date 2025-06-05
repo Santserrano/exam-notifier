@@ -31,6 +31,12 @@ interface FetcherData {
   config?: NotificationConfig;
 }
 
+interface LocalNotificationConfig {
+  webPushEnabled: boolean;
+  smsEnabled: boolean;
+  emailEnabled: boolean;
+}
+
 export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }: Props) {
   const [showConfig, setShowConfig] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,30 +46,24 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
   const isSubmitting = fetcher.state === "submitting";
 
   // Estado local para manejar los switches
-  const [localConfig, setLocalConfig] = useState({
-    webPushEnabled: initialConfig?.webPushEnabled ?? false,
-    smsEnabled: initialConfig?.smsEnabled ?? false,
-    emailEnabled: initialConfig?.emailEnabled ?? false
+  const [localConfig, setLocalConfig] = useState<LocalNotificationConfig>(() => {
+    // Intentar recuperar la configuración del localStorage
+    const savedConfig = localStorage.getItem('notificationConfig');
+    if (savedConfig) {
+      return JSON.parse(savedConfig);
+    }
+    // Si no hay configuración guardada, usar la inicial
+    return {
+      webPushEnabled: initialConfig?.webPushEnabled ?? false,
+      smsEnabled: initialConfig?.smsEnabled ?? false,
+      emailEnabled: initialConfig?.emailEnabled ?? false
+    };
   });
 
-  // Sincronizar con el estado del servidor al cargar y después de cada actualización
+  // Guardar cambios en localStorage
   useEffect(() => {
-    if (initialConfig) {
-      setLocalConfig({
-        webPushEnabled: initialConfig.webPushEnabled ?? false,
-        smsEnabled: initialConfig.smsEnabled ?? false,
-        emailEnabled: initialConfig.emailEnabled ?? false
-      });
-    }
-  }, [initialConfig]);
-
-  // Sincronizar con las respuestas del fetcher
-  useEffect(() => {
-    if (fetcher.data?.config) {
-      setLocalConfig(fetcher.data.config);
-      revalidator.revalidate();
-    }
-  }, [fetcher.data, revalidator]);
+    localStorage.setItem('notificationConfig', JSON.stringify(localConfig));
+  }, [localConfig]);
 
   // Manejar la activación de web push
   const handleWebPushActivation = async () => {
@@ -83,13 +83,10 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
       }
 
       // Registrar Service Worker
-      console.log("Registrando Service Worker...");
       const registration = await navigator.serviceWorker.register("/sw.js");
-      console.log("Service Worker registrado:", registration);
 
       // Esperar a que el Service Worker esté activo
       if (!registration.active) {
-        console.log("Esperando a que el Service Worker esté activo...");
         await new Promise((resolve) => {
           if (registration.active) {
             resolve(true);
@@ -100,13 +97,10 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
       }
 
       // Obtener suscripción
-      console.log("Intentando obtener suscripción...");
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: env?.VAPID_PUBLIC_KEY,
       });
-
-      console.log("Suscripción obtenida:", subscription);
 
       // Enviar suscripción al backend
       const response = await fetch(
@@ -124,20 +118,18 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
         }
       );
 
-      const data = await response.json();
-      console.log("Respuesta del servidor:", data);
-
       if (!response.ok) {
+        const data = await response.json();
         throw new Error(data.error || data.details || "Error al guardar la suscripción");
       }
 
-      // Actualizar estado local
-      setLocalConfig(prev => ({
+      // Actualizar estado local primero
+      setLocalConfig((prev: LocalNotificationConfig) => ({
         ...prev,
         webPushEnabled: true
       }));
 
-      // Enviar actualización al servidor
+      // Enviar actualización al servidor en segundo plano
       fetcher.submit(
         {
           type: "webPushEnabled",
@@ -146,10 +138,13 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
         { method: "post" }
       );
 
-      // Revalidar para asegurar que el estado se mantiene
-      revalidator.revalidate();
     } catch (error) {
       console.error("Error al activar notificaciones:", error);
+      // Revertir el estado local en caso de error
+      setLocalConfig((prev: LocalNotificationConfig) => ({
+        ...prev,
+        webPushEnabled: false
+      }));
       fetcher.data = { 
         success: false, 
         error: error instanceof Error ? error.message : "Error al activar notificaciones" 
@@ -160,30 +155,57 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
   };
 
   // Manejar cambios en los switches
-  const handleToggleNotification = (type: keyof NotificationConfig) => {
+  const handleToggleNotification = async (type: keyof LocalNotificationConfig) => {
     if (userRole !== "profesor" || !user?.id) return;
 
     // Actualizar estado local inmediatamente
-    setLocalConfig(prev => ({
+    setLocalConfig((prev: LocalNotificationConfig) => ({
       ...prev,
       [type]: !prev[type]
     }));
 
-    // Enviar actualización al servidor
-    fetcher.submit(
-      {
-        type,
-        enabled: (!localConfig[type]).toString(),
-      },
-      { method: "post" }
-    );
+    try {
+      // Enviar actualización al servidor en segundo plano
+      const response = await fetch(
+        `${env?.API_URL}/api/diaries/notificaciones/config/${user.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": env?.INTERNAL_API_KEY || "",
+          },
+          body: JSON.stringify({
+            [type]: !localConfig[type],
+          }),
+        }
+      );
 
-    // Revalidar para asegurar que el estado se mantiene
-    revalidator.revalidate();
+      if (!response.ok) {
+        throw new Error("Error al actualizar la configuración");
+      }
+
+      // Mostrar mensaje de éxito
+      fetcher.data = { 
+        success: true,
+        config: await response.json()
+      };
+
+    } catch (error) {
+      console.error("Error al actualizar configuración:", error);
+      // Revertir el estado local en caso de error
+      setLocalConfig((prev: LocalNotificationConfig) => ({
+        ...prev,
+        [type]: !prev[type]
+      }));
+      fetcher.data = { 
+        success: false, 
+        error: error instanceof Error ? error.message : "Error al actualizar la configuración" 
+      };
+    }
   };
 
   const getNotificationMessage = (
-    type: keyof NotificationConfig,
+    type: keyof LocalNotificationConfig,
     enabled: boolean,
   ) => {
     switch (type) {
