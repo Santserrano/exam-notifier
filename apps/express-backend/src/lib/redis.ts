@@ -35,9 +35,7 @@ export async function initRedis() {
 
     try {
         await redis.connect();
-        console.log('Redis conectado exitosamente');
     } catch (error) {
-        console.error('Error al conectar Redis:', error);
         throw error;
     }
 } 
