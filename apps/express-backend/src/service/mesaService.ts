@@ -78,6 +78,11 @@ class MesaService {
 
     async createMesa(data: Omit<MesaData, 'id' | 'createdAt'>): Promise<MesaResponse> {
         try {
+            // Validar datos requeridos
+            if (!data.profesor || !data.vocal || !data.carrera || !data.materia || !data.fecha) {
+                throw new Error('Faltan datos requeridos');
+            }
+
             // Verificar que la materia existe
             const materia = await this.prisma.materia.findUnique({
                 where: {
@@ -89,16 +94,35 @@ class MesaService {
                 throw new Error('Materia no encontrada');
             }
 
+            // Verificar que los profesores existen
+            const [profesor, vocal] = await Promise.all([
+                this.prisma.profesor.findUnique({ where: { id: data.profesor } }),
+                this.prisma.profesor.findUnique({ where: { id: data.vocal } })
+            ]);
+
+            if (!profesor || !vocal) {
+                throw new Error('Uno o ambos profesores no existen');
+            }
+
+            // Verificar que la carrera existe
+            const carrera = await this.prisma.carrera.findUnique({
+                where: { id: data.carrera }
+            });
+
+            if (!carrera) {
+                throw new Error('Carrera no encontrada');
+            }
+
             const nuevaMesa = await this.prisma.mesaDeExamen.create({
                 data: {
                     profesorId: data.profesor,
                     vocalId: data.vocal,
                     carreraId: data.carrera,
                     materiaId: data.materia,
-                    fecha: data.fecha,
+                    fecha: new Date(data.fecha),
                     descripcion: data.descripcion || 'Mesa de examen',
                     cargo: data.cargo || 'Titular',
-                    verification: data.verification || true,
+                    verification: data.verification ?? true,
                     modalidad: data.modalidad,
                     aula: data.aula,
                     webexLink: data.webexLink
