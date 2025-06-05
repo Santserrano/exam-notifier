@@ -314,6 +314,19 @@ export default function MesasRoute() {
   const fetcher = useFetcher();
   const navigate = useNavigate();
 
+  // Estado local para manejar la vista actual
+  const [currentView, setCurrentView] = useState<'list' | 'detail' | 'students'>(() => {
+    if (searchParams.get("alumnos")) return 'students';
+    if (searchParams.get("detalle")) return 'detail';
+    return 'list';
+  });
+
+  const [selectedMesa, setSelectedMesa] = useState<MesaProcesada | null>(() => {
+    const detalleId = searchParams.get("detalle");
+    const alumnosId = searchParams.get("alumnos");
+    return mesas.find((m: MesaProcesada) => m.id === detalleId || m.id === alumnosId) || null;
+  });
+
   // Configurar el service worker al cargar el componente
   if ('serviceWorker' in navigator && 'PushManager' in window) {
     navigator.serviceWorker.ready.then(registration => {
@@ -351,9 +364,6 @@ export default function MesasRoute() {
   const sede = searchParams.get("sede") ?? "";
   const filtroAlumno = searchParams.get("filtroAlumno") ?? "";
 
-  const detalleId = searchParams.get("detalle");
-  const alumnosId = searchParams.get("alumnos");
-
   const actualizarFiltro = (clave: string, valor: string) => {
     if (valor) searchParams.set(clave, valor);
     else searchParams.delete(clave);
@@ -371,44 +381,37 @@ export default function MesasRoute() {
     );
   });
 
-  const mesaDetalle = mesas.find(
-    (m: MesaProcesada) => m.id === detalleId || m.id === alumnosId
-  );
-
-  // Función para manejar la navegación
+  // Función optimizada para manejar la navegación
   const handleNavigation = (type: 'detalle' | 'alumnos' | 'back', mesaId?: string) => {
-    const newParams = new URLSearchParams(searchParams);
+    const mesa = mesaId ? mesas.find((m: MesaProcesada) => m.id === mesaId) : null;
     
     switch (type) {
       case 'detalle':
-        newParams.set('detalle', mesaId || '');
-        newParams.delete('alumnos');
+        setCurrentView('detail');
+        setSelectedMesa(mesa);
         break;
       case 'alumnos':
-        newParams.set('alumnos', mesaId || '');
-        newParams.delete('detalle');
+        setCurrentView('students');
+        setSelectedMesa(mesa);
         break;
       case 'back':
-        if (alumnosId) {
-          newParams.set('detalle', alumnosId);
-          newParams.delete('alumnos');
+        if (currentView === 'students') {
+          setCurrentView('detail');
         } else {
-          newParams.delete('detalle');
-          newParams.delete('alumnos');
+          setCurrentView('list');
+          setSelectedMesa(null);
         }
         break;
     }
-    
-    setSearchParams(newParams);
   };
 
-  // Renderizado condicional basado en los parámetros de búsqueda
-  if (alumnosId && mesaDetalle) {
+  // Renderizado condicional basado en la vista actual
+  if (currentView === 'students' && selectedMesa) {
     return (
       <div className="mx-auto max-w-md pb-8">
         <HeaderClerk notificationConfig={notificationConfig} userRole="profesor" env={env} />
         <ListaAlumnos 
-          mesa={mesaDetalle} 
+          mesa={selectedMesa} 
           filtroAlumno={filtroAlumno}
           onFiltroChange={(valor) => actualizarFiltro("filtroAlumno", valor)}
           onVolver={() => handleNavigation('back')}
@@ -417,13 +420,13 @@ export default function MesasRoute() {
     );
   }
 
-  if (detalleId && mesaDetalle) {
+  if (currentView === 'detail' && selectedMesa) {
     return (
       <div className="mx-auto max-w-md pb-8">
         <HeaderClerk notificationConfig={notificationConfig} userRole="profesor" env={env} />
         <DetalleMesa 
-          mesa={mesaDetalle} 
-          onVerAlumnos={() => handleNavigation('alumnos', mesaDetalle.id)}
+          mesa={selectedMesa} 
+          onVerAlumnos={() => handleNavigation('alumnos', selectedMesa.id)}
           onVolver={() => handleNavigation('back')}
         />
       </div>
