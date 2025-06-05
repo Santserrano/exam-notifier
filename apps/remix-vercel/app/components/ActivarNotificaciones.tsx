@@ -177,7 +177,7 @@ export function ActivarNotificaciones() {
           },
           body: JSON.stringify({
             profesorId: user?.id,
-            subscription,
+            subscription: subscription.toJSON(),
           }),
         },
       );
@@ -186,18 +186,30 @@ export function ActivarNotificaciones() {
       console.log("Respuesta del servidor:", data);
 
       if (!response.ok) {
-        throw new Error(
-          data.error || data.details || "Error al guardar la suscripción",
-        );
+        throw new Error(data.error || data.details || "Error al guardar la suscripción");
       }
 
-      if (!data.success) {
-        throw new Error("La operación no fue exitosa");
+      // Actualizar la configuración
+      const configResponse = await fetch(
+        `${env.API_URL}/api/diaries/notificaciones/config/${user?.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": env.INTERNAL_API_KEY || "",
+          },
+          body: JSON.stringify({
+            webPushEnabled: true,
+          }),
+        },
+      );
+
+      if (!configResponse.ok) {
+        throw new Error("Error al actualizar la configuración");
       }
 
-      if (!data.config || !data.config.webPushEnabled) {
-        throw new Error("La configuración no se activó correctamente");
-      }
+      const configData = await configResponse.json();
+      console.log("Configuración actualizada:", configData);
 
       setIsSubscribed(true);
       showNotification("¡Notificaciones activadas con éxito!", "success");
