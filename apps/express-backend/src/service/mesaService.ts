@@ -12,7 +12,7 @@ interface MesaData {
     fecha: Date;
     descripcion: string;
     cargo: string;
-    verification: number;
+    verification: boolean;
     createdAt: Date;
     modalidad?: string | null;
     aula?: string | null;
@@ -21,7 +21,7 @@ interface MesaData {
 
 interface MesaResponse {
     success: boolean;
-    data?: Omit<MesaData, 'verification'> & { verification: boolean };
+    data?: MesaData;
     error?: string;
 }
 
@@ -145,34 +145,32 @@ class MesaService {
                 throw new Error('Carrera no encontrada');
             }
 
-            console.log('Creando nueva mesa con datos:', {
-                profesorId: data.profesor,
-                vocalId: data.vocal,
-                carreraId: data.carrera,
-                materiaId: data.materia,
+            const mesaData: Prisma.MesaDeExamenCreateInput = {
+                profesor: {
+                    connect: { id: data.profesor }
+                },
+                vocal: {
+                    connect: { id: data.vocal }
+                },
+                carrera: {
+                    connect: { id: data.carrera }
+                },
+                materia: {
+                    connect: { id: data.materia }
+                },
                 fecha: new Date(data.fecha),
                 descripcion: data.descripcion || 'Mesa de examen',
                 cargo: data.cargo || 'Titular',
-                verification: 1,
+                verification: data.verification || false,
                 modalidad: data.modalidad,
                 aula: data.aula,
                 webexLink: data.webexLink
-            });
+            };
+
+            console.log('Creando nueva mesa con datos:', mesaData);
 
             const nuevaMesa = await prisma.mesaDeExamen.create({
-                data: {
-                    profesorId: data.profesor,
-                    vocalId: data.vocal,
-                    carreraId: data.carrera,
-                    materiaId: data.materia,
-                    fecha: new Date(data.fecha),
-                    descripcion: data.descripcion || 'Mesa de examen',
-                    cargo: data.cargo || 'Titular',
-                    verification: 1,
-                    modalidad: data.modalidad,
-                    aula: data.aula,
-                    webexLink: data.webexLink
-                },
+                data: mesaData,
                 include: {
                     profesor: true,
                     vocal: true,
@@ -198,7 +196,7 @@ class MesaService {
                     fecha: nuevaMesa.fecha,
                     descripcion: nuevaMesa.descripcion,
                     cargo: nuevaMesa.cargo,
-                    verification: nuevaMesa.verification === 1,
+                    verification: nuevaMesa.verification,
                     createdAt: nuevaMesa.createdAt,
                     modalidad: nuevaMesa.modalidad,
                     aula: nuevaMesa.aula,
