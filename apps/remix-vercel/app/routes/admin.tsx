@@ -241,7 +241,8 @@ export const action = async (args: ActionFunctionArgs) => {
       throw new Error(errorData.error || "Error al crear la mesa");
     }
 
-    return redirect("/admin");
+    // Redirigir a la página de mesas con un parámetro de actualización
+    return redirect("/mesas?refresh=true");
   } catch (error) {
     console.error("Error en el action:", error);
     return json(
@@ -432,6 +433,7 @@ export default function AdminRoute() {
               onClick={onClose}
               aria-label="Volver"
               className="text-2xl text-green-900"
+              disabled={isSubmitting}
             >
               ←
             </button>
@@ -450,6 +452,7 @@ export default function AdminRoute() {
             name="fecha"
             required
             defaultValue={mesa?.fecha ?? ""}
+            disabled={isSubmitting}
           />
           <label className="text-sm font-semibold text-green-900">
             Carrera
@@ -460,6 +463,7 @@ export default function AdminRoute() {
             required
             value={carreraSeleccionada}
             onChange={(e) => { setCarreraSeleccionada(e.target.value); }}
+            disabled={isSubmitting}
           >
             <option value="">Seleccionar</option>
             {carreras.map((c: Carrera) => (
@@ -477,7 +481,7 @@ export default function AdminRoute() {
             required
             value={materiaSeleccionada}
             onChange={(e) => { setMateriaSeleccionada(e.target.value); }}
-            disabled={!carreraSeleccionada}
+            disabled={!carreraSeleccionada || isSubmitting}
           >
             <option value="">Seleccionar</option>
             {carreraSeleccionada &&
@@ -498,7 +502,7 @@ export default function AdminRoute() {
             required
             value={profesorSeleccionado}
             onChange={(e) => setProfesorSeleccionado(e.target.value)}
-            disabled={!materiaSeleccionada}
+            disabled={!materiaSeleccionada || isSubmitting}
           >
             <option value="">Seleccionar</option>
             {profesoresFiltrados.map((profesor: Profesor) => (
@@ -516,7 +520,7 @@ export default function AdminRoute() {
             required
             value={vocalSeleccionado}
             onChange={(e) => setVocalSeleccionado(e.target.value)}
-            disabled={!materiaSeleccionada}
+            disabled={!materiaSeleccionada || isSubmitting}
           >
             <option value="">Seleccionar</option>
             {profesoresFiltrados.map((profesor: Profesor) => (
@@ -531,6 +535,7 @@ export default function AdminRoute() {
             className="rounded border px-2 py-2"
             required
             defaultValue={mesa?.hora ?? ""}
+            disabled={isSubmitting}
           >
             <option value="">Seleccionar</option>
             {horas.map((h) => (
@@ -550,6 +555,7 @@ export default function AdminRoute() {
                 value="Presencial"
                 checked={modalidad === "Presencial"}
                 onChange={() => { setModalidad("Presencial"); }}
+                disabled={isSubmitting}
               />
               Presencial
             </label>
@@ -560,6 +566,7 @@ export default function AdminRoute() {
                 value="Virtual"
                 checked={modalidad === "Virtual"}
                 onChange={() => { setModalidad("Virtual"); }}
+                disabled={isSubmitting}
               />
               Virtual
             </label>
@@ -577,6 +584,7 @@ export default function AdminRoute() {
                 value={aula}
                 onChange={(e) => { setAula(e.target.value); }}
                 placeholder="Ej: 101, Laboratorio 2"
+                disabled={isSubmitting}
               />
             </div>
           ) : (
@@ -591,6 +599,7 @@ export default function AdminRoute() {
                 value={webexLink}
                 onChange={(e) => { setWebexLink(e.target.value); }}
                 placeholder="https://webex.com/..."
+                disabled={isSubmitting}
               />
             </div>
           )}
