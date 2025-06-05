@@ -280,11 +280,12 @@ export const action = async (args: ActionFunctionArgs) => {
 };
 
 const carreras = [
-  "Ingeniería en sistemas",
+  "Ingeniería en Sistemas",
   "Arquitectura",
   "Lic. en Nutrición",
   "Lic. en Publicidad",
 ];
+
 const fechas = [
   "ene.",
   "feb.",
@@ -328,20 +329,29 @@ export default function MesasRoute() {
   });
 
   // Configurar el service worker al cargar el componente
-  if ('serviceWorker' in navigator && 'PushManager' in window) {
-    navigator.serviceWorker.ready.then(registration => {
-      registration.addEventListener('push', ((event: Event) => {
-        const pushEvent = event as PushEvent;
-        if (pushEvent.data) {
-          const data = pushEvent.data.json();
-          if (data.data?.mesaId) {
-            fetcher.load(`/api/mesas?userId=${userId}`);
-            window.location.reload();
+  useEffect(() => {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.addEventListener('push', ((event: Event) => {
+          const pushEvent = event as PushEvent;
+          if (pushEvent.data) {
+            const data = pushEvent.data.json();
+            if (data.data?.mesaId) {
+              // Recargar los datos inmediatamente
+              fetcher.load(`/api/mesas?userId=${userId}`);
+              // Mostrar una notificación al usuario
+              if (Notification.permission === 'granted') {
+                new Notification('Nueva Mesa Asignada', {
+                  body: 'Has sido asignado a una nueva mesa de examen',
+                  icon: '/icon.png'
+                });
+              }
+            }
           }
-        }
-      }) as EventListener);
-    });
-  }
+        }) as EventListener);
+      });
+    }
+  }, [userId, fetcher]);
 
   // Efecto para recargar los datos cuando se crea una nueva mesa
   useEffect(() => {
@@ -352,11 +362,14 @@ export default function MesasRoute() {
     }
   }, [searchParams, fetcher, userId]);
 
-  // Prefetch de datos comunes
+  // Efecto para recargar los datos periódicamente
   useEffect(() => {
-    // Prefetch de la lista de mesas
-    fetcher.load(`/api/mesas?userId=${userId}`);
-  }, [userId]);
+    const interval = setInterval(() => {
+      fetcher.load(`/api/mesas?userId=${userId}`);
+    }, 30000); // Recargar cada 30 segundos
+
+    return () => clearInterval(interval);
+  }, [userId, fetcher]);
 
   const search = searchParams.get("search") ?? "";
   const carrera = searchParams.get("carrera") ?? "";
