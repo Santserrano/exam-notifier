@@ -43,18 +43,65 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
 
     if (type === "webPushEnabled" && !notificationConfig?.[type]) {
       try {
-        const registration = await navigator.serviceWorker.ready;
-        const permission = await Notification.requestPermission();
-        
-        if (permission !== "granted") {
-          fetcher.data = { success: false, error: "Permiso de notificaciones denegado" };
-          return;
+        // Verificar soporte de Service Worker
+        if (!("serviceWorker" in navigator)) {
+          throw new Error("Tu navegador no soporta notificaciones push");
         }
 
+        // Verificar permisos
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          throw new Error("Permiso de notificaciones denegado");
+        }
+
+        // Registrar Service Worker
+        console.log("Registrando Service Worker...");
+        const registration = await navigator.serviceWorker.register("/sw.js");
+        console.log("Service Worker registrado:", registration);
+
+        // Esperar a que el Service Worker esté activo
+        if (!registration.active) {
+          console.log("Esperando a que el Service Worker esté activo...");
+          await new Promise((resolve) => {
+            if (registration.active) {
+              resolve(true);
+            } else {
+              registration.addEventListener("activate", () => resolve(true));
+            }
+          });
+        }
+
+        // Obtener suscripción
+        console.log("Intentando obtener suscripción...");
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: env?.VAPID_PUBLIC_KEY,
         });
+
+        console.log("Suscripción obtenida:", subscription);
+
+        // Enviar suscripción al backend
+        const response = await fetch(
+          `${env?.API_URL}/api/notificaciones/push-subscription`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": env?.INTERNAL_API_KEY || "",
+            },
+            body: JSON.stringify({
+              profesorId: user?.id,
+              subscription: subscription.toJSON(),
+            }),
+          }
+        );
+
+        const data = await response.json();
+        console.log("Respuesta del servidor:", data);
+
+        if (!response.ok) {
+          throw new Error(data.error || data.details || "Error al guardar la suscripción");
+        }
 
         setNotificationConfig(prev => ({
           ...prev,
@@ -64,12 +111,12 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
         fetcher.submit(
           {
             type: "webPushEnabled",
-            subscription: JSON.stringify(subscription),
             enabled: "true",
           },
           { method: "post" }
         );
       } catch (error) {
+        console.error("Error al activar notificaciones:", error);
         setNotificationConfig(prev => ({
           ...prev,
           [type]: false
