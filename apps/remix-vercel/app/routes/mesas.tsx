@@ -339,18 +339,6 @@ export default function MesasRoute() {
   const detalleId = searchParams.get("detalle");
   const alumnosId = searchParams.get("alumnos");
 
-  // Prefetch de datos para navegación
-  useEffect(() => {
-    if (detalleId) {
-      // Prefetch de datos de la mesa
-      fetcher.load(`/api/mesas/${detalleId}`);
-    }
-    if (alumnosId) {
-      // Prefetch de datos de alumnos
-      fetcher.load(`/api/mesas/${alumnosId}/alumnos`);
-    }
-  }, [detalleId, alumnosId]);
-
   const actualizarFiltro = (clave: string, valor: string) => {
     if (valor) searchParams.set(clave, valor);
     else searchParams.delete(clave);
