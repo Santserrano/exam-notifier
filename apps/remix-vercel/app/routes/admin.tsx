@@ -95,6 +95,12 @@ interface Profesor {
   materias: Materia[];
 }
 
+type ActionData = {
+  success?: boolean;
+  data?: any;
+  error?: string;
+};
+
 export const loader = async (args: LoaderFunctionArgs) => {
   const { userId } = await getAuth(args);
 
@@ -189,14 +195,14 @@ export const action = async (args: ActionFunctionArgs) => {
   const { userId } = await getAuth(args);
 
   if (!userId) {
-    return redirect("/sign-in");
+    return json({ error: "No autorizado" }, { status: 401 });
   }
 
   const user = await clerkClient.users.getUser(userId);
   const role = user.publicMetadata.role;
 
   if (role !== "admin") {
-    return redirect("/");
+    return json({ error: "No autorizado" }, { status: 403 });
   }
 
   const { API_URL, INTERNAL_API_KEY } = getServerEnv();
@@ -240,19 +246,21 @@ export const action = async (args: ActionFunctionArgs) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || "Error al crear la mesa");
+      return json(
+        { error: errorData.error || "Error al crear la mesa" },
+        { status: response.status }
+      );
     }
 
-    // Redirigir a la página de mesas con un parámetro de actualización
-    return redirect("/mesas?refresh=true");
+    const data = await response.json();
+    return json({ success: true, data });
   } catch (error) {
     console.error("Error en el action:", error);
     return json(
       {
-        error:
-          error instanceof Error ? error.message : "Error al crear la mesa",
+        error: error instanceof Error ? error.message : "Error al crear la mesa",
       },
-      { status: 400 },
+      { status: 500 }
     );
   }
 };
@@ -260,7 +268,7 @@ export const action = async (args: ActionFunctionArgs) => {
 export default function AdminRoute() {
   const { userId, role, mesas, profesores, carreras, notificationConfig, env } =
     useLoaderData<typeof loader>();
-  const actionData = useActionData<typeof action>();
+  const actionData = useActionData<ActionData>();
   const [search, setSearch] = useState("");
   const [carrera, setCarrera] = useState("");
   const [materia, setMateria] = useState("");
@@ -270,6 +278,15 @@ export default function AdminRoute() {
   const [mesaAEditar, setMesaAEditar] = useState<MesaRaw | null>(null);
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+
+  // Efecto para manejar la respuesta del action
+  React.useEffect(() => {
+    if (actionData?.success) {
+      setShowAddMesa(false);
+      // Recargar la página para mostrar la nueva mesa
+      window.location.reload();
+    }
+  }, [actionData]);
 
   const fechas = [
     "ene.",
@@ -650,6 +667,11 @@ export default function AdminRoute() {
     <div className="mx-auto max-w-md pb-8">
       <HeaderClerk notificationConfig={notificationConfig} userRole="admin" env={env} />
       <div className="mt-2 px-4">
+        {actionData?.error && (
+          <div className="mb-4 rounded bg-red-100 p-2 text-sm text-red-600">
+            {actionData.error}
+          </div>
+        )}
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-center text-base md:text-lg font-bold">
             Administración
