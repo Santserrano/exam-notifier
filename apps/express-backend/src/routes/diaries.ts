@@ -1,12 +1,18 @@
-import express from 'express'
+import express, { Router } from 'express'
 import { prisma } from '../lib/prisma.js'
 
 import { cacheMiddleware, invalidateCache } from '../middleware/cache.js'
 import { mesaService } from '../service/mesaService.js'
 import { ProfesorService } from '../service/profesorService.js'
+import { CarreraService } from '../service/carreraService.js'
+import { MateriaService } from '../service/materiaService.js'
+import { cache } from '../lib/cache.js'
+import { validateApiKey } from '../middleware/auth.js'
 
-const router = express.Router()
+const router = Router()
 const profesorService = new ProfesorService()
+const carreraService = new CarreraService()
+const materiaService = new MateriaService()
 
 // Middleware para validar API key
 const validateApiKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -52,11 +58,20 @@ router.get('/profesores', cacheMiddleware(3600), async (req, res) => {
 });
 
 // Obtener todas las mesas
-router.get('/mesas', cacheMiddleware(1800), async (req, res) => {
+router.get('/mesas', async (req, res) => {
   try {
+    const cacheKey = 'mesas';
+    const cachedData = await cache.get(cacheKey);
+
+    if (cachedData) {
+      return res.json(cachedData);
+    }
+
     const mesas = await mesaService.getAllMesas();
+    await cache.set(cacheKey, mesas);
     res.json(mesas);
   } catch (error) {
+    console.error('Error al obtener mesas:', error);
     res.status(500).json({ error: 'Error al obtener las mesas' });
   }
 });
@@ -82,53 +97,66 @@ router.get('/mesas/:id', cacheMiddleware(1800), async (req, res) => {
 // Crear una nueva mesa
 router.post('/mesas', async (req, res) => {
   try {
-    console.log('Recibida solicitud para crear mesa:', req.body);
-    const mesaData = req.body;
+    const {
+      profesor,
+      vocal,
+      carrera,
+      materia,
+      fecha,
+      descripcion,
+      cargo,
+      verification,
+      modalidad,
+      aula,
+      webexLink,
+    } = req.body;
 
     // Validar datos requeridos
-    const camposRequeridos = ['profesor', 'vocal', 'carrera', 'materia', 'fecha', 'modalidad'];
-    const camposFaltantes = camposRequeridos.filter(campo => !mesaData[campo]);
-
-    if (camposFaltantes.length > 0) {
-      console.error('Campos faltantes:', camposFaltantes);
-      return res.status(400).json({
-        error: 'Campos requeridos faltantes',
-        camposFaltantes
-      });
+    if (!profesor || !vocal || !carrera || !materia || !fecha) {
+      return res.status(400).json({ error: 'Faltan datos requeridos' });
     }
 
     // Validar formato de fecha
-    if (isNaN(new Date(mesaData.fecha).getTime())) {
-      console.error('Fecha inválida:', mesaData.fecha);
-      return res.status(400).json({
-        error: 'Formato de fecha inválido'
-      });
+    const fechaObj = new Date(fecha);
+    if (isNaN(fechaObj.getTime())) {
+      return res.status(400).json({ error: 'Formato de fecha inválido' });
     }
 
-    // Asegurar que verification sea un booleano
-    if (mesaData.verification !== undefined) {
-      mesaData.verification = Boolean(mesaData.verification);
-    } else {
-      mesaData.verification = false;
+    // Validar modalidad
+    if (modalidad && !['Presencial', 'Virtual'].includes(modalidad)) {
+      return res.status(400).json({ error: 'Modalidad inválida' });
     }
 
-    const resultado = await mesaService.createMesa(mesaData);
-
-    if (!resultado.success) {
-      console.error('Error al crear mesa:', resultado.error);
-      return res.status(400).json({ error: resultado.error });
+    // Validar campos según modalidad
+    if (modalidad === 'Presencial' && !aula) {
+      return res.status(400).json({ error: 'El campo aula es requerido para modalidad presencial' });
     }
 
-    // Invalidar la caché
-    await invalidateCache('/mesas*');
+    if (modalidad === 'Virtual' && !webexLink) {
+      return res.status(400).json({ error: 'El campo webexLink es requerido para modalidad virtual' });
+    }
 
-    return res.status(201).json(resultado.data);
-  } catch (error) {
-    console.error('Error en POST /mesas:', error);
-    return res.status(500).json({
-      error: 'Error al crear la mesa',
-      details: error instanceof Error ? error.message : 'Error desconocido'
+    const mesa = await mesaService.createMesa({
+      profesor,
+      vocal,
+      carrera,
+      materia,
+      fecha,
+      descripcion,
+      cargo,
+      verification: verification ?? false,
+      modalidad,
+      aula,
+      webexLink,
     });
+
+    // Invalidar caché
+    await cache.del('mesas');
+
+    res.status(201).json(mesa);
+  } catch (error) {
+    console.error('Error al crear mesa:', error);
+    res.status(500).json({ error: 'Error al crear la mesa' });
   }
 });
 

@@ -1,29 +1,21 @@
-import { MesaDeExamen, Prisma } from '@prisma/client';
+import { MesaDeExamen, Prisma, Profesor, Carrera, Materia } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { notificationFactory } from '../core/notifications/NotificationFactory.js';
 import { notificacionService } from './NotificationService.js';
 
-interface MesaData {
-    id: number;
+type MesaCreateInput = {
     profesor: string;
     vocal: string;
     carrera: string;
     materia: string;
-    fecha: Date;
-    descripcion: string;
-    cargo: string;
-    verification: boolean;
-    createdAt: Date;
-    modalidad?: string | null;
-    aula?: string | null;
-    webexLink?: string | null;
-}
-
-interface MesaResponse {
-    success: boolean;
-    data?: MesaData;
-    error?: string;
-}
+    fecha: string;
+    descripcion?: string;
+    cargo?: string;
+    verification?: boolean;
+    modalidad?: string;
+    aula?: string;
+    webexLink?: string;
+};
 
 type MesaWithRelations = Prisma.MesaDeExamenGetPayload<{
     include: {
@@ -37,6 +29,12 @@ type MesaWithRelations = Prisma.MesaDeExamenGetPayload<{
         carrera: true;
     };
 }>;
+
+interface MesaResponse {
+    success: boolean;
+    data?: MesaWithRelations;
+    error?: string;
+}
 
 class MesaService {
     async getAllMesas(): Promise<MesaWithRelations[]> {
@@ -106,113 +104,88 @@ class MesaService {
         }
     }
 
-    async createMesa(data: Omit<MesaData, 'id' | 'createdAt'>): Promise<MesaResponse> {
+    async createMesa(data: MesaCreateInput): Promise<MesaResponse> {
         try {
-            console.log('Datos recibidos en createMesa:', data);
+            console.log("Datos recibidos en createMesa:", data);
 
             // Validar datos requeridos
             if (!data.profesor || !data.vocal || !data.carrera || !data.materia || !data.fecha) {
-                throw new Error('Faltan datos requeridos');
+                throw new Error("Faltan datos requeridos");
             }
 
-            // Verificar que la materia existe
-            const materia = await prisma.materia.findUnique({
-                where: {
-                    id: data.materia
-                }
+            // Verificar que el profesor existe
+            const profesor = await prisma.profesor.findUnique({
+                where: { id: data.profesor },
             });
-
-            if (!materia) {
-                throw new Error('Materia no encontrada');
+            if (!profesor) {
+                throw new Error("Profesor no encontrado");
             }
 
-            // Verificar que los profesores existen
-            const [profesor, vocal] = await Promise.all([
-                prisma.profesor.findUnique({ where: { id: data.profesor } }),
-                prisma.profesor.findUnique({ where: { id: data.vocal } })
-            ]);
-
-            if (!profesor || !vocal) {
-                throw new Error('Uno o ambos profesores no existen');
+            // Verificar que el vocal existe
+            const vocal = await prisma.profesor.findUnique({
+                where: { id: data.vocal },
+            });
+            if (!vocal) {
+                throw new Error("Vocal no encontrado");
             }
 
             // Verificar que la carrera existe
             const carrera = await prisma.carrera.findUnique({
-                where: { id: data.carrera }
+                where: { id: data.carrera },
             });
-
             if (!carrera) {
-                throw new Error('Carrera no encontrada');
+                throw new Error("Carrera no encontrada");
             }
 
-            const mesaData: Prisma.MesaDeExamenCreateInput = {
-                profesor: {
-                    connect: { id: data.profesor }
-                },
-                vocal: {
-                    connect: { id: data.vocal }
-                },
-                carrera: {
-                    connect: { id: data.carrera }
-                },
-                materia: {
-                    connect: { id: data.materia }
-                },
-                fecha: new Date(data.fecha),
-                descripcion: data.descripcion || 'Mesa de examen',
-                cargo: data.cargo || 'Titular',
-                verification: data.verification || false,
-                modalidad: data.modalidad,
-                aula: data.aula,
-                webexLink: data.webexLink
-            };
+            // Verificar que la materia existe
+            const materia = await prisma.materia.findUnique({
+                where: { id: data.materia },
+                include: { carrera: true },
+            });
+            if (!materia) {
+                throw new Error("Materia no encontrada");
+            }
 
-            console.log('Creando nueva mesa con datos:', mesaData);
-
-            const nuevaMesa = await prisma.mesaDeExamen.create({
-                data: mesaData,
+            console.log("Creando nueva mesa de examen...");
+            const mesa = await prisma.mesaDeExamen.create({
+                data: {
+                    profesor: { connect: { id: data.profesor } },
+                    vocal: { connect: { id: data.vocal } },
+                    carrera: { connect: { id: data.carrera } },
+                    materia: { connect: { id: data.materia } },
+                    fecha: new Date(data.fecha),
+                    descripcion: data.descripcion || "Mesa de examen",
+                    cargo: data.cargo || "Titular",
+                    verification: data.verification ?? false,
+                    modalidad: data.modalidad || "Presencial",
+                    aula: data.modalidad === "Presencial" ? data.aula : undefined,
+                    webexLink: data.modalidad === "Virtual" ? data.webexLink : undefined,
+                },
                 include: {
                     profesor: true,
                     vocal: true,
                     materia: {
                         include: {
-                            carrera: true
-                        }
+                            carrera: true,
+                        },
                     },
-                    carrera: true
-                }
+                    carrera: true,
+                },
             });
 
-            console.log('Mesa creada exitosamente:', nuevaMesa);
+            console.log("Mesa creada exitosamente:", mesa);
 
             return {
                 success: true,
-                data: {
-                    id: nuevaMesa.id,
-                    profesor: nuevaMesa.profesorId,
-                    vocal: nuevaMesa.vocalId,
-                    carrera: nuevaMesa.carreraId,
-                    materia: nuevaMesa.materiaId,
-                    fecha: nuevaMesa.fecha,
-                    descripcion: nuevaMesa.descripcion,
-                    cargo: nuevaMesa.cargo,
-                    verification: nuevaMesa.verification,
-                    createdAt: nuevaMesa.createdAt,
-                    modalidad: nuevaMesa.modalidad,
-                    aula: nuevaMesa.aula,
-                    webexLink: nuevaMesa.webexLink
-                }
+                data: mesa,
             };
         } catch (error) {
-            console.error('Error en createMesa:', error);
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : 'Error al crear la mesa'
-            };
+            console.error("Error al crear mesa:", error);
+            throw error;
         }
     }
 
-    async updateMesa(id: number, data: Partial<MesaData>): Promise<MesaResponse> {
+    async updateMesa(id: number, data: Partial<MesaCreateInput>): Promise<MesaResponse> {
         try {
             const mesaActualizada = await prisma.mesaDeExamen.update({
                 where: { id },
@@ -221,50 +194,33 @@ class MesaService {
                     vocalId: data.vocal,
                     carreraId: data.carrera,
                     materiaId: data.materia,
-                    fecha: data.fecha,
+                    fecha: data.fecha ? new Date(data.fecha) : undefined,
                     descripcion: data.descripcion,
                     cargo: data.cargo,
                     verification: data.verification,
                     modalidad: data.modalidad,
-                    aula: data.aula,
-                    webexLink: data.webexLink
+                    aula: data.modalidad === "Presencial" ? data.aula : undefined,
+                    webexLink: data.modalidad === "Virtual" ? data.webexLink : undefined,
                 },
                 include: {
                     profesor: true,
                     vocal: true,
                     materia: {
                         include: {
-                            carrera: true
-                        }
+                            carrera: true,
+                        },
                     },
-                    carrera: true
-                }
+                    carrera: true,
+                },
             });
 
             return {
                 success: true,
-                data: {
-                    id: mesaActualizada.id,
-                    profesor: mesaActualizada.profesorId,
-                    vocal: mesaActualizada.vocalId,
-                    carrera: mesaActualizada.carreraId,
-                    materia: mesaActualizada.materiaId,
-                    fecha: mesaActualizada.fecha,
-                    descripcion: mesaActualizada.descripcion,
-                    cargo: mesaActualizada.cargo,
-                    verification: mesaActualizada.verification,
-                    createdAt: mesaActualizada.createdAt,
-                    modalidad: mesaActualizada.modalidad,
-                    aula: mesaActualizada.aula,
-                    webexLink: mesaActualizada.webexLink
-                }
+                data: mesaActualizada,
             };
         } catch (error) {
-            console.error('Error en updateMesa:', error);
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : 'Error al actualizar la mesa'
-            };
+            console.error("Error al actualizar mesa:", error);
+            throw error;
         }
     }
 
