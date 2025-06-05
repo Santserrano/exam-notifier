@@ -46,23 +46,32 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
   const isSubmitting = fetcher.state === "submitting";
 
   // Estado local para manejar los switches
-  const [localConfig, setLocalConfig] = useState<LocalNotificationConfig>(() => {
-    // Intentar recuperar la configuración del localStorage
-    const savedConfig = localStorage.getItem('notificationConfig');
-    if (savedConfig) {
-      return JSON.parse(savedConfig);
-    }
-    // Si no hay configuración guardada, usar la inicial
-    return {
-      webPushEnabled: initialConfig?.webPushEnabled ?? false,
-      smsEnabled: initialConfig?.smsEnabled ?? false,
-      emailEnabled: initialConfig?.emailEnabled ?? false
-    };
+  const [localConfig, setLocalConfig] = useState<LocalNotificationConfig>({
+    webPushEnabled: initialConfig?.webPushEnabled ?? false,
+    smsEnabled: initialConfig?.smsEnabled ?? false,
+    emailEnabled: initialConfig?.emailEnabled ?? false
   });
 
-  // Guardar cambios en localStorage
+  // Cargar configuración del localStorage solo en el cliente
   useEffect(() => {
-    localStorage.setItem('notificationConfig', JSON.stringify(localConfig));
+    if (typeof window !== 'undefined') {
+      const savedConfig = localStorage.getItem('notificationConfig');
+      if (savedConfig) {
+        try {
+          const parsedConfig = JSON.parse(savedConfig);
+          setLocalConfig(parsedConfig);
+        } catch (error) {
+          console.error('Error al parsear la configuración guardada:', error);
+        }
+      }
+    }
+  }, []);
+
+  // Guardar cambios en localStorage solo en el cliente
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('notificationConfig', JSON.stringify(localConfig));
+    }
   }, [localConfig]);
 
   // Manejar la activación de web push
