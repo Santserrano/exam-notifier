@@ -1,4 +1,4 @@
-import { MesaDeExamen } from '@prisma/client';
+import { MesaDeExamen, Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { notificationFactory } from '../core/notifications/NotificationFactory.js';
 import { notificacionService } from './NotificationService.js';
@@ -25,8 +25,21 @@ interface MesaResponse {
     error?: string;
 }
 
+type MesaWithRelations = Prisma.MesaDeExamenGetPayload<{
+    include: {
+        profesor: true;
+        vocal: true;
+        materia: {
+            include: {
+                carrera: true;
+            };
+        };
+        carrera: true;
+    };
+}>;
+
 class MesaService {
-    async getAllMesas(): Promise<MesaDeExamen[]> {
+    async getAllMesas(): Promise<MesaWithRelations[]> {
         try {
             const mesas = await prisma.mesaDeExamen.findMany({
                 include: {
@@ -36,7 +49,8 @@ class MesaService {
                         include: {
                             carrera: true
                         }
-                    }
+                    },
+                    carrera: true
                 }
             });
             return mesas;
@@ -139,7 +153,7 @@ class MesaService {
                 fecha: new Date(data.fecha),
                 descripcion: data.descripcion || 'Mesa de examen',
                 cargo: data.cargo || 'Titular',
-                verification: data.verification ?? true,
+                verification: data.verification || false,
                 modalidad: data.modalidad,
                 aula: data.aula,
                 webexLink: data.webexLink
@@ -154,7 +168,7 @@ class MesaService {
                     fecha: new Date(data.fecha),
                     descripcion: data.descripcion || 'Mesa de examen',
                     cargo: data.cargo || 'Titular',
-                    verification: data.verification ?? true,
+                    verification: data.verification || false,
                     modalidad: data.modalidad,
                     aula: data.aula,
                     webexLink: data.webexLink
@@ -172,111 +186,6 @@ class MesaService {
             });
 
             console.log('Mesa creada exitosamente:', nuevaMesa);
-
-            // Obtener datos del profesor y vocal
-            const [profesorData, vocalData] = await Promise.all([
-                prisma.profesor.findUnique({ where: { id: data.profesor } }),
-                prisma.profesor.findUnique({ where: { id: data.vocal } })
-            ]);
-
-            if (!profesorData || !vocalData) {
-                throw new Error('Profesor o vocal no encontrado');
-            }
-
-            // Preparar datos comunes para las notificaciones
-            const fechaObj = new Date(data.fecha);
-            const fechaFormateada = fechaObj.toLocaleDateString();
-            const horaFormateada = fechaObj.toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-
-            // Obtener configuraciones de notificaciones
-            const [configProfesor, configVocal] = await Promise.all([
-                notificacionService.getConfigByProfesor(data.profesor),
-                notificacionService.getConfigByProfesor(data.vocal)
-            ]);
-
-            // Enviar notificaciones al profesor
-            if (configProfesor) {
-                try {
-                    const notificationData = {
-                        title: 'Nueva mesa asignada',
-                        body: `Hola ${profesorData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada} a las ${horaFormateada}`,
-                        recipient: data.profesor,
-                        metadata: {
-                            mesaId: nuevaMesa.id,
-                            materia: nuevaMesa.materia.nombre,
-                            fecha: fechaFormateada,
-                            hora: horaFormateada
-                        }
-                    };
-
-                    // Enviar notificaciones según la configuración
-                    if (configProfesor.webPushEnabled) {
-                        const pushNotification = notificationFactory.createNotification('push', notificationData);
-                        await pushNotification.send();
-                    }
-
-                    if (profesorData.email && configProfesor.emailEnabled) {
-                        const emailNotification = notificationFactory.createNotification('email', {
-                            ...notificationData,
-                            recipient: profesorData.email
-                        });
-                        await emailNotification.send();
-                    }
-
-                    if (profesorData.telefono && configProfesor.smsEnabled) {
-                        const whatsappNotification = notificationFactory.createNotification('whatsapp', {
-                            ...notificationData,
-                            recipient: profesorData.telefono
-                        });
-                        await whatsappNotification.send();
-                    }
-                } catch (error) {
-                    console.error('Error al enviar notificaciones al profesor:', error);
-                }
-            }
-
-            // Enviar notificaciones al vocal
-            if (configVocal) {
-                try {
-                    const notificationData = {
-                        title: 'Nueva mesa asignada',
-                        body: `Hola ${vocalData.nombre}, se te ha asignado como vocal en una mesa de ${nuevaMesa.materia.nombre} (${nuevaMesa.carrera.nombre}) para el ${fechaFormateada} a las ${horaFormateada}`,
-                        recipient: data.vocal,
-                        metadata: {
-                            mesaId: nuevaMesa.id,
-                            materia: nuevaMesa.materia.nombre,
-                            fecha: fechaFormateada,
-                            hora: horaFormateada
-                        }
-                    };
-
-                    if (configVocal.webPushEnabled) {
-                        const pushNotification = notificationFactory.createNotification('push', notificationData);
-                        await pushNotification.send();
-                    }
-
-                    if (vocalData.email && configVocal.emailEnabled) {
-                        const emailNotification = notificationFactory.createNotification('email', {
-                            ...notificationData,
-                            recipient: vocalData.email
-                        });
-                        await emailNotification.send();
-                    }
-
-                    if (vocalData.telefono && configVocal.smsEnabled) {
-                        const whatsappNotification = notificationFactory.createNotification('whatsapp', {
-                            ...notificationData,
-                            recipient: vocalData.telefono
-                        });
-                        await whatsappNotification.send();
-                    }
-                } catch (error) {
-                    console.error('Error al enviar notificaciones al vocal:', error);
-                }
-            }
 
             return {
                 success: true,
