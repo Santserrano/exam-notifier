@@ -390,6 +390,7 @@ export default function MesasRoute() {
 
     const handleVerAlumnos = () => {
       const newParams = new URLSearchParams(searchParams);
+      newParams.delete("detalle");
       newParams.set("alumnos", mesa.id);
       setSearchParams(newParams);
     };
@@ -429,7 +430,7 @@ export default function MesasRoute() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleVolver}
-            className="text-2xl text-green-900 hover:text-green-700"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl text-green-900 hover:bg-gray-200"
           >
             ←
           </button>
@@ -442,7 +443,7 @@ export default function MesasRoute() {
         </div>
         <div className="text-sm text-gray-500">{mesa.carrera}</div>
         <Button
-          className="bg-blue-800 text-white hover:bg-blue-900"
+          className="w-full bg-blue-800 text-white hover:bg-blue-900"
           onClick={handleVerAlumnos}
         >
           Alumnos inscriptos
@@ -526,7 +527,7 @@ export default function MesasRoute() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleVolver}
-            className="text-2xl text-green-900 hover:text-green-700"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl text-green-900 hover:bg-gray-200"
           >
             ←
           </button>
