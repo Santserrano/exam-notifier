@@ -312,6 +312,208 @@ const alumnosMock = [
   { nombre: "Gilda R. Romero" },
 ];
 
+function DetalleMesa({ mesa }: { mesa: MesaProcesada }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const fetcher = useFetcher();
+  const { user } = useUser();
+
+  const esProfesorAsignado = user?.id === mesa.profesorId || user?.id === mesa.vocalId;
+
+  const handleAceptacion = (estado: "ACEPTADA" | "RECHAZADA") => {
+    const formData = new FormData();
+    formData.append("type", "aceptacion");
+    formData.append("mesaId", mesa.id);
+    formData.append("estado", estado);
+    fetcher.submit(formData, { method: "post" });
+  };
+
+  const handleVolver = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("detalle");
+    newParams.delete("alumnos");
+    setSearchParams(newParams);
+  };
+
+  const handleVerAlumnos = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("detalle");
+    newParams.set("alumnos", mesa.id);
+    setSearchParams(newParams);
+  };
+
+  const fechaObj = new Date(mesa.fechaOriginal);
+  const diasSemana = [
+    "Domingo",
+    "Lunes",
+    "Martes",
+    "Miércoles",
+    "Jueves",
+    "Viernes",
+    "Sábado",
+  ];
+  const meses = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
+  ];
+  const fechaCompleta = `${diasSemana[fechaObj.getDay()]} ${fechaObj.getDate()} de ${meses[fechaObj.getMonth()]} ${fechaObj.getFullYear()}`;
+  const hora = fechaObj.toLocaleTimeString("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return (
+    <div className="flex flex-col gap-6 p-2">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleVolver}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl text-green-900 hover:bg-gray-200"
+        >
+          ←
+        </button>
+        <h2 className="flex-1 text-center text-xl font-bold text-green-900">
+          Detalle de Mesa
+        </h2>
+      </div>
+      <div className="text-lg font-semibold text-green-900">
+        {mesa.materia}
+      </div>
+      <div className="text-sm text-gray-500">{mesa.carrera}</div>
+      <Button
+        type="button"
+        className="w-full bg-blue-800 text-white hover:bg-blue-900"
+        onClick={handleVerAlumnos}
+      >
+        Alumnos inscriptos
+      </Button>
+      <hr />
+      <div className="flex items-center gap-2 text-sm">
+        <User className="h-4 w-4" /> Titular: {mesa.profesorNombre}
+      </div>
+      <div className="flex items-center gap-2 text-sm">
+        <User className="h-4 w-4" /> Vocal: {mesa.vocalNombre}
+      </div>
+      <hr />
+      <div className="flex items-center gap-2 text-sm">
+        <Calendar className="h-4 w-4" /> {fechaCompleta}
+      </div>
+      <div className="flex items-center gap-2 text-sm">
+        <Clock className="h-4 w-4" /> {hora} hs
+      </div>
+      <div className="flex items-center gap-2 text-sm">
+        <MapPin className="h-4 w-4" /> {mesa.modalidad}
+      </div>
+      <div className="flex items-center gap-2 text-sm">
+        <Building2 className="h-4 w-4" /> {mesa.aula}
+      </div>
+      <hr />
+      
+      {/* Estado de aceptación */}
+      {esProfesorAsignado && (
+        <div className="flex flex-col gap-4">
+          <div className="text-sm font-semibold text-gray-700">
+            Estado de aceptación:
+          </div>
+          {mesa.estadoAceptacion === "PENDIENTE" ? (
+            <div className="flex gap-4">
+              <Button
+                onClick={() => handleAceptacion("ACEPTADA")}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              >
+                Aceptar Mesa
+              </Button>
+              <Button
+                onClick={() => handleAceptacion("RECHAZADA")}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              >
+                Rechazar Mesa
+              </Button>
+            </div>
+          ) : (
+            <div className={`text-sm font-medium ${
+              mesa.estadoAceptacion === "ACEPTADA" ? "text-green-600" : "text-red-600"
+            }`}>
+              Mesa {mesa.estadoAceptacion === "ACEPTADA" ? "aceptada" : "rechazada"}
+            </div>
+          )}
+        </div>
+      )}
+      
+      <hr />
+      <div className="flex items-center gap-2 text-sm">
+        <Info className="h-4 w-4" /> Recibirás un recordatorio 1 día antes
+      </div>
+    </div>
+  );
+}
+
+interface ListaAlumnosProps {
+  mesa: MesaProcesada;
+  filtroAlumno: string;
+  onFiltroChange: (valor: string) => void;
+}
+
+function ListaAlumnos({ mesa, filtroAlumno, onFiltroChange }: ListaAlumnosProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const alumnosFiltrados = alumnosMock.filter((a) =>
+    a.nombre.toLowerCase().includes(filtroAlumno.toLowerCase()),
+  );
+
+  const handleVolver = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("alumnos");
+    newParams.set("detalle", mesa.id);
+    setSearchParams(newParams);
+  };
+
+  return (
+    <div className="flex flex-col gap-2 p-2">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleVolver}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl text-green-900 hover:bg-gray-200"
+        >
+          ←
+        </button>
+        <h2 className="flex-1 text-center text-xl font-bold text-green-900">
+          Alumnos inscriptos
+        </h2>
+      </div>
+      <input
+        type="text"
+        placeholder="Buscar alumno por nombre"
+        value={filtroAlumno}
+        onChange={(e) => onFiltroChange(e.target.value)}
+        className="rounded border px-2 py-2"
+      />
+      <div className="flex flex-col gap-1">
+        {alumnosFiltrados.length === 0 ? (
+          <div className="text-center text-gray-500">
+            No hay alumnos para mostrar.
+          </div>
+        ) : (
+          alumnosFiltrados.map((a, idx) => (
+            <div key={idx} className="rounded border bg-gray-50 px-3 py-2">
+              {a.nombre}
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function MesasRoute() {
   const { mesas, userId, notificationConfig, env } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -325,9 +527,7 @@ export default function MesasRoute() {
         if (pushEvent.data) {
           const data = pushEvent.data.json();
           if (data.data?.mesaId) {
-            // Forzar recarga de datos
             fetcher.load('/api/mesas');
-            // También recargar la página completa para asegurar que los datos estén actualizados
             window.location.reload();
           }
         }
@@ -362,206 +562,33 @@ export default function MesasRoute() {
   });
 
   const mesaDetalle = mesas.find(
-    (m: MesaProcesada) =>
-      m.id === detalleId || m.id === alumnosId,
+    (m: MesaProcesada) => m.id === detalleId || m.id === alumnosId
   );
 
-  function DetalleMesa({ mesa }: { mesa: MesaProcesada }) {
-    const [searchParams, setSearchParams] = useSearchParams();
-    const fetcher = useFetcher();
-    const { user } = useUser();
-
-    const esProfesorAsignado = user?.id === mesa.profesorId || user?.id === mesa.vocalId;
-
-    const handleAceptacion = (estado: "ACEPTADA" | "RECHAZADA") => {
-      const formData = new FormData();
-      formData.append("type", "aceptacion");
-      formData.append("mesaId", mesa.id);
-      formData.append("estado", estado);
-      fetcher.submit(formData, { method: "post" });
-    };
-
-    const handleVolver = () => {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete("detalle");
-      newParams.delete("alumnos");
-      setSearchParams(newParams);
-    };
-
-    const handleVerAlumnos = () => {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete("detalle");
-      newParams.set("alumnos", mesa.id);
-      setSearchParams(newParams);
-    };
-
-    const fechaObj = new Date(mesa.fechaOriginal);
-    const diasSemana = [
-      "Domingo",
-      "Lunes",
-      "Martes",
-      "Miércoles",
-      "Jueves",
-      "Viernes",
-      "Sábado",
-    ];
-    const meses = [
-      "Enero",
-      "Febrero",
-      "Marzo",
-      "Abril",
-      "Mayo",
-      "Junio",
-      "Julio",
-      "Agosto",
-      "Septiembre",
-      "Octubre",
-      "Noviembre",
-      "Diciembre",
-    ];
-    const fechaCompleta = `${diasSemana[fechaObj.getDay()]} ${fechaObj.getDate()} de ${meses[fechaObj.getMonth()]} ${fechaObj.getFullYear()}`;
-    const hora = fechaObj.toLocaleTimeString("es-AR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
+  // Renderizado condicional basado en los parámetros de búsqueda
+  if (alumnosId && mesaDetalle) {
     return (
-      <div className="flex flex-col gap-6 p-2">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleVolver}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl text-green-900 hover:bg-gray-200"
-          >
-            ←
-          </button>
-          <h2 className="flex-1 text-center text-xl font-bold text-green-900">
-            Detalle de Mesa
-          </h2>
-        </div>
-        <div className="text-lg font-semibold text-green-900">
-          {mesa.materia}
-        </div>
-        <div className="text-sm text-gray-500">{mesa.carrera}</div>
-        <Button
-          type="button"
-          className="w-full bg-blue-800 text-white hover:bg-blue-900"
-          onClick={handleVerAlumnos}
-        >
-          Alumnos inscriptos
-        </Button>
-        <hr />
-        <div className="flex items-center gap-2 text-sm">
-          <User className="h-4 w-4" /> Titular: {mesa.profesorNombre}
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <User className="h-4 w-4" /> Vocal: {mesa.vocalNombre}
-        </div>
-        <hr />
-        <div className="flex items-center gap-2 text-sm">
-          <Calendar className="h-4 w-4" /> {fechaCompleta}
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <Clock className="h-4 w-4" /> {hora} hs
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <MapPin className="h-4 w-4" /> {mesa.modalidad}
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <Building2 className="h-4 w-4" /> {mesa.aula}
-        </div>
-        <hr />
-        
-        {/* Estado de aceptación */}
-        {esProfesorAsignado && (
-          <div className="flex flex-col gap-4">
-            <div className="text-sm font-semibold text-gray-700">
-              Estado de aceptación:
-            </div>
-            {mesa.estadoAceptacion === "PENDIENTE" ? (
-              <div className="flex gap-4">
-                <Button
-                  onClick={() => handleAceptacion("ACEPTADA")}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                >
-                  Aceptar Mesa
-                </Button>
-                <Button
-                  onClick={() => handleAceptacion("RECHAZADA")}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                >
-                  Rechazar Mesa
-                </Button>
-              </div>
-            ) : (
-              <div className={`text-sm font-medium ${
-                mesa.estadoAceptacion === "ACEPTADA" ? "text-green-600" : "text-red-600"
-              }`}>
-                Mesa {mesa.estadoAceptacion === "ACEPTADA" ? "aceptada" : "rechazada"}
-              </div>
-            )}
-          </div>
-        )}
-        
-        <hr />
-        <div className="flex items-center gap-2 text-sm">
-          <Info className="h-4 w-4" /> Recibirás un recordatorio 1 día antes
-        </div>
-      </div>
-    );
-  }
-
-  function ListaAlumnos({ mesa }: { mesa: MesaProcesada }) {
-    const [searchParams, setSearchParams] = useSearchParams();
-    const alumnosFiltrados = alumnosMock.filter((a) =>
-      a.nombre.toLowerCase().includes(filtroAlumno.toLowerCase()),
-    );
-
-    const handleVolver = () => {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete("alumnos");
-      newParams.set("detalle", mesa.id);
-      setSearchParams(newParams);
-    };
-
-    return (
-      <div className="flex flex-col gap-2 p-2">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleVolver}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-2xl text-green-900 hover:bg-gray-200"
-          >
-            ←
-          </button>
-          <h2 className="flex-1 text-center text-xl font-bold text-green-900">
-            Alumnos inscriptos
-          </h2>
-        </div>
-        <input
-          type="text"
-          placeholder="Buscar alumno por nombre"
-          value={filtroAlumno}
-          onChange={(e) => { actualizarFiltro("filtroAlumno", e.target.value); }}
-          className="rounded border px-2 py-2"
+      <div className="mx-auto max-w-md pb-8">
+        <HeaderClerk notificationConfig={notificationConfig} userRole="profesor" env={env} />
+        <ListaAlumnos 
+          mesa={mesaDetalle} 
+          filtroAlumno={filtroAlumno}
+          onFiltroChange={(valor) => actualizarFiltro("filtroAlumno", valor)}
         />
-        <div className="flex flex-col gap-1">
-          {alumnosFiltrados.length === 0 ? (
-            <div className="text-center text-gray-500">
-              No hay alumnos para mostrar.
-            </div>
-          ) : (
-            alumnosFiltrados.map((a, idx) => (
-              <div key={idx} className="rounded border bg-gray-50 px-3 py-2">
-                {a.nombre}
-              </div>
-            ))
-          )}
-        </div>
       </div>
     );
   }
 
+  if (detalleId && mesaDetalle) {
+    return (
+      <div className="mx-auto max-w-md pb-8">
+        <HeaderClerk notificationConfig={notificationConfig} userRole="profesor" env={env} />
+        <DetalleMesa mesa={mesaDetalle} />
+      </div>
+    );
+  }
+
+  // Vista principal de mesas
   return (
     <div className="mx-auto max-w-md pb-8">
       <HeaderClerk notificationConfig={notificationConfig} userRole="profesor" env={env} />
@@ -612,32 +639,25 @@ export default function MesasRoute() {
         </div>
 
         <div className="space-y-4 rounded-3xl">
-          {detalleId && mesaDetalle ? (
-            <DetalleMesa mesa={mesaDetalle} />
-          ) : alumnosId && mesaDetalle ? (
-            <ListaAlumnos mesa={mesaDetalle} />
-          ) : mesasFiltradas.length === 0 ? (
+          {mesasFiltradas.length === 0 ? (
             <div className="py-8 text-center text-gray-500">
               No hay mesas para mostrar.
             </div>
           ) : (
-            mesasFiltradas.map((mesa: MesaProcesada) => {
-              console.log("Renderizando mesa:", mesa);
-              return (
-                <MesaCard
-                  key={mesa.id}
-                  fecha={mesa.fecha}
-                  materia={mesa.materia}
-                  carrera={mesa.carrera}
-                  modalidad={mesa.modalidad}
-                  color={mesa.color}
-                  onClick={() => {
-                    searchParams.set("detalle", mesa.id);
-                    setSearchParams(searchParams);
-                  }}
-                />
-              );
-            })
+            mesasFiltradas.map((mesa: MesaProcesada) => (
+              <MesaCard
+                key={mesa.id}
+                fecha={mesa.fecha}
+                materia={mesa.materia}
+                carrera={mesa.carrera}
+                modalidad={mesa.modalidad}
+                color={mesa.color}
+                onClick={() => {
+                  searchParams.set("detalle", mesa.id);
+                  setSearchParams(searchParams);
+                }}
+              />
+            ))
           )}
         </div>
 
