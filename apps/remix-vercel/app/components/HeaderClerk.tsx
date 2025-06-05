@@ -39,111 +39,129 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
   const revalidator = useRevalidator();
   const isSubmitting = fetcher.state === "submitting";
 
-  // Usar el estado del fetcher directamente, con fallback a initialConfig
-  const notificationConfig = {
-    webPushEnabled: fetcher.data?.config?.webPushEnabled ?? initialConfig?.webPushEnabled ?? false,
-    smsEnabled: fetcher.data?.config?.smsEnabled ?? initialConfig?.smsEnabled ?? false,
-    emailEnabled: fetcher.data?.config?.emailEnabled ?? initialConfig?.emailEnabled ?? false
-  };
+  // Estado local para manejar los switches
+  const [localConfig, setLocalConfig] = useState({
+    webPushEnabled: initialConfig?.webPushEnabled ?? false,
+    smsEnabled: initialConfig?.smsEnabled ?? false,
+    emailEnabled: initialConfig?.emailEnabled ?? false
+  });
 
-  // Revalidar cuando el fetcher tenga éxito
+  // Sincronizar con el estado del servidor
   useEffect(() => {
-    if (fetcher.data?.success) {
-      revalidator.revalidate();
+    if (fetcher.data?.config) {
+      setLocalConfig(fetcher.data.config);
     }
-  }, [fetcher.data, revalidator]);
+  }, [fetcher.data]);
 
-  const handleToggleNotification = async (type: keyof NotificationConfig) => {
+  // Manejar la activación de web push
+  const handleWebPushActivation = async () => {
     if (userRole !== "profesor" || !user?.id) return;
+    setIsLoading(true);
 
-    if (type === "webPushEnabled" && !notificationConfig?.[type]) {
-      setIsLoading(true);
-      try {
-        // Verificar soporte de Service Worker
-        if (!("serviceWorker" in navigator)) {
-          throw new Error("Tu navegador no soporta notificaciones push");
-        }
-
-        // Verificar permisos
-        const permission = await Notification.requestPermission();
-        if (permission !== "granted") {
-          throw new Error("Permiso de notificaciones denegado");
-        }
-
-        // Registrar Service Worker
-        console.log("Registrando Service Worker...");
-        const registration = await navigator.serviceWorker.register("/sw.js");
-        console.log("Service Worker registrado:", registration);
-
-        // Esperar a que el Service Worker esté activo
-        if (!registration.active) {
-          console.log("Esperando a que el Service Worker esté activo...");
-          await new Promise((resolve) => {
-            if (registration.active) {
-              resolve(true);
-            } else {
-              registration.addEventListener("activate", () => resolve(true));
-            }
-          });
-        }
-
-        // Obtener suscripción
-        console.log("Intentando obtener suscripción...");
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: env?.VAPID_PUBLIC_KEY,
-        });
-
-        console.log("Suscripción obtenida:", subscription);
-
-        // Enviar suscripción al backend
-        const response = await fetch(
-          `${env?.API_URL}/api/diaries/notificaciones/push-subscription`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-api-key": env?.INTERNAL_API_KEY || "",
-            },
-            body: JSON.stringify({
-              profesorId: user?.id,
-              subscription: subscription.toJSON(),
-            }),
-          }
-        );
-
-        const data = await response.json();
-        console.log("Respuesta del servidor:", data);
-
-        if (!response.ok) {
-          throw new Error(data.error || data.details || "Error al guardar la suscripción");
-        }
-
-        fetcher.submit(
-          {
-            type: "webPushEnabled",
-            enabled: "true",
-          },
-          { method: "post" }
-        );
-      } catch (error) {
-        console.error("Error al activar notificaciones:", error);
-        fetcher.data = { 
-          success: false, 
-          error: error instanceof Error ? error.message : "Error al activar notificaciones" 
-        };
-      } finally {
-        setIsLoading(false);
+    try {
+      // Verificar soporte de Service Worker
+      if (!("serviceWorker" in navigator)) {
+        throw new Error("Tu navegador no soporta notificaciones push");
       }
-    } else {
+
+      // Verificar permisos
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        throw new Error("Permiso de notificaciones denegado");
+      }
+
+      // Registrar Service Worker
+      console.log("Registrando Service Worker...");
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      console.log("Service Worker registrado:", registration);
+
+      // Esperar a que el Service Worker esté activo
+      if (!registration.active) {
+        console.log("Esperando a que el Service Worker esté activo...");
+        await new Promise((resolve) => {
+          if (registration.active) {
+            resolve(true);
+          } else {
+            registration.addEventListener("activate", () => resolve(true));
+          }
+        });
+      }
+
+      // Obtener suscripción
+      console.log("Intentando obtener suscripción...");
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: env?.VAPID_PUBLIC_KEY,
+      });
+
+      console.log("Suscripción obtenida:", subscription);
+
+      // Enviar suscripción al backend
+      const response = await fetch(
+        `${env?.API_URL}/api/diaries/notificaciones/push-subscription`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": env?.INTERNAL_API_KEY || "",
+          },
+          body: JSON.stringify({
+            profesorId: user?.id,
+            subscription: subscription.toJSON(),
+          }),
+        }
+      );
+
+      const data = await response.json();
+      console.log("Respuesta del servidor:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || data.details || "Error al guardar la suscripción");
+      }
+
+      // Actualizar estado local
+      setLocalConfig(prev => ({
+        ...prev,
+        webPushEnabled: true
+      }));
+
+      // Enviar actualización al servidor
       fetcher.submit(
         {
-          type,
-          enabled: (!notificationConfig?.[type]).toString(),
+          type: "webPushEnabled",
+          enabled: "true",
         },
         { method: "post" }
       );
+    } catch (error) {
+      console.error("Error al activar notificaciones:", error);
+      fetcher.data = { 
+        success: false, 
+        error: error instanceof Error ? error.message : "Error al activar notificaciones" 
+      };
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  // Manejar cambios en los switches
+  const handleToggleNotification = (type: keyof NotificationConfig) => {
+    if (userRole !== "profesor" || !user?.id) return;
+
+    // Actualizar estado local inmediatamente
+    setLocalConfig(prev => ({
+      ...prev,
+      [type]: !prev[type]
+    }));
+
+    // Enviar actualización al servidor
+    fetcher.submit(
+      {
+        type,
+        enabled: (!localConfig[type]).toString(),
+      },
+      { method: "post" }
+    );
   };
 
   const getNotificationMessage = (
@@ -179,24 +197,24 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
             <div className="relative">
               <div className="flex items-center gap-2">
                 <Button
-                  onClick={() => handleToggleNotification("webPushEnabled")}
-                  disabled={isSubmitting || notificationConfig?.webPushEnabled || isLoading}
+                  onClick={handleWebPushActivation}
+                  disabled={isSubmitting || localConfig.webPushEnabled || isLoading}
                   className={`flex h-10 w-10 items-center justify-center rounded-full p-0 ${
-                    notificationConfig?.webPushEnabled
+                    localConfig.webPushEnabled
                       ? "cursor-not-allowed bg-green-600"
                       : isLoading || isSubmitting
                         ? "cursor-not-allowed bg-gray-400"
                         : "bg-blue-600 hover:bg-blue-700"
                   }`}
                   title={
-                    notificationConfig?.webPushEnabled
+                    localConfig.webPushEnabled
                       ? "Notificaciones activadas"
                       : isLoading || isSubmitting
                         ? "Activando..."
                         : "Activar notificaciones"
                   }
                 >
-                  {notificationConfig?.webPushEnabled ? (
+                  {localConfig.webPushEnabled ? (
                     <Bell className="h-5 w-5 text-white" />
                   ) : isLoading || isSubmitting ? (
                     <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -231,12 +249,12 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
                         onClick={() => handleToggleNotification("webPushEnabled")}
                         disabled={isLoading || isSubmitting}
                         className={`h-6 w-12 rounded-full transition-colors duration-200 ease-in-out ${
-                          notificationConfig?.webPushEnabled ? "bg-green-500" : "bg-gray-300"
+                          localConfig.webPushEnabled ? "bg-green-500" : "bg-gray-300"
                         }`}
                       >
                         <div
                           className={`h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ease-in-out ${
-                            notificationConfig?.webPushEnabled
+                            localConfig.webPushEnabled
                               ? "translate-x-6"
                               : "translate-x-1"
                           }`}
@@ -256,12 +274,12 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
                         onClick={() => handleToggleNotification("smsEnabled")}
                         disabled={isLoading || isSubmitting}
                         className={`h-6 w-12 rounded-full transition-colors duration-200 ease-in-out ${
-                          notificationConfig?.smsEnabled ? "bg-green-500" : "bg-gray-300"
+                          localConfig.smsEnabled ? "bg-green-500" : "bg-gray-300"
                         }`}
                       >
                         <div
                           className={`h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ease-in-out ${
-                            notificationConfig?.smsEnabled ? "translate-x-6" : "translate-x-1"
+                            localConfig.smsEnabled ? "translate-x-6" : "translate-x-1"
                           }`}
                         />
                       </button>
@@ -279,12 +297,12 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
                         onClick={() => handleToggleNotification("emailEnabled")}
                         disabled={isLoading || isSubmitting}
                         className={`h-6 w-12 rounded-full transition-colors duration-200 ease-in-out ${
-                          notificationConfig?.emailEnabled ? "bg-green-500" : "bg-gray-300"
+                          localConfig.emailEnabled ? "bg-green-500" : "bg-gray-300"
                         }`}
                       >
                         <div
                           className={`h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ease-in-out ${
-                            notificationConfig?.emailEnabled
+                            localConfig.emailEnabled
                               ? "translate-x-6"
                               : "translate-x-1"
                           }`}
