@@ -16,7 +16,7 @@ import {
 
 import { Button } from "@exam-notifier/ui/components/button";
 import Input from "@exam-notifier/ui/components/input";
-import { MesaCard } from "@exam-notifier/ui/components/MesaCard";
+import { MesaCardAdmin } from "@exam-notifier/ui/components/MesaCardAdmin";
 import Modal from "@exam-notifier/ui/components/Modal";
 import { SearchBar } from "@exam-notifier/ui/components/SearchBar";
 
@@ -674,7 +674,7 @@ export default function AdminRoute() {
         )}
         <div>
           {mesasFiltradas.map((mesa: MesaProcesada) => (
-            <MesaCard
+            <MesaCardAdmin
               key={mesa.id}
               {...mesa}
               onClick={() => { setMesaAEditar(mesa as MesaRaw); }}
