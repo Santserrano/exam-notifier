@@ -141,8 +141,6 @@ export const loader = async (args: LoaderFunctionArgs) => {
       carrerasResponse.ok ? carrerasResponse.json() : []
     ]);
 
-    console.log('Mesas raw del backend:', mesasRaw);
-
     const meses = ["ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sep.", "oct.", "nov.", "dic."];
     const mesas = mesasRaw.map((m: {
       id?: number;

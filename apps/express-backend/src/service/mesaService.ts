@@ -104,8 +104,6 @@ class MesaService {
 
     async createMesa(data: MesaCreateInput): Promise<MesaResponse> {
         try {
-            console.log("Datos recibidos en createMesa:", data);
-
             // Validar datos requeridos
             if (!data.profesor || !data.vocal || !data.carrera || !data.materia || !data.fecha) {
                 throw new Error("Faltan datos requeridos");
@@ -144,7 +142,6 @@ class MesaService {
                 throw new Error("Materia no encontrada");
             }
 
-            console.log("Creando nueva mesa de examen...");
             const nuevaMesa = await prisma.mesaDeExamen.create({
                 data: {
                     profesor: { connect: { id: data.profesor } },
@@ -171,7 +168,6 @@ class MesaService {
                 },
             });
 
-            console.log('Mesa creada exitosamente:', nuevaMesa);
             // Obtener datos del profesor y vocal
             const [profesorData, vocalData] = await Promise.all([
                 prisma.profesor.findUnique({ where: { id: data.profesor } }),
@@ -283,7 +279,6 @@ class MesaService {
                 data: nuevaMesa
             };
         } catch (error) {
-            console.error('Error al crear la mesa:', error);
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Error al crear la mesa'
@@ -325,7 +320,6 @@ class MesaService {
                 data: mesaActualizada,
             };
         } catch (error) {
-            console.error("Error al actualizar mesa:", error);
             throw error;
         }
     }

@@ -88,21 +88,39 @@ export const MesaCardAdmin: React.FC<MesaCardProps> = ({
         <div className="font-semibold text-green-900 text-base truncate">{materia}</div>
         <div className="text-sm text-gray-500 truncate">{carrera}</div>
         {/* Estado de aceptación */}
-        <div className="mt-2 flex flex-col gap-1">
-          <div className="text-xs text-gray-700 font-semibold mb-1">
-            Estado: {aceptadas}/{total} aceptaron ({rechazadas} rechazaron, {pendientes} pendientes)
-          </div>
-          {aceptaciones.map((aceptacion) => (
-            <div key={aceptacion.profesor.id} className="flex items-center gap-2">
-              <span className="text-xs text-gray-600">
-                {aceptacion.profesor.nombre} {aceptacion.profesor.apellido}:
-              </span>
+        <div className="mt-2 flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-1">
-                {getEstadoIcon(aceptacion.estado)}
-                <span className={`text-xs ${getEstadoColor(aceptacion.estado)}`}>{aceptacion.estado}</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                <span className="text-xs font-medium text-green-700">{aceptadas}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <XCircle className="w-3.5 h-3.5 text-red-600" />
+                <span className="text-xs font-medium text-red-700">{rechazadas}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3.5 h-3.5 rounded-full bg-yellow-400" />
+                <span className="text-xs font-medium text-yellow-700">{pendientes}</span>
               </div>
             </div>
-          ))}
+            <span className="text-xs text-gray-500">de {total}</span>
+          </div>
+          <div className="flex flex-col gap-1.5 bg-gray-50 p-2 rounded-lg">
+            {aceptaciones.map((aceptacion) => (
+              <div key={aceptacion.profesor.id} className="flex items-center justify-between">
+                <span className="text-xs font-medium text-gray-700">
+                  {aceptacion.profesor.nombre} {aceptacion.profesor.apellido}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  {getEstadoIcon(aceptacion.estado)}
+                  <span className={`text-xs font-medium ${getEstadoColor(aceptacion.estado)}`}>
+                    {aceptacion.estado}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

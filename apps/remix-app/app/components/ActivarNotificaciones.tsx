@@ -204,6 +204,30 @@ export function ActivarNotificaciones() {
     }
   };
 
+  const verificarSuscripcion = async () => {
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      
+      if (!subscription) {
+        return null;
+      }
+
+      const url = `${window.location.origin}/api/notificaciones/config`;
+      const response = await fetch(url);
+      const config = await response.json();
+
+      if (!config.publicKey) {
+        throw new Error('No se encontró la clave pública para las notificaciones');
+      }
+
+      return subscription;
+    } catch (error) {
+      console.error('Error al verificar suscripción:', error);
+      return null;
+    }
+  };
+
   if (!env?.API_URL || !env?.INTERNAL_API_KEY || !env?.VAPID_PUBLIC_KEY) {
     console.error('Variables de entorno faltantes:', { env });
     return null;
