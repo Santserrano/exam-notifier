@@ -97,7 +97,6 @@ self.addEventListener("push", function (event) {
   if (event.data) {
     const data = event.data.json();
     console.log("[Service Worker] Datos de la notificación:", data);
-
     const options = {
       body: data.body,
       icon: "/icon-ucp.png",
@@ -123,24 +122,21 @@ self.addEventListener("push", function (event) {
       renotify: true
     };
 
+    // Formatear la fecha para el body usando la zona horaria de Argentina
     if (data.data?.fecha) {
       const fechaObj = new Date(data.data.fecha);
-
-      const fecha = fechaObj.toLocaleDateString('es-AR', {
-        timeZone: 'America/Argentina/Buenos_Aires',
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-      });
-
-      const hora = fechaObj.toLocaleTimeString('es-AR', {
-        timeZone: 'America/Argentina/Buenos_Aires',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      });
-
-      options.body = `Hola ${data.data.nombre}, se te ha asignado una nueva mesa: ${data.data.materia} el ${fecha} a las ${hora}`;
+      options.body = data.body.replace(
+        /\d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}/,
+        fechaObj.toLocaleString('es-AR', {
+          timeZone: 'America/Argentina/Buenos_Aires',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        })
+      );
     }
 
     console.log("[Service Worker] Opciones de la notificación:", options);
