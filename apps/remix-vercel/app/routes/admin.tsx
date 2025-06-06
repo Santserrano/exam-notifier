@@ -220,7 +220,23 @@ export const action = async (args: ActionFunctionArgs) => {
   // Combinar fecha y hora correctamente
   const [year, month, day] = fecha.split('-').map(Number);
   const [hours, minutes] = hora.split(':').map(Number);
-  const fechaHora = new Date(year, month - 1, day, hours, minutes);
+  
+  // Crear la fecha en la zona horaria de Argentina
+  const fechaLocal = new Date(year, month - 1, day, hours, minutes);
+  
+  // Convertir a UTC como si fuera en Argentina
+  const fechaUTC = new Date(
+    fechaLocal.toLocaleString("en-US", {
+      timeZone: "America/Argentina/Buenos_Aires",
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })
+  );
 
   try {
     const response = await fetch(`${API_URL}/api/diaries/mesas`, {
@@ -234,7 +250,7 @@ export const action = async (args: ActionFunctionArgs) => {
         vocal: vocalId,
         carrera,
         materia,
-        fecha: fechaHora.toISOString(),
+        fecha: fechaUTC.toISOString(),
         descripcion: "Mesa de examen",
         cargo: "Titular",
         verification: false,
@@ -331,21 +347,11 @@ export default function AdminRoute() {
   // Formatear las mesas para mostrarlas
   const mesasFormateadas = mesas.map((mesa: MesaRaw, index: number): MesaProcesada => {
     const fechaObj = new Date(mesa.fecha);
-    const meses = [
-      "ene.",
-      "feb.",
-      "mar.",
-      "abr.",
-      "may.",
-      "jun.",
-      "jul.",
-      "ago.",
-      "sep.",
-      "oct.",
-      "nov.",
-      "dic.",
-    ];
-    const fechaFormateada = `${fechaObj.getDate()} ${meses[fechaObj.getMonth()]}`;
+    const fechaFormateada = fechaObj.toLocaleDateString('es-AR', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+      day: 'numeric',
+      month: 'short'
+    }).replace('.', '');
     const futura = fechaObj > new Date();
     const modalidad = (mesa.modalidad === "Virtual" ? "Virtual" : "Presencial") as "Presencial" | "Virtual";
 
