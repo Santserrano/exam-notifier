@@ -300,6 +300,7 @@ export default function AdminRoute() {
   React.useEffect(() => {
     if (actionData?.success) {
       setShowAddMesa(false);
+      setMesaAEditar(null);
       // Recargar la página para mostrar la nueva mesa
       window.location.reload();
     }
@@ -407,8 +408,8 @@ export default function AdminRoute() {
     mesa?: MesaRaw;
   }) {
     const isEdit = !!mesa;
-    const fetcher = useFetcher();
-    const isSubmitting = fetcher.state === "submitting";
+    const navigation = useNavigation();
+    const isSubmitting = navigation.state === "submitting";
     const [modalidad, setModalidad] = useState<Modalidad>(
       mesa?.modalidad === "Virtual" ? "Virtual" : "Presencial",
     );
@@ -432,24 +433,11 @@ export default function AdminRoute() {
       setMateriaSeleccionada("");
     }, [carreraSeleccionada]);
 
-    // Filtrar profesores según carrera y materia seleccionada
-    const profesoresFiltrados = React.useMemo(() => {
-      if (!Array.isArray(profesores)) return [];
-
-      return profesores.filter((profesor: Profesor) => {
-        const cumpleCarrera =
-          !carreraSeleccionada ||
-          profesor.carreras.some((c) => c.id === carreraSeleccionada);
-        const cumpleMateria =
-          !materiaSeleccionada ||
-          profesor.materias.some((m) => m.id === materiaSeleccionada);
-        return cumpleCarrera && cumpleMateria;
-      });
-    }, [profesores, carreraSeleccionada, materiaSeleccionada]);
+    if (!open) return null;
 
     return (
       <Modal open={open} onClose={onClose} title={""}>
-        <fetcher.Form
+        <form
           method="post"
           className="flex max-h-[80vh] flex-col gap-3 overflow-y-auto pr-2"
         >
@@ -665,7 +653,7 @@ export default function AdminRoute() {
               "Añadir Mesa"
             )}
           </Button>
-        </fetcher.Form>
+        </form>
       </Modal>
     );
   }
@@ -704,7 +692,12 @@ export default function AdminRoute() {
         <style>{`
           select { max-height: 200px; overflow-y: auto; }
         `}</style>
-        <MesaModal open={showAddMesa} onClose={() => { setShowAddMesa(false); }} />
+        {showAddMesa && (
+          <MesaModal 
+            open={showAddMesa} 
+            onClose={() => { setShowAddMesa(false); }} 
+          />
+        )}
         {mesaAEditar && (
           <MesaModal
             open={true}
