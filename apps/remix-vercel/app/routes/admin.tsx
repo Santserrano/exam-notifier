@@ -115,14 +115,14 @@ export const loader = async (args: LoaderFunctionArgs) => {
     return redirect("/");
   }
 
-  const { API_URL, INTERNAL_API_KEY, VAPID_PUBLIC_KEY } = getServerEnv();
+  const { PUBLIC_API_URL, INTERNAL_API_KEY, VAPID_PUBLIC_KEY } = getServerEnv();
   const notificationConfig = await getNotificationConfig(args);
 
   try {
     // Obtener las mesas y profesores del backend
     const [mesasResponse, profesoresResponse, carrerasResponse] =
       await Promise.all([
-        fetch(`${API_URL}/api/diaries/mesas`, {
+        fetch(`${PUBLIC_API_URL}/api/diaries/mesas`, {
           headers: {
             "x-api-key": INTERNAL_API_KEY,
             "Content-Type": "application/json",
@@ -131,7 +131,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
           console.error("Error al obtener mesas:", error);
           return { ok: false, status: 500, json: () => [] };
         }),
-        fetch(`${API_URL}/api/diaries/profesores`, {
+        fetch(`${PUBLIC_API_URL}/api/diaries/profesores`, {
           headers: {
             "x-api-key": INTERNAL_API_KEY,
             "Content-Type": "application/json",
@@ -140,7 +140,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
           console.error("Error al obtener profesores:", error);
           return { ok: false, status: 500, json: () => [] };
         }),
-        fetch(`${API_URL}/api/diaries/carreras`, {
+        fetch(`${PUBLIC_API_URL}/api/diaries/carreras`, {
           headers: {
             "x-api-key": INTERNAL_API_KEY,
             "Content-Type": "application/json",
@@ -166,7 +166,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
       notificationConfig,
       env: {
         VAPID_PUBLIC_KEY,
-        API_URL,
+        PUBLIC_API_URL,
         INTERNAL_API_KEY,
       },
     };
@@ -183,7 +183,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
       notificationConfig,
       env: {
         VAPID_PUBLIC_KEY,
-        API_URL,
+        PUBLIC_API_URL,
         INTERNAL_API_KEY,
       },
     });
@@ -205,7 +205,7 @@ export const action = async (args: ActionFunctionArgs) => {
     return json({ error: "No autorizado" }, { status: 403 });
   }
 
-  const { API_URL, INTERNAL_API_KEY } = getServerEnv();
+  const { PUBLIC_API_URL, INTERNAL_API_KEY } = getServerEnv();
   const formData = await request.formData();
   const fecha = formData.get("fecha") as string;
   const materia = formData.get("asignatura") as string;
@@ -223,7 +223,7 @@ export const action = async (args: ActionFunctionArgs) => {
   const fechaHora = new Date(year, month - 1, day, hours, minutes);
 
   try {
-    const response = await fetch(`${API_URL}/api/diaries/mesas`, {
+    const response = await fetch(`${PUBLIC_API_URL}/api/diaries/mesas`, {
       method: "POST",
       headers: {
         "x-api-key": INTERNAL_API_KEY,
