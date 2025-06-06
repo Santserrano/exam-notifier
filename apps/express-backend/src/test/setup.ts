@@ -1,27 +1,73 @@
-// Third party imports
+
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
+import { beforeAll, afterAll, beforeEach } from '@jest/globals';
+import { execSync } from 'child_process';
 
-// Cargar variables de entorno para los tests
-dotenv.config();
+
+dotenv.config({ path: '.env.test' });
 
 // Mock de las variables de entorno necesarias
 process.env.RESEND_API_KEY = 'test_resend_key';
 process.env.VAPID_PUBLIC_KEY = 'test_vapid_public';
 process.env.VAPID_PRIVATE_KEY = 'test_vapid_private';
 process.env.INTERNAL_API_KEY = 'test_api_key';
-
-// Configuración global para las pruebas
+process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || 'file:./test.db';
 process.env.NODE_ENV = 'test';
 
-// Cliente de Prisma para pruebas
-export const prisma = new PrismaClient();
 
-// Funciones de utilidad para tests
-export const setupTestEnvironment = async () => {
-    // Implementar cuando se necesiten tests
+const prisma = new PrismaClient();
+
+
+const resetTestDatabase = () => {
+  if (process.env.NODE_ENV === 'test') {
+    try {
+      execSync('npx prisma migrate reset --force --skip-seed', {
+        stdio: 'inherit',
+      });
+    } catch (error) {
+      console.error('Error resetting test database:', error);
+      throw error;
+    }
+  }
 };
 
-export const teardownTestEnvironment = async () => {
-    // Implementar cuando se necesiten tests
-}; 
+
+beforeAll(async () => {
+  // Aplicar migraciones a la base de datos de prueba
+  try {
+    execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+    await prisma.$connect();
+  } catch (error) {
+    console.error('Error during test database setup:', error);
+    throw error;
+  }
+});
+
+beforeEach(() => {
+  // Limpiar datos antes de cada test
+  jest.clearAllMocks();
+});
+
+afterAll(async () => {
+  // Desconectar Prisma y limpiar recursos
+  await prisma.$disconnect();
+});
+
+
+export const testUtils = {
+  prisma,
+  resetTestDatabase,
+  seedTestData: async (data: Record<string, any[]>) => {
+    await Promise.all(
+      Object.entries(data).map(async ([model, records]) => {
+        // @ts-ignore - Dynamic access to prisma models
+        await prisma[model].createMany({ data: records });
+      })
+    );
+  },
+};
+
+// Exportaciones
+export { prisma };
+export * from './test-utils';
