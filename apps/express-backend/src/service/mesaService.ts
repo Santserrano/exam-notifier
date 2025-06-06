@@ -180,14 +180,17 @@ class MesaService {
 
             // Preparar datos comunes para las notificaciones
             const fechaObj = new Date(data.fecha);
-            const fechaFormateada = fechaObj.toLocaleString('es-AR', {
+            const formatter = new Intl.DateTimeFormat('es-AR', {
                 timeZone: 'America/Argentina/Buenos_Aires',
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
                 hour: '2-digit',
-                minute: '2-digit'
+                minute: '2-digit',
+                hour12: true
             });
+
+            const fechaFormateada = formatter.format(fechaObj);
 
             // Obtener configuraciones de notificaciones
             const [configProfesor, configVocal] = await Promise.all([
@@ -205,7 +208,7 @@ class MesaService {
                         metadata: {
                             mesaId: nuevaMesa.id,
                             materia: nuevaMesa.materia.nombre,
-                            fecha: fechaFormateada
+                            fecha: fechaObj.toISOString()
                         }
                     };
 
@@ -245,7 +248,7 @@ class MesaService {
                         metadata: {
                             mesaId: nuevaMesa.id,
                             materia: nuevaMesa.materia.nombre,
-                            fecha: fechaFormateada
+                            fecha: fechaObj.toISOString()
                         }
                     };
 
