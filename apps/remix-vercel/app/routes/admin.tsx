@@ -12,6 +12,7 @@ import {
   useLoaderData,
   useNavigation,
   useRouteError,
+  useFetcher,
 } from "@remix-run/react";
 
 import { Button } from "@exam-notifier/ui/components/button";
@@ -406,8 +407,8 @@ export default function AdminRoute() {
     mesa?: MesaRaw;
   }) {
     const isEdit = !!mesa;
-    const navigation = useNavigation();
-    const isSubmitting = navigation.state === "submitting";
+    const fetcher = useFetcher();
+    const isSubmitting = fetcher.state === "submitting";
     const [modalidad, setModalidad] = useState<Modalidad>(
       mesa?.modalidad === "Virtual" ? "Virtual" : "Presencial",
     );
@@ -448,7 +449,7 @@ export default function AdminRoute() {
 
     return (
       <Modal open={open} onClose={onClose} title={""}>
-        <form
+        <fetcher.Form
           method="post"
           className="flex max-h-[80vh] flex-col gap-3 overflow-y-auto pr-2"
         >
@@ -656,7 +657,7 @@ export default function AdminRoute() {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                {isEdit ? "Guardando..." : "Creando..."}
+                {isEdit ? "Guardando..." : "Creando mesa..."}
               </>
             ) : isEdit ? (
               "Guardar Cambios"
@@ -664,7 +665,7 @@ export default function AdminRoute() {
               "Añadir Mesa"
             )}
           </Button>
-        </form>
+        </fetcher.Form>
       </Modal>
     );
   }
