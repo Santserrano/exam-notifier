@@ -1,6 +1,6 @@
 import { MesaDeExamen } from '@prisma/client';
 
-import { MesaData } from './interfaces/Interface.js';
+import { MesaData } from  '../interfaces/Interface.js';
 import { Adapter } from './Adapter.js';
 
 
