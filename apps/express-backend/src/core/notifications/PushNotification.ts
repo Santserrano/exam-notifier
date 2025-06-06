@@ -11,19 +11,11 @@ interface WebPushSubscription {
 }
 
 export class PushNotification implements Notification {
-    private static instance: PushNotification;
     private data: NotificationData;
 
-    private constructor(data: NotificationData) {
+    constructor(data: NotificationData) {
         this.data = data;
         this.initializeVapidKeys();
-    }
-
-    public static getInstance(data: NotificationData): PushNotification {
-        if (!PushNotification.instance) {
-            PushNotification.instance = new PushNotification(data);
-        }
-        return PushNotification.instance;
     }
 
     private initializeVapidKeys(): void {
@@ -59,6 +51,7 @@ export class PushNotification implements Notification {
             const payload = JSON.stringify({
                 title: this.data.title,
                 body: this.data.body,
+                timestamp: Date.now(),
                 data: this.data.metadata ?? {}
             });
 
