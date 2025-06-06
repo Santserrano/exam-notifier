@@ -3,7 +3,7 @@ import { Adapter } from '../../Adapters/Adapter.js';
 describe('Adapter Interface', () => {
   // Implementación mock para probar la interfaz
   class MockAdapter<T, U> implements Adapter<T, U> {
-    adapt(item: T): U {
+    adapt(item:T): U {
       return {} as U;
     }
   }

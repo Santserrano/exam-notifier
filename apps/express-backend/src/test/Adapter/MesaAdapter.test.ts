@@ -1,6 +1,8 @@
-import { MesaAdapter } from '../Adapters/MesaAdapter.js';
-import { MesaData } from '../Adapters/interfaces/Interface.js';
 import { MesaDeExamen } from '@prisma/client';
+
+import { MesaAdapter } from '../../Adapters/MasaAdapter.js';
+
+
 
 describe('MesaAdapter', () => {
   const adapter = new MesaAdapter();
@@ -19,7 +21,8 @@ describe('MesaAdapter', () => {
     createdAt: new Date('2022-12-01T08:00:00Z'),
     modalidad: 'Presencial',
     aula: 'Aula 101',
-    webexLink: 'https://webex.com/exam-room'
+    webexLink: 'https://webex.com/exam-room',
+    updatedAt: new Date('2022-12-01T08:00:00Z'),
   };
 
   // Mock con campos opcionales nulos
