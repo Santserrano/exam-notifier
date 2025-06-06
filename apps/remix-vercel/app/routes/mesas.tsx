@@ -137,7 +137,11 @@ export const loader = async (args: LoaderFunctionArgs) => {
     ];
     const mesas = mesasRaw.map((m: MesaRaw, index: number) => {
       const fechaObj = new Date(m.fecha);
-      const fechaFormateada = `${fechaObj.getDate()} ${meses[fechaObj.getMonth()]}`;
+      const fechaFormateada = fechaObj.toLocaleDateString('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        day: 'numeric',
+        month: 'short'
+      }).replace('.', '');
       const futura = fechaObj > new Date();
       const modalidad = m.modalidad === "Virtual" ? "Virtual" : "Presencial";
 
@@ -576,10 +580,21 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
     "Noviembre",
     "Diciembre",
   ];
-  const fechaCompleta = `${diasSemana[fechaObj.getDay()]} ${fechaObj.getDate()} de ${meses[fechaObj.getMonth()]} ${fechaObj.getFullYear()}`;
-  const hora = fechaObj.toLocaleTimeString("es-AR", {
-    hour: "2-digit",
-    minute: "2-digit",
+
+  // Formatear la fecha usando la zona horaria de Argentina
+  const fechaCompleta = fechaObj.toLocaleDateString('es-AR', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+
+  const hora = fechaObj.toLocaleTimeString('es-AR', {
+    timeZone: 'America/Argentina/Buenos_Aires',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
   });
 
   return (

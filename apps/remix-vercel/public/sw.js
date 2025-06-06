@@ -124,19 +124,27 @@ self.addEventListener("push", function (event) {
 
     // Formatear la fecha para el body usando la zona horaria de Argentina
     if (data.data?.fecha) {
+      console.log('Fecha recibida en SW:', data.data.fecha);
       const fechaObj = new Date(data.data.fecha);
+      console.log('Fecha como Date en SW:', fechaObj.toISOString());
+
       const fecha = fechaObj.toLocaleDateString('es-AR', {
         timeZone: 'America/Argentina/Buenos_Aires',
         day: '2-digit',
         month: 'long',
         year: 'numeric'
       });
+
       const hora = fechaObj.toLocaleTimeString('es-AR', {
         timeZone: 'America/Argentina/Buenos_Aires',
         hour: '2-digit',
         minute: '2-digit',
         hour12: false
       });
+
+      console.log('Fecha formateada en SW:', fecha);
+      console.log('Hora formateada en SW:', hora);
+
       options.body = data.body.replace(
         /\d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}/,
         `${fecha} a las ${hora}`

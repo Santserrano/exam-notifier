@@ -109,6 +109,9 @@ class MesaService {
                 throw new Error("Faltan datos requeridos");
             }
 
+            console.log('Fecha recibida en createMesa:', data.fecha);
+            console.log('Fecha como Date:', new Date(data.fecha).toISOString());
+
             // Verificar que el profesor existe
             const profesor = await prisma.profesor.findUnique({
                 where: { id: data.profesor },
@@ -168,6 +171,8 @@ class MesaService {
                 },
             });
 
+            console.log('Fecha guardada en la mesa:', nuevaMesa.fecha.toISOString());
+
             // Obtener datos del profesor y vocal
             const [profesorData, vocalData] = await Promise.all([
                 prisma.profesor.findUnique({ where: { id: data.profesor } }),
@@ -180,6 +185,8 @@ class MesaService {
 
             // Preparar datos comunes para las notificaciones
             const fechaObj = new Date(data.fecha);
+            console.log('Fecha para notificaciones:', fechaObj.toISOString());
+
             const formatter = new Intl.DateTimeFormat('es-AR', {
                 timeZone: 'America/Argentina/Buenos_Aires',
                 year: 'numeric',
@@ -191,6 +198,7 @@ class MesaService {
             });
 
             const fechaFormateada = formatter.format(fechaObj);
+            console.log('Fecha formateada para notificación:', fechaFormateada);
 
             // Obtener configuraciones de notificaciones
             const [configProfesor, configVocal] = await Promise.all([
