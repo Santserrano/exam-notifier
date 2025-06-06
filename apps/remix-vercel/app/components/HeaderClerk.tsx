@@ -16,7 +16,7 @@ interface HeaderClerkProps {
   userRole: string;
   env: {
     VAPID_PUBLIC_KEY: string;
-    PUBLIC_API_URL: string;
+    API_URL: string;
     INTERNAL_API_KEY: string;
   };
 }
@@ -34,7 +34,7 @@ interface LocalNotificationConfig {
 }
 
 export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }: HeaderClerkProps) {
-  const { VAPID_PUBLIC_KEY, PUBLIC_API_URL, INTERNAL_API_KEY } = env;
+  const { VAPID_PUBLIC_KEY, API_URL, INTERNAL_API_KEY } = env;
   const [showConfig, setShowConfig] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
@@ -110,7 +110,7 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
 
       // Enviar suscripción al backend
       const response = await fetch(
-        `${PUBLIC_API_URL}/api/diaries/notificaciones/push-subscription`,
+        `${API_URL}/api/diaries/notificaciones/push-subscription`,
         {
           method: "POST",
           headers: {
@@ -173,7 +173,7 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
     try {
       // Enviar actualización al servidor en segundo plano
       const response = await fetch(
-        `${PUBLIC_API_URL}/api/diaries/notificaciones/config/${user.id}`,
+        `${API_URL}/api/diaries/notificaciones/config/${user.id}`,
         {
           method: "PATCH",
           headers: {

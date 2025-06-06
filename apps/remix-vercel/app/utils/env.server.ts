@@ -37,7 +37,7 @@ export function getClientEnv() {
 
 export function getServerEnv() {
   return {
-    PUBLIC_API_URL: process.env.PUBLIC_API_URL ?? "http://localhost:3001",
+    API_URL: process.env.PUBLIC_API_URL ?? "http://localhost:3001",
     VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY ?? "",
     INTERNAL_API_KEY: process.env.INTERNAL_API_KEY ?? "",
   };
