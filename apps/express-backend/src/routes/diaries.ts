@@ -100,6 +100,14 @@ router.post('/mesas', async (req, res) => {
       return res.status(400).json({ error: 'Formato de fecha inválido' });
     }
 
+    // Convertir la fecha a UTC como si fuera en Argentina
+    const fechaLocal = new Date(fecha);
+    const fechaUTC = new Date(
+      fechaLocal.toLocaleString("en-US", {
+        timeZone: "America/Argentina/Buenos_Aires"
+      })
+    );
+
     // Validar modalidad
     if (modalidad && !['Presencial', 'Virtual'].includes(modalidad)) {
       return res.status(400).json({ error: 'Modalidad inválida' });
@@ -119,7 +127,7 @@ router.post('/mesas', async (req, res) => {
       vocal,
       carrera,
       materia,
-      fecha,
+      fecha: fechaUTC.toISOString(),
       descripcion,
       cargo,
       verification: verification ?? false,
