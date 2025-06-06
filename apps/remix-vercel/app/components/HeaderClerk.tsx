@@ -11,16 +11,12 @@ import { Button } from "@exam-notifier/ui/components/button";
 import { Toast } from "@exam-notifier/ui/components/Toast";
 import { NotificationConfig } from "~/utils/notification.server";
 
-interface Props {
-  notificationConfig: {
-    webPushEnabled?: boolean;
-    smsEnabled?: boolean;
-    emailEnabled?: boolean;
-  } | null;
-  userRole?: string;
-  env?: {
+interface HeaderClerkProps {
+  notificationConfig: NotificationConfig;
+  userRole: string;
+  env: {
     VAPID_PUBLIC_KEY: string;
-    API_URL: string;
+    PUBLIC_API_URL: string;
     INTERNAL_API_KEY: string;
   };
 }
@@ -37,7 +33,8 @@ interface LocalNotificationConfig {
   emailEnabled: boolean;
 }
 
-export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }: Props) {
+export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }: HeaderClerkProps) {
+  const { VAPID_PUBLIC_KEY, PUBLIC_API_URL, INTERNAL_API_KEY } = env;
   const [showConfig, setShowConfig] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
@@ -108,17 +105,17 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
       // Obtener suscripción
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: env?.VAPID_PUBLIC_KEY,
+        applicationServerKey: VAPID_PUBLIC_KEY,
       });
 
       // Enviar suscripción al backend
       const response = await fetch(
-        `${env?.API_URL}/api/diaries/notificaciones/push-subscription`,
+        `${PUBLIC_API_URL}/api/diaries/notificaciones/push-subscription`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-api-key": env?.INTERNAL_API_KEY || "",
+            "x-api-key": INTERNAL_API_KEY || "",
           },
           body: JSON.stringify({
             profesorId: user?.id,
@@ -176,12 +173,12 @@ export function HeaderClerk({ notificationConfig: initialConfig, userRole, env }
     try {
       // Enviar actualización al servidor en segundo plano
       const response = await fetch(
-        `${env?.API_URL}/api/diaries/notificaciones/config/${user.id}`,
+        `${PUBLIC_API_URL}/api/diaries/notificaciones/config/${user.id}`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            "x-api-key": env?.INTERNAL_API_KEY || "",
+            "x-api-key": INTERNAL_API_KEY || "",
           },
           body: JSON.stringify({
             [type]: !localConfig[type],
