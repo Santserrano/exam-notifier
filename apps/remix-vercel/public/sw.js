@@ -122,6 +122,23 @@ self.addEventListener("push", function (event) {
       renotify: true
     };
 
+    // Formatear la fecha para el body usando la zona horaria de Argentina
+    if (data.data?.fecha) {
+      const fechaObj = new Date(data.data.fecha);
+      options.body = data.body.replace(
+        /\d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}/,
+        fechaObj.toLocaleString('es-AR', {
+          timeZone: 'America/Argentina/Buenos_Aires',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        })
+      );
+    }
+
     console.log("[Service Worker] Opciones de la notificación:", options);
     event.waitUntil(self.registration.showNotification(data.title, options));
   }
