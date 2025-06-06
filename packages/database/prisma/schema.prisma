@@ -64,7 +64,7 @@ model MesaDeExamen {
   fecha        DateTime
   descripcion  String
   cargo        String
-  verification Int    @default(0)
+  verification boolean    @default(true)
   modalidad    String?    @default("Presencial")
   aula         String?    // solo si modalidad es Presencial
   webexLink    String?    // solo si modalidad es Virtual
