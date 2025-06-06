@@ -187,6 +187,7 @@ class MesaService {
             const fechaObj = new Date(data.fecha);
             console.log('Fecha para notificaciones:', fechaObj.toISOString());
 
+            // Formatear la fecha para las notificaciones usando la zona horaria de Argentina
             const formatter = new Intl.DateTimeFormat('es-AR', {
                 timeZone: 'America/Argentina/Buenos_Aires',
                 year: 'numeric',
