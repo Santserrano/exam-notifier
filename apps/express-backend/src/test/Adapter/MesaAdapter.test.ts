@@ -47,7 +47,7 @@ describe('MesaAdapter', () => {
     createdAt: new Date('2022-12-15T08:00:00Z')
   } as MesaDeExamen;
 
-  it('should correctly adapt full MesaDeExamen to MesaData', () => {
+  it('Debería adaptar correctamente MesaDeExamen completo a MesaData', () => {
     const result = adapter.adapt(fullMock);
 
     expect(result).toEqual({
