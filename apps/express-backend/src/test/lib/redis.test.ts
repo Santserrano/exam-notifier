@@ -48,7 +48,7 @@ describe('Módulo Redis', () => {
   });
 
   describe('initRedis', () => {
-    it('should connect to redis successfully', async () => {
+    it('Debería conectarse a Redis con éxito.', async () => {
       mockRedis.connect.mockResolvedValueOnce(true);
       await expect(initRedis()).resolves.not.toThrow();
       expect(mockRedis.connect).toHaveBeenCalled();
