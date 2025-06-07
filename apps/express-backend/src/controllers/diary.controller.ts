@@ -55,9 +55,15 @@ export const crearAceptacionMesa = async (_req: Request, res: Response) => {
             return res.status(400).json({ error: "Estado de aceptación inválido" });
         }
 
+        // Convertir mesaId a número
+        const mesaIdNum = parseInt(mesaId.toString(), 10);
+        if (isNaN(mesaIdNum)) {
+            return res.status(400).json({ error: "ID de mesa inválido" });
+        }
+
         // Verificar que la mesa existe
         const mesa = await prisma.mesaDeExamen.findUnique({
-            where: { id: Number(mesaId) }
+            where: { id: mesaIdNum }
         });
 
         if (!mesa) {
@@ -76,7 +82,7 @@ export const crearAceptacionMesa = async (_req: Request, res: Response) => {
         const aceptacion = await prisma.mesaAceptacion.upsert({
             where: {
                 mesaId_profesorId: {
-                    mesaId: Number(mesaId),
+                    mesaId: mesaIdNum,
                     profesorId,
                 },
             },
@@ -84,7 +90,7 @@ export const crearAceptacionMesa = async (_req: Request, res: Response) => {
                 estado,
             },
             create: {
-                mesaId: Number(mesaId),
+                mesaId: mesaIdNum,
                 profesorId,
                 estado,
             },
