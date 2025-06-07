@@ -39,7 +39,7 @@ describe('NotificationFactory', () => {
     expect(notification).toBeInstanceOf(WhatsAppNotification);
   });
 
-  it('should create notifications with extra fields in data', () => {
+  it('Debería crear notificaciones con campos adicionales en los datos', () => {
     const factory = new NotificationFactory();
     const extendedData = { ...mockData, extra: 'field' };
     const email = factory.createNotification('email', extendedData);
