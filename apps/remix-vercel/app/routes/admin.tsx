@@ -506,6 +506,7 @@ export default function AdminRoute() {
   const [sede, setSede] = useState("");
   const [showAddMesa, setShowAddMesa] = useState(false);
   const [mesaAEditar, setMesaAEditar] = useState<MesaRaw | null>(null);
+  const [isLoadingProfesores, setIsLoadingProfesores] = useState(false);
 
   const mesasFormateadas = React.useMemo(() => 
     mesas.map((mesa: MesaRaw, index: number) => procesarMesa(mesa, index)),
@@ -522,6 +523,10 @@ export default function AdminRoute() {
     [mesasFormateadas, search, carrera, fecha]
   );
 
+  const handleProfesoresClick = () => {
+    setIsLoadingProfesores(true);
+  };
+
   return (
     <div className="mx-auto max-w-md pb-8">
       <HeaderClerk notificationConfig={notificationConfig} userRole="admin" env={env} />
@@ -535,8 +540,30 @@ export default function AdminRoute() {
           <h2 className="text-center text-base md:text-lg font-bold">
             Administración
           </h2>
-          <Link to="/profesores" prefetch="intent">
-            <Button variant="outline">Gestionar Profesores</Button>
+          <Link 
+            to="/profesores" 
+            prefetch="render"
+            onClick={handleProfesoresClick}
+          >
+            <Button 
+              variant="outline" 
+              disabled={isLoadingProfesores}
+              className="relative"
+            >
+              {isLoadingProfesores ? (
+                <>
+                  <span className="opacity-0">Gestionar Profesores</span>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <svg className="animate-spin h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                </>
+              ) : (
+                "Gestionar Profesores"
+              )}
+            </Button>
           </Link>
         </div>
         <SearchBar
