@@ -1,13 +1,11 @@
 import { EmailNotification } from '../../../src/core/notifications/EmailNotification.js';
 import { Resend } from 'resend';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mockear Resend
-vi.mock('resend', () => {
+jest.mock('resend', () => {
   return {
-    Resend: vi.fn().mockImplementation(() => ({
+    Resend: jest.fn().mockImplementation(() => ({
       emails: {
-        send: vi.fn().mockResolvedValue({}),
+        send: jest.fn().mockResolvedValue({}),
       },
     })),
   };
@@ -21,7 +19,7 @@ describe('EmailNotification', () => {
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
     process.env.RESEND_API_KEY = 'test-key';
   });
 
@@ -46,7 +44,7 @@ describe('EmailNotification', () => {
   it('should not throw when resend fails', async () => {
     const error = new Error('API Error');
     const notification = new EmailNotification(mockData);
-    vi.mocked(notification['resend'].emails.send).mockRejectedValue(error);
+    (notification['resend'].emails.send as jest.Mock).mockRejectedValue(error);
     await expect(notification.send()).resolves.toBeUndefined();
   });
 });
