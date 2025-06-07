@@ -87,7 +87,7 @@ describe('MesaAdapter', () => {
     });
   });
 
-  it('should handle missing optional fields', () => {
+  it('Debería gestionar los campos opcionales faltantes', () => {
     const result = adapter.adapt(minimalMock);
 
     expect(result).toEqual({
