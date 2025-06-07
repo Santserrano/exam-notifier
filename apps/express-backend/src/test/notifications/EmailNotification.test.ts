@@ -25,7 +25,7 @@ describe('EmailNotification', () => {
     process.env.RESEND_API_KEY = 'test-key';
   });
 
-  it('should create an instance with provided data', () => {
+  it('Debe crear una instancia con los datos proporcionados', () => {
     const notification = new EmailNotification(mockData);
     expect(notification).toBeInstanceOf(EmailNotification);
   });
