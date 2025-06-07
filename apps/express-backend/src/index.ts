@@ -1,8 +1,6 @@
 import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
-
-import { initRedis } from './lib/redis.js'
 import diaryRouter from './routes/diaries.js'
 import notificationsRouter from './routes/notifications.js'
 
@@ -11,15 +9,6 @@ dotenv.config()
 
 const app = express()
 const port = process.env.PORT ?? 3005
-
-// Inicializar Redis (ahora con soporte para modo deshabilitado)
-initRedis().catch(err => {
-  console.error('Error al inicializar Redis:', err);
-  // No terminamos el proceso si Redis está deshabilitado
-  if (process.env.REDIS_ENABLED === 'true') {
-    process.exit(1);
-  }
-});
 
 // Configuración de CORS
 const corsOptions = {
