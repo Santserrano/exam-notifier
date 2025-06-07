@@ -5,6 +5,7 @@ import { useLoaderData, useFetcher, Link } from "@remix-run/react";
 import { Button } from "@exam-notifier/ui/components/button";
 import Modal from "@exam-notifier/ui/components/Modal";
 import { clerkClient } from "~/utils/clerk.server";
+import { getServerEnv } from "~/utils/env.server";
 
 interface Profesor {
   id: string;
@@ -145,8 +146,10 @@ export const action = async ({ request, params, context }: ActionFunctionArgs) =
   const formData = await request.json();
   const { profesorId, carreras, materias } = formData;
 
+  const { API_URL } = getServerEnv();
+
   try {
-    const response = await fetch(`http://localhost:3005/api/diaries/profesores/${profesorId}/config`, {
+    const response = await fetch(`${API_URL}/api/diaries/profesores/${profesorId}/config`, {
       method: "PUT",
       headers: {
         "x-api-key": process.env.INTERNAL_API_KEY || "",
