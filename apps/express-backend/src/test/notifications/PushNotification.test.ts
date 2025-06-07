@@ -28,7 +28,7 @@ describe('PushNotification', () => {
     });
 
     it('should initialize with VAPID keys', () => {
-        PushNotification.getInstance(mockData);
+        new PushNotification(mockData);
         expect(webpush.setVapidDetails).toHaveBeenCalledWith(
             'mailto:notificaciones@exam-notifier.com',
             'public_key',
@@ -38,7 +38,7 @@ describe('PushNotification', () => {
 
     it('should not send if web push is disabled', async () => {
         (notificacionService.getConfigByProfesor as jest.Mock).mockResolvedValue({ webPushEnabled: false });
-        const notification = PushNotification.getInstance(mockData);
+        const notification = new PushNotification(mockData);
         await notification.send();
         expect(webpush.sendNotification).not.toHaveBeenCalled();
     });
@@ -46,7 +46,7 @@ describe('PushNotification', () => {
     it('should not send if no subscriptions', async () => {
         (notificacionService.getConfigByProfesor as jest.Mock).mockResolvedValue({ webPushEnabled: true });
         (notificacionService.getWebPushSubscriptions as jest.Mock).mockResolvedValue([]);
-        const notification = PushNotification.getInstance(mockData);
+        const notification = new PushNotification(mockData);
         await notification.send();
         expect(webpush.sendNotification).not.toHaveBeenCalled();
     });
@@ -56,7 +56,7 @@ describe('PushNotification', () => {
         (notificacionService.getWebPushSubscriptions as jest.Mock).mockResolvedValue([mockSubscription]);
         (webpush.sendNotification as jest.Mock).mockResolvedValue({});
 
-        const notification = PushNotification.getInstance(mockData);
+        const notification = new PushNotification(mockData);
         await notification.send();
 
         expect(webpush.sendNotification).toHaveBeenCalledWith(
@@ -82,7 +82,7 @@ describe('PushNotification', () => {
         (mockError as any).statusCode = 410;
         (webpush.sendNotification as jest.Mock).mockRejectedValue(mockError);
 
-        const notification = PushNotification.getInstance(mockData);
+        const notification = new PushNotification(mockData);
         await notification.send();
 
         expect(notificacionService.deleteWebPushSubscription).toHaveBeenCalledWith(mockSubscription.id);
