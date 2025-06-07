@@ -422,13 +422,12 @@ export default function AdminRoute() {
     const [webexLink, setWebexLink] = useState(mesa?.webexLink ?? "");
     const [hora, setHora] = useState(mesa?.hora ?? "");
 
-    // Función para formatear la fecha correctamente
+    // Función para formatear la fecha correctamente desde el string ISO
     const formatDate = (dateString: string) => {
-      const date = new Date(dateString);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
+      if (!dateString) return '';
+      // Extraer solo la parte YYYY-MM-DD
+      const match = dateString.match(/^\d{4}-\d{2}-\d{2}/);
+      return match ? match[0] : '';
     };
 
     // Resetear materia cuando cambia la carrera
@@ -514,6 +513,12 @@ export default function AdminRoute() {
             disabled={isSubmitting}
           >
             <option value="">Seleccionar</option>
+            {/* Si la carrera seleccionada no está en la lista, agregarla */}
+            {carreraSeleccionada && !carreras.some((c: Carrera) => c.id === carreraSeleccionada) && (
+              <option value={carreraSeleccionada}>
+                {carreraSeleccionada}
+              </option>
+            )}
             {carreras.map((c: Carrera) => (
               <option key={c.id} value={c.id}>
                 {c.nombre}
@@ -532,6 +537,11 @@ export default function AdminRoute() {
             disabled={!carreraSeleccionada || isSubmitting}
           >
             <option value="">Seleccionar</option>
+            {/* Si la materia seleccionada no está en la lista, agregarla */}
+            {materiaSeleccionada && carreraSeleccionada &&
+              !carreras.find((c: Carrera) => c.id === carreraSeleccionada)?.materias?.some((m: { id: string }) => m.id === materiaSeleccionada) && (
+                <option value={materiaSeleccionada}>{materiaSeleccionada}</option>
+            )}
             {carreraSeleccionada &&
               carreras
                 .find((c: Carrera) => c.id === carreraSeleccionada)
@@ -553,6 +563,10 @@ export default function AdminRoute() {
             disabled={!materiaSeleccionada || isSubmitting}
           >
             <option value="">Seleccionar</option>
+            {/* Si el profesor seleccionado no está en la lista, agregarlo */}
+            {profesorSeleccionado && !profesoresFiltrados.some((p: Profesor) => p.id === profesorSeleccionado) && (
+              <option value={profesorSeleccionado}>{profesorSeleccionado}</option>
+            )}
             {profesoresFiltrados.map((profesor: Profesor) => (
               <option key={profesor.id} value={profesor.id}>
                 {`${profesor.nombre} ${profesor.apellido}`}
@@ -571,6 +585,10 @@ export default function AdminRoute() {
             disabled={!materiaSeleccionada || isSubmitting}
           >
             <option value="">Seleccionar</option>
+            {/* Si el vocal seleccionado no está en la lista, agregarlo */}
+            {vocalSeleccionado && !profesoresFiltrados.some((p: Profesor) => p.id === vocalSeleccionado) && (
+              <option value={vocalSeleccionado}>{vocalSeleccionado}</option>
+            )}
             {profesoresFiltrados.map((profesor: Profesor) => (
               <option key={profesor.id} value={profesor.id}>
                 {`${profesor.nombre} ${profesor.apellido}`}
@@ -587,6 +605,10 @@ export default function AdminRoute() {
             disabled={isSubmitting}
           >
             <option value="">Seleccionar</option>
+            {/* Si la hora seleccionada no está en la lista, agregarla */}
+            {hora && !horas.includes(hora) && (
+              <option value={hora}>{hora}</option>
+            )}
             {horas.map((h) => (
               <option key={h} value={h}>
                 {h}
