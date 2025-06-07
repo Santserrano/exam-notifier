@@ -63,8 +63,8 @@ describe('Módulo Redis', () => {
     });
   });
 
-  describe('Redis Error Handling', () => {
-    it('should log errors when they occur', () => {
+  describe('Manejo de errores de Redis', () => {
+    it('Debería registrar errores cuando ocurren', () => {
       const consoleSpy = jest.spyOn(console, 'error');
       const testError = new Error('Test error');
       
