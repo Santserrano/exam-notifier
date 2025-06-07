@@ -18,7 +18,7 @@ const mockData = {
 
 describe('NotificationFactory', () => {
 
-  it('should create email notification', () => {
+  it('Debería crear una notificación por correo electrónico', () => {
     const factory = new NotificationFactory();
     const notification = factory.createNotification('email', mockData);
     expect(notification).toBeInstanceOf(EmailNotification);
