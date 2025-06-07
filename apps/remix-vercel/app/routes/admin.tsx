@@ -403,54 +403,65 @@ export default function AdminRoute() {
     const isEdit = !!mesa;
     const fetcher = useFetcher();
     const isSubmitting = fetcher.state === "submitting";
-    const [modalidad, setModalidad] = useState<Modalidad>(
-      mesa?.modalidad === "Virtual" ? "Virtual" : "Presencial",
-    );
-    const [carreraSeleccionada, setCarreraSeleccionada] = useState<string>(
-      typeof mesa?.carrera === 'object' ? mesa.carrera.id || '' : mesa?.carrera || '',
-    );
-    const [materiaSeleccionada, setMateriaSeleccionada] = useState<string>(
-      typeof mesa?.materia === 'object' ? mesa.materia.id || '' : mesa?.materia || '',
-    );
-    const [profesorSeleccionado, setProfesorSeleccionado] = useState<string>(
-      typeof mesa?.profesor === 'object' ? mesa.profesor.id || '' : mesa?.profesor || '',
-    );
-    const [vocalSeleccionado, setVocalSeleccionado] = useState<string>(
-      typeof mesa?.vocal === 'object' ? mesa.vocal.id || '' : mesa?.vocal || '',
-    );
-    const [aula, setAula] = useState(mesa?.aula ?? "");
-    const [webexLink, setWebexLink] = useState(mesa?.webexLink ?? "");
-    const [hora, setHora] = useState(mesa?.hora ?? "");
+
+    // Estados controlados para todos los campos
+    const [modalidad, setModalidad] = useState<Modalidad>("Presencial");
+    const [carreraSeleccionada, setCarreraSeleccionada] = useState<string>("");
+    const [materiaSeleccionada, setMateriaSeleccionada] = useState<string>("");
+    const [profesorSeleccionado, setProfesorSeleccionado] = useState<string>("");
+    const [vocalSeleccionado, setVocalSeleccionado] = useState<string>("");
+    const [aula, setAula] = useState("");
+    const [webexLink, setWebexLink] = useState("");
+    const [hora, setHora] = useState("");
+    const [fecha, setFecha] = useState("");
 
     // Función para formatear la fecha correctamente desde el string ISO
     const formatDate = (dateString: string) => {
       if (!dateString) return '';
-      // Extraer solo la parte YYYY-MM-DD
       const match = dateString.match(/^\d{4}-\d{2}-\d{2}/);
       return match ? match[0] : '';
     };
 
-    // Resetear materia cuando cambia la carrera
+    // Efecto para inicializar los estados al abrir el modal (agregar o editar)
     React.useEffect(() => {
-      if (!isEdit) {
-        setMateriaSeleccionada("");
+      if (open) {
+        if (isEdit && mesa) {
+          setModalidad(mesa.modalidad === "Virtual" ? "Virtual" : "Presencial");
+          setCarreraSeleccionada(typeof mesa.carrera === 'object' ? mesa.carrera.id || '' : mesa.carrera || '');
+          setMateriaSeleccionada(typeof mesa.materia === 'object' ? mesa.materia.id || '' : mesa.materia || '');
+          setProfesorSeleccionado(typeof mesa.profesor === 'object' ? mesa.profesor.id || '' : mesa.profesor || '');
+          setVocalSeleccionado(typeof mesa.vocal === 'object' ? mesa.vocal.id || '' : mesa.vocal || '');
+          setAula(mesa.aula || "");
+          setWebexLink(mesa.webexLink || "");
+          setHora(mesa.hora || "");
+          setFecha(mesa.fecha ? formatDate(mesa.fecha) : "");
+        } else {
+          setModalidad("Presencial");
+          setCarreraSeleccionada("");
+          setMateriaSeleccionada("");
+          setProfesorSeleccionado("");
+          setVocalSeleccionado("");
+          setAula("");
+          setWebexLink("");
+          setHora("");
+          setFecha("");
+        }
       }
-    }, [carreraSeleccionada, isEdit]);
+    }, [open, isEdit, mesa]);
 
-    // Actualizar valores cuando cambia la mesa
-    React.useEffect(() => {
-      if (mesa) {
-        setModalidad(mesa.modalidad === "Virtual" ? "Virtual" : "Presencial");
-        setCarreraSeleccionada(typeof mesa.carrera === 'object' ? mesa.carrera.id || '' : mesa.carrera || '');
-        setMateriaSeleccionada(typeof mesa.materia === 'object' ? mesa.materia.id || '' : mesa.materia || '');
-        setProfesorSeleccionado(typeof mesa.profesor === 'object' ? mesa.profesor.id || '' : mesa.profesor || '');
-        setVocalSeleccionado(typeof mesa.vocal === 'object' ? mesa.vocal.id || '' : mesa.vocal || '');
-        setAula(mesa.aula || "");
-        setWebexLink(mesa.webexLink || "");
-        setHora(mesa.hora || "");
-        setFecha(mesa.fecha ? formatDate(mesa.fecha) : "");
-      }
-    }, [mesa]);
+    // Limpiar los estados al cerrar el modal
+    const handleClose = () => {
+      setModalidad("Presencial");
+      setCarreraSeleccionada("");
+      setMateriaSeleccionada("");
+      setProfesorSeleccionado("");
+      setVocalSeleccionado("");
+      setAula("");
+      setWebexLink("");
+      setHora("");
+      setFecha("");
+      onClose();
+    };
 
     // Filtrar profesores según carrera y materia seleccionada
     const profesoresFiltrados = React.useMemo(() => {
@@ -470,7 +481,7 @@ export default function AdminRoute() {
     if (!open) return null;
 
     return (
-      <Modal open={open} onClose={onClose} title={""}>
+      <Modal open={open} onClose={handleClose} title={""}>
         <fetcher.Form
           method="post"
           className="flex max-h-[80vh] flex-col gap-3 overflow-y-auto pr-2"
@@ -478,7 +489,7 @@ export default function AdminRoute() {
           <div className="sticky top-0 mb-2 flex items-center gap-2 bg-white pb-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               aria-label="Volver"
               className="text-2xl text-green-900"
               disabled={isSubmitting}
