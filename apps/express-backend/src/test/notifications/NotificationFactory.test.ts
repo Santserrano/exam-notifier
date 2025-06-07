@@ -24,7 +24,7 @@ describe('NotificationFactory', () => {
     expect(notification).toBeInstanceOf(EmailNotification);
   });
 
-  it('should create push notification (with valid VAPID keys)', () => {
+  it('Debe crear una notificación push (con claves VAPID válidas)', () => {
     const urlSafeBase64 = Buffer.alloc(65).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     process.env.VAPID_PUBLIC_KEY = urlSafeBase64;
     process.env.VAPID_PRIVATE_KEY = Buffer.alloc(32).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
