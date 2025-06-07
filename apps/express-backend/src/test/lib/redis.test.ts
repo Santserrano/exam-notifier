@@ -54,7 +54,7 @@ describe('Módulo Redis', () => {
       expect(mockRedis.connect).toHaveBeenCalled();
     });
 
-    it('should throw Error when connection fails', async () => {
+    it('Debería generar un error cuando falla la conexión', async () => {
       const testError = new Error('Connection failed');
       mockRedis.connect.mockRejectedValueOnce(testError);
       
