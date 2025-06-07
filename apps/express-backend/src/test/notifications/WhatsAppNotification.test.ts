@@ -1,6 +1,7 @@
-import { WhatsAppNotification } from '../../../src/core/notifications/WhatsAppNotification.js';
-import { NotificationData } from "../../../src/core/notifications/Notification.js";
 import axios from 'axios';
+
+import { NotificationData } from "../../../src/core/notifications/Notification";
+import { WhatsAppNotification } from '../../../src/core/notifications/WhatsAppNotification';
 
 jest.mock('axios');
 

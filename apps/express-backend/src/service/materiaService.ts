@@ -1,4 +1,5 @@
-import { PrismaClient, Materia } from '@prisma/client';
+import { Materia } from '@prisma/client';
+
 import { prisma } from '../lib/prisma.js';
 
 export class MateriaService {

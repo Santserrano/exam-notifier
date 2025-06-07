@@ -1,6 +1,8 @@
 import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
+import morgan from 'morgan'
+
 import diaryRouter from './routes/diaries.js'
 import notificationsRouter from './routes/notifications.js'
 
@@ -25,38 +27,16 @@ const corsOptions = {
 // Aplicar CORS antes de cualquier middleware
 app.use(cors(corsOptions))
 app.use(express.json())
+app.use(morgan('dev'))
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok' });
 });
-
-// Middleware para validar API key
-const validateApiKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const apiKey = req.headers['x-api-key']
-
-  if (!apiKey || apiKey !== process.env.INTERNAL_API_KEY) {
-    return res.status(401).json({ error: 'API key inválida' })
-  }
-
-  next()
-}
-
-// Aplicar middleware de validación de API key a todas las rutas
-app.use('/api', validateApiKey)
 
 // Rutas
 app.use('/api/diaries', diaryRouter)
 app.use('/api/diaries/notificaciones', notificationsRouter)
-
-// Manejo de errores CORS
-app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  if (err.name === 'CORSError') {
-    res.status(403).json({ error: 'CORS error' })
-  } else {
-    res.status(500).json({ error: 'Internal server error' })
-  }
-})
 
 if (process.env.NODE_ENV !== 'test') {
   app.listen(port, () => {

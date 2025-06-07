@@ -1,6 +1,6 @@
 import { MesaDeExamen } from '@prisma/client';
 
-import { MesaAdapter } from '../../Adapters/MasaAdapter.js';
+import { MesaAdapter } from '../../../src/Adapters/MasaAdapter';
 
 describe('MesaAdapter', () => {
   const adapter = new MesaAdapter();

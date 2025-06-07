@@ -1,8 +1,8 @@
-import { EmailNotification } from './EmailNotification.js';
-import { Notification, NotificationData } from './Notification.js';
-import { PushNotification } from './PushNotification.js';
-import { NotificationType } from './types.js';
-import { WhatsAppNotification } from './WhatsAppNotification.js';
+import { EmailNotification } from './EmailNotification';
+import { Notification, NotificationData } from './Notification';
+import { PushNotification } from './PushNotification';
+import { NotificationType } from './types';
+import { WhatsAppNotification } from './WhatsAppNotification';
 
 export class NotificationFactory {
     createNotification(type: NotificationType, data: NotificationData): Notification {

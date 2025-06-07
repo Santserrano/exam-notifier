@@ -1,7 +1,7 @@
 import webpush from 'web-push';
 
-import { notificacionService } from '../../service/NotificationService.js';
-import { Notification, NotificationData } from './Notification.js';
+import { notificacionService } from '../../service/NotificationService';
+import { Notification, NotificationData } from './Notification';
 
 interface WebPushSubscription {
     id: string;

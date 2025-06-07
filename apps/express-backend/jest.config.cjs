@@ -1,32 +1,23 @@
+/* eslint-disable no-undef */
+/* eslint-env node */
 /** @type {import('jest').Config} */
-const config = {
-    preset: 'ts-jest/presets/default-esm',
+module.exports = {
+    preset: 'ts-jest',
     testEnvironment: 'node',
-    roots: ['<rootDir>/src', '<rootDir>/test'],
+    roots: ['<rootDir>/src'],
+    testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
     transform: {
-        '^.+\\.tsx?$': [
-            'ts-jest',
-            {
-                useESM: true,
-                tsconfig: 'tsconfig.json'
-            }
-        ]
+        '^.+\\.ts$': 'ts-jest',
     },
-    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-    extensionsToTreatAsEsm: ['.ts'],
+    moduleFileExtensions: ['ts', 'js', 'json', 'node'],
     setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
-    moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/src/$1',
-        '^(\\.{1,2}/.*)\\.js$': '$1'
-    },
     collectCoverageFrom: [
-        'src/**/*.{ts,tsx}',
+        'src/**/*.ts',
         '!src/**/*.d.ts',
-        '!src/index.ts',
+        '!src/**/*.test.ts',
+        '!src/**/__tests__/**',
     ],
     coverageDirectory: 'coverage',
     coverageReporters: ['text', 'lcov'],
     verbose: true,
-};
-
-module.exports = config; 
+}; 

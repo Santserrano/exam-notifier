@@ -1,6 +1,6 @@
 import webpush from 'web-push'
 
-import { notificacionService } from './NotificationService.js';
+import { notificacionService } from './NotificationService';
 
 // Configurar web-push con las claves VAPID
 if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {

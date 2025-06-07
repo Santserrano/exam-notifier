@@ -1,0 +1,21 @@
+{
+    "env": {
+        "node": true
+    },
+    "overrides": [
+        {
+            "files": [
+                "*.cjs"
+            ],
+            "env": {
+                "node": true
+            },
+            "parserOptions": {
+                "sourceType": "script"
+            },
+            "rules": {
+                "no-undef": "off"
+            }
+        }
+    ]
+}

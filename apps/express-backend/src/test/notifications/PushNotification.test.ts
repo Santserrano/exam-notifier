@@ -1,10 +1,11 @@
-import { PushNotification } from "../../../src/core/notifications/PushNotification.js";
-import { NotificationData } from "../../../src/core/notifications/Notification.js";
 import webpush from "web-push";
-import { notificacionService } from "../../service/NotificationService.js";
+
+import { NotificationData } from "../../../src/core/notifications/Notification";
+import { PushNotification } from "../../../src/core/notifications/PushNotification";
+import { notificacionService } from "../../../src/service/NotificationService";
 
 jest.mock('web-push');
-jest.mock('../../service/NotificationService.js');
+jest.mock('../../../src/service/NotificationService');
 
 describe('PushNotification', () => {
     const mockData: NotificationData = {

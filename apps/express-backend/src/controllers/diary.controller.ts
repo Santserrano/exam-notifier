@@ -2,9 +2,9 @@ import { Request, Response } from "express";
 
 import { prisma } from "../lib/prisma.js";
 
-export const getAceptacionesProfesor = async (req: Request, res: Response) => {
+export const getAceptacionesProfesor = async (_req: Request, res: Response) => {
     try {
-        const { profesorId } = req.params;
+        const { profesorId } = _req.params;
         if (!profesorId) {
             return res.status(400).json({ error: "ID del profesor es requerido" });
         }
@@ -26,7 +26,7 @@ export const getAceptacionesProfesor = async (req: Request, res: Response) => {
     }
 };
 
-export const getAceptaciones = async (req: Request, res: Response) => {
+export const getAceptaciones = async (_req: Request, res: Response) => {
     try {
         const aceptaciones = await prisma.mesaAceptacion.findMany({
             include: {
@@ -42,9 +42,9 @@ export const getAceptaciones = async (req: Request, res: Response) => {
     }
 };
 
-export const crearAceptacionMesa = async (req: Request, res: Response) => {
+export const crearAceptacionMesa = async (_req: Request, res: Response) => {
     try {
-        const { mesaId, profesorId, estado } = req.body;
+        const { mesaId, profesorId, estado } = _req.body;
 
         if (!mesaId || !profesorId || !estado) {
             return res.status(400).json({ error: "Faltan parámetros requeridos" });

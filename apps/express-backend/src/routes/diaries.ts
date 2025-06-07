@@ -1,21 +1,18 @@
-import express, { Router } from 'express'
+import { Router } from 'express'
+
 import { prisma } from '../lib/prisma.js'
+import { validateApiKey } from '../middleware/auth.js'
 import { mesaService } from '../service/mesaService.js'
 import { ProfesorService } from '../service/profesorService.js'
-import { CarreraService } from '../service/carreraService.js'
-import { MateriaService } from '../service/materiaService.js'
-import { validateApiKey } from '../middleware/auth.js'
 
 const router = Router()
 const profesorService = new ProfesorService()
-const carreraService = new CarreraService()
-const materiaService = new MateriaService()
 
 // Middleware para validar API key
 router.use(validateApiKey);
 
 // Obtener todas las carreras
-router.get('/carreras', async (req, res) => {
+router.get('/carreras', async (_req, res) => {
   try {
     const carreras = await prisma.carrera.findMany({
       include: {
@@ -34,7 +31,7 @@ router.get('/carreras', async (req, res) => {
 });
 
 // Obtener todos los profesores
-router.get('/profesores', async (req, res) => {
+router.get('/profesores', async (_req, res) => {
   try {
     const profesores = await profesorService.getAllProfesores();
     res.json(profesores);
@@ -44,7 +41,7 @@ router.get('/profesores', async (req, res) => {
 });
 
 // Obtener todas las mesas
-router.get('/mesas', async (req, res) => {
+router.get('/mesas', async (_req, res) => {
   try {
     const mesas = await mesaService.getAllMesas();
     res.json(mesas);
