@@ -69,7 +69,7 @@ describe('apiKeyAuth Middleware', () => {
       expect(nextFunction).not.toHaveBeenCalled();
     });
 
-    it('should call next() if API key is valid', () => {
+    it('debe llamar a next() si la clave API es válida', () => {
       const validKey = 'valid-key-123';
       process.env.INTERNAL_API_KEY = validKey;
       mockRequest.headers = { 'x-api-key': validKey };
