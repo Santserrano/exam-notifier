@@ -114,7 +114,7 @@ describe('apiKeyAuth Middleware', () => {
       expect(nextFunction).not.toHaveBeenCalled();
     });
 
-    it('should maintain method chaining (status().json())', () => {
+    it('debe mantener el encadenamiento de métodos (status().json())', () => {
       process.env.INTERNAL_API_KEY = 'valid-key-123';
       
       validateApiKey(
