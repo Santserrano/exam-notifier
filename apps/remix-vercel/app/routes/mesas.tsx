@@ -644,7 +644,6 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
       </div>
       <hr />
       
-      {/* Estado de aceptación */}
       {esProfesorAsignado && (
         <div className="flex flex-col gap-4">
           <div className="text-sm font-semibold text-gray-700">
