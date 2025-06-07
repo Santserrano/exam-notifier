@@ -5,53 +5,321 @@ const prisma = new PrismaClient();
 async function main() {
     // Crear carreras
     const carreras = await Promise.all([
-        prisma.carrera.create({
-            data: {
+        prisma.carrera.upsert({
+            where: { nombre: 'Ingeniería en Informática' },
+            update: {},
+            create: {
                 nombre: 'Ingeniería en Informática',
             },
         }),
-        prisma.carrera.create({
-            data: {
+        prisma.carrera.upsert({
+            where: { nombre: 'Ingeniería en Sistemas' },
+            update: {},
+            create: {
                 nombre: 'Ingeniería en Sistemas',
             },
         }),
-        prisma.carrera.create({
-            data: {
+        prisma.carrera.upsert({
+            where: { nombre: 'Licenciatura en Análisis de Sistemas' },
+            update: {},
+            create: {
                 nombre: 'Licenciatura en Análisis de Sistemas',
+            },
+        }),
+        prisma.carrera.upsert({
+            where: { nombre: 'Tecnicatura en Programación' },
+            update: {},
+            create: {
+                nombre: 'Tecnicatura en Programación',
+            },
+        }),
+        prisma.carrera.upsert({
+            where: { nombre: 'Ingeniería en Software' },
+            update: {},
+            create: {
+                nombre: 'Ingeniería en Software',
+            },
+        }),
+        prisma.carrera.upsert({
+            where: { nombre: 'Licenciatura en Ciencias de la Computación' },
+            update: {},
+            create: {
+                nombre: 'Licenciatura en Ciencias de la Computación',
             },
         }),
     ]);
 
     // Crear materias
     const materias = await Promise.all([
-        prisma.materia.create({
-            data: {
+        // Materias para Ingeniería en Informática
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Programación I',
+                    carreraId: carreras[0].id,
+                },
+            },
+            update: {},
+            create: {
                 nombre: 'Programación I',
                 carreraId: carreras[0].id,
             },
         }),
-        prisma.materia.create({
-            data: {
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Base de Datos',
+                    carreraId: carreras[0].id,
+                },
+            },
+            update: {},
+            create: {
                 nombre: 'Base de Datos',
                 carreraId: carreras[0].id,
             },
         }),
-        prisma.materia.create({
-            data: {
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Estructuras de Datos',
+                    carreraId: carreras[0].id,
+                },
+            },
+            update: {},
+            create: {
+                nombre: 'Estructuras de Datos',
+                carreraId: carreras[0].id,
+            },
+        }),
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Sistemas Operativos',
+                    carreraId: carreras[0].id,
+                },
+            },
+            update: {},
+            create: {
+                nombre: 'Sistemas Operativos',
+                carreraId: carreras[0].id,
+            },
+        }),
+
+        // Materias para Ingeniería en Sistemas
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Programación II',
+                    carreraId: carreras[1].id,
+                },
+            },
+            update: {},
+            create: {
                 nombre: 'Programación II',
                 carreraId: carreras[1].id,
             },
         }),
-        prisma.materia.create({
-            data: {
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Redes',
+                    carreraId: carreras[1].id,
+                },
+            },
+            update: {},
+            create: {
                 nombre: 'Redes',
                 carreraId: carreras[1].id,
             },
         }),
-        prisma.materia.create({
-            data: {
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Arquitectura de Computadoras',
+                    carreraId: carreras[1].id,
+                },
+            },
+            update: {},
+            create: {
+                nombre: 'Arquitectura de Computadoras',
+                carreraId: carreras[1].id,
+            },
+        }),
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Ingeniería de Software',
+                    carreraId: carreras[1].id,
+                },
+            },
+            update: {},
+            create: {
+                nombre: 'Ingeniería de Software',
+                carreraId: carreras[1].id,
+            },
+        }),
+
+        // Materias para Licenciatura en Análisis de Sistemas
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Análisis de Sistemas',
+                    carreraId: carreras[2].id,
+                },
+            },
+            update: {},
+            create: {
                 nombre: 'Análisis de Sistemas',
                 carreraId: carreras[2].id,
+            },
+        }),
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Diseño de Sistemas',
+                    carreraId: carreras[2].id,
+                },
+            },
+            update: {},
+            create: {
+                nombre: 'Diseño de Sistemas',
+                carreraId: carreras[2].id,
+            },
+        }),
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Gestión de Proyectos',
+                    carreraId: carreras[2].id,
+                },
+            },
+            update: {},
+            create: {
+                nombre: 'Gestión de Proyectos',
+                carreraId: carreras[2].id,
+            },
+        }),
+
+        // Materias para Tecnicatura en Programación
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Programación Web',
+                    carreraId: carreras[3].id,
+                },
+            },
+            update: {},
+            create: {
+                nombre: 'Programación Web',
+                carreraId: carreras[3].id,
+            },
+        }),
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Desarrollo de Aplicaciones Móviles',
+                    carreraId: carreras[3].id,
+                },
+            },
+            update: {},
+            create: {
+                nombre: 'Desarrollo de Aplicaciones Móviles',
+                carreraId: carreras[3].id,
+            },
+        }),
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Testing de Software',
+                    carreraId: carreras[3].id,
+                },
+            },
+            update: {},
+            create: {
+                nombre: 'Testing de Software',
+                carreraId: carreras[3].id,
+            },
+        }),
+
+        // Materias para Ingeniería en Software
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Desarrollo de Software',
+                    carreraId: carreras[4].id,
+                },
+            },
+            update: {},
+            create: {
+                nombre: 'Desarrollo de Software',
+                carreraId: carreras[4].id,
+            },
+        }),
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Calidad de Software',
+                    carreraId: carreras[4].id,
+                },
+            },
+            update: {},
+            create: {
+                nombre: 'Calidad de Software',
+                carreraId: carreras[4].id,
+            },
+        }),
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Patrones de Diseño',
+                    carreraId: carreras[4].id,
+                },
+            },
+            update: {},
+            create: {
+                nombre: 'Patrones de Diseño',
+                carreraId: carreras[4].id,
+            },
+        }),
+
+        // Materias para Licenciatura en Ciencias de la Computación
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Algoritmos y Complejidad',
+                    carreraId: carreras[5].id,
+                },
+            },
+            update: {},
+            create: {
+                nombre: 'Algoritmos y Complejidad',
+                carreraId: carreras[5].id,
+            },
+        }),
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Inteligencia Artificial',
+                    carreraId: carreras[5].id,
+                },
+            },
+            update: {},
+            create: {
+                nombre: 'Inteligencia Artificial',
+                carreraId: carreras[5].id,
+            },
+        }),
+        prisma.materia.upsert({
+            where: {
+                nombre_carreraId: {
+                    nombre: 'Computación Gráfica',
+                    carreraId: carreras[5].id,
+                },
+            },
+            update: {},
+            create: {
+                nombre: 'Computación Gráfica',
+                carreraId: carreras[5].id,
             },
         }),
     ]);
@@ -186,14 +454,14 @@ async function main() {
 
     // Crear algunas aceptaciones de mesas
     await Promise.all([
-        prisma.mesaAceptacion.create({
+        prisma.MesaAceptacion.create({
             data: {
                 mesaId: mesas[0].id,
                 profesorId: profesores[0].id,
                 estado: 'ACEPTADA',
             },
         }),
-        prisma.mesaAceptacion.create({
+        prisma.MesaAceptacion.create({
             data: {
                 mesaId: mesas[0].id,
                 profesorId: profesores[1].id,
