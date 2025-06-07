@@ -15,7 +15,7 @@ jest.mock('redis', () => {
   };
 });
 
-describe('Redis Module', () => {
+describe('Módulo Redis', () => {
   let mockRedis: any;
 
   beforeAll(() => {
