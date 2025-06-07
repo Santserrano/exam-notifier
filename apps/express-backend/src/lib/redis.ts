@@ -18,4 +18,4 @@ export async function initRedis() {
     } catch (error) {
         throw new CustomError("Redis falló", { cause: error });
     }
-} 
+}
