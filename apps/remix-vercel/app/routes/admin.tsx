@@ -621,8 +621,8 @@ export const loader = async (args: LoaderFunctionArgs) => {
   const notificationConfig = await getNotificationConfig(args);
 
   try {
-    // Obtener las mesas y profesores del backend
-    const [mesasResponse, profesoresResponse, carrerasResponse] =
+    // Obtener las mesas, profesores, carreras y aceptaciones del backend
+    const [mesasResponse, profesoresResponse, carrerasResponse, aceptacionesResponse] =
       await Promise.all([
         fetch(`${API_URL}/api/diaries/mesas`, {
           headers: {
@@ -651,18 +651,83 @@ export const loader = async (args: LoaderFunctionArgs) => {
           console.error("Error al obtener carreras:", error);
           return { ok: false, status: 500, json: () => [] };
         }),
+        fetch(`${API_URL}/api/diaries/mesas/aceptaciones`, {
+          headers: {
+            "x-api-key": INTERNAL_API_KEY,
+            "Content-Type": "application/json",
+          },
+        }).catch((error: unknown) => {
+          console.error("Error al obtener aceptaciones:", error);
+          return { ok: false, status: 500, json: () => [] };
+        }),
       ]);
 
-    const [mesas, profesores, carreras] = await Promise.all([
+    const [mesas, profesores, carreras, aceptaciones] = await Promise.all([
       mesasResponse.ok ? mesasResponse.json() : [],
       profesoresResponse.ok ? profesoresResponse.json() : [],
       carrerasResponse.ok ? carrerasResponse.json() : [],
+      aceptacionesResponse.ok ? aceptacionesResponse.json() : [],
     ]);
 
-    const data = {
+    const meses = [
+      "ene.", "feb.", "mar.", "abr.", "may.", "jun.",
+      "jul.", "ago.", "sep.", "oct.", "nov.", "dic.",
+    ];
+
+    const mesasProcesadas = mesas.map((m: MesaRaw, index: number) => {
+      const fechaObj = new Date(m.fecha);
+      const fechaFormateada = fechaObj.toLocaleDateString('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        day: 'numeric',
+        month: 'short'
+      }).replace('.', '');
+      const modalidad = m.modalidad === "Virtual" ? "Virtual" : "Presencial";
+
+      const materiaNombre = typeof m.materia === 'object' ? m.materia?.nombre || '' : m.materia || '';
+      const carreraNombre = typeof m.carrera === 'object' 
+        ? m.carrera?.nombre || m.carrera?.id || ''
+        : m.carrera || '';
+      
+      const profesorObj = typeof m.profesor === 'object' ? m.profesor : null;
+      const vocalObj = typeof m.vocal === 'object' ? m.vocal : null;
+
+      // Filtrar aceptaciones para esta mesa
+      const aceptacionesMesa = aceptaciones.filter((a: any) => a.mesaId === m.id);
+
+      return {
+        id: m.id?.toString() || `mesa-${index}`,
+        materia: materiaNombre,
+        carrera: carreraNombre,
+        fecha: fechaFormateada,
+        fechaOriginal: m.fecha,
+        modalidad,
+        color: modalidad === "Virtual" ? "blue" : "green",
+        sede: m.sede || "Central",
+        profesorId: typeof m.profesor === 'object' ? m.profesor?.id || '' : '',
+        vocalId: typeof m.vocal === 'object' ? m.vocal?.id || '' : '',
+        profesorNombre: profesorObj 
+          ? `${profesorObj.nombre || ''} ${profesorObj.apellido || ''}`
+          : typeof m.profesor === 'string' ? m.profesor : '',
+        vocalNombre: vocalObj
+          ? `${vocalObj.nombre || ''} ${vocalObj.apellido || ''}`
+          : typeof m.vocal === 'string' ? m.vocal : '',
+        aula: m.aula || "Aula por confirmar",
+        webexLink: m.webexLink,
+        aceptaciones: aceptacionesMesa.map((a: any) => ({
+          profesor: {
+            id: a.profesor.id,
+            nombre: a.profesor.nombre,
+            apellido: a.profesor.apellido,
+          },
+          estado: a.estado,
+        })),
+      };
+    });
+
+    return json({
       userId,
       role,
-      mesas: Array.isArray(mesas) ? mesas : [],
+      mesas: mesasProcesadas,
       profesores: Array.isArray(profesores) ? profesores : [],
       carreras: Array.isArray(carreras) ? carreras : [],
       notificationConfig,
@@ -671,9 +736,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
         API_URL,
         INTERNAL_API_KEY,
       },
-    };
-
-    return json(data);
+    });
   } catch (error) {
     console.error("Error en el loader:", error);
     return json({
