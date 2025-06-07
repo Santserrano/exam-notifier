@@ -52,7 +52,7 @@ describe('apiKeyAuth Middleware', () => {
       expect(nextFunction).not.toHaveBeenCalled();
     });
 
-    it('should return 401 if API key is invalid', () => {
+    it('Debería devolver 401 si la clave API no es válida', () => {
       process.env.INTERNAL_API_KEY = 'valid-key-123';
       mockRequest.headers = { 'x-api-key': 'invalid-key' };
       
