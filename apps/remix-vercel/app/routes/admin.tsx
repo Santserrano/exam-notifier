@@ -42,21 +42,25 @@ interface MesaRaw {
   fecha: string;
   modalidad?: string;
   materia?: {
+    id?: string;
     nombre?: string;
     carrera?: {
+      id?: string;
       nombre?: string;
     };
   } | string;
   carrera?: {
-    nombre?: string;
     id?: string;
+    nombre?: string;
   } | string;
   sede?: string;
   profesor?: {
+    id?: string;
     nombre?: string;
     apellido?: string;
   } | string;
   vocal?: {
+    id?: string;
     nombre?: string;
     apellido?: string;
   } | string;
@@ -406,21 +410,38 @@ export default function AdminRoute() {
       typeof mesa?.carrera === 'object' ? mesa.carrera.id || '' : mesa?.carrera || '',
     );
     const [materiaSeleccionada, setMateriaSeleccionada] = useState<string>(
-      typeof mesa?.materia === 'object' ? mesa.materia.nombre || '' : mesa?.materia || '',
+      typeof mesa?.materia === 'object' ? mesa.materia.id || '' : mesa?.materia || '',
     );
     const [profesorSeleccionado, setProfesorSeleccionado] = useState<string>(
-      typeof mesa?.profesor === 'object' ? `${mesa.profesor.nombre || ''} ${mesa.profesor.apellido || ''}` : mesa?.profesor || '',
+      typeof mesa?.profesor === 'object' ? mesa.profesor.id || '' : mesa?.profesor || '',
     );
     const [vocalSeleccionado, setVocalSeleccionado] = useState<string>(
-      typeof mesa?.vocal === 'object' ? `${mesa.vocal.nombre || ''} ${mesa.vocal.apellido || ''}` : mesa?.vocal || '',
+      typeof mesa?.vocal === 'object' ? mesa.vocal.id || '' : mesa?.vocal || '',
     );
     const [aula, setAula] = useState(mesa?.aula ?? "");
     const [webexLink, setWebexLink] = useState(mesa?.webexLink ?? "");
+    const [hora, setHora] = useState(mesa?.hora ?? "");
 
     // Resetear materia cuando cambia la carrera
     React.useEffect(() => {
-      setMateriaSeleccionada("");
-    }, [carreraSeleccionada]);
+      if (!isEdit) {
+        setMateriaSeleccionada("");
+      }
+    }, [carreraSeleccionada, isEdit]);
+
+    // Actualizar valores cuando cambia la mesa
+    React.useEffect(() => {
+      if (mesa) {
+        setModalidad(mesa.modalidad === "Virtual" ? "Virtual" : "Presencial");
+        setCarreraSeleccionada(typeof mesa.carrera === 'object' ? mesa.carrera.id || '' : mesa.carrera || '');
+        setMateriaSeleccionada(typeof mesa.materia === 'object' ? mesa.materia.id || '' : mesa.materia || '');
+        setProfesorSeleccionado(typeof mesa.profesor === 'object' ? mesa.profesor.id || '' : mesa.profesor || '');
+        setVocalSeleccionado(typeof mesa.vocal === 'object' ? mesa.vocal.id || '' : mesa.vocal || '');
+        setAula(mesa.aula || "");
+        setWebexLink(mesa.webexLink || "");
+        setHora(mesa.hora || "");
+      }
+    }, [mesa]);
 
     // Filtrar profesores según carrera y materia seleccionada
     const profesoresFiltrados = React.useMemo(() => {
@@ -469,7 +490,7 @@ export default function AdminRoute() {
             type="date"
             name="fecha"
             required
-            defaultValue={mesa?.fecha ?? ""}
+            defaultValue={mesa?.fecha ? new Date(mesa.fecha).toISOString().split('T')[0] : ""}
             disabled={isSubmitting}
           />
           <label className="text-sm font-semibold text-green-900">
@@ -524,10 +545,10 @@ export default function AdminRoute() {
           >
             <option value="">Seleccionar</option>
             {profesoresFiltrados.map((profesor: Profesor) => (
-  <option key={profesor.id} value={profesor.id}>
-    {`${profesor.nombre} ${profesor.apellido}`}
-  </option>
-))}
+              <option key={profesor.id} value={profesor.id}>
+                {`${profesor.nombre} ${profesor.apellido}`}
+              </option>
+            ))}
           </select>
           <label className="text-sm font-semibold text-green-900">
             Docente Vocal
@@ -552,7 +573,8 @@ export default function AdminRoute() {
             name="hora"
             className="rounded border px-2 py-2"
             required
-            defaultValue={mesa?.hora ?? ""}
+            value={hora}
+            onChange={(e) => setHora(e.target.value)}
             disabled={isSubmitting}
           >
             <option value="">Seleccionar</option>
