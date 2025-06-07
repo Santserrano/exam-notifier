@@ -27,8 +27,8 @@ describe('Módulo Redis', () => {
     jest.clearAllMocks();
   });
 
-  describe('Redis Client', () => {
-    it('should throw error if REDIS_URL is not defined', async () => {
+  describe('Cliente Redis', () => {
+    it('Debería generar un error si REDIS_URL no está definido', async () => {
       const originalUrl = process.env.REDIS_URL;
       delete process.env.REDIS_URL;
       
