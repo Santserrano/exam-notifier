@@ -33,7 +33,7 @@ describe('NotificationFactory', () => {
     expect(notification).toBeInstanceOf(PushNotification);
   });
 
-  it('should create whatsapp notification', () => {
+  it('Debería crear una notificación de WhatsApp.', () => {
     const factory = new NotificationFactory();
     const notification = factory.createNotification('whatsapp', mockData);
     expect(notification).toBeInstanceOf(WhatsAppNotification);
