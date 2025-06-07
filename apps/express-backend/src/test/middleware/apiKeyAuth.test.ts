@@ -85,7 +85,7 @@ describe('apiKeyAuth Middleware', () => {
       expect(mockResponse.json).not.toHaveBeenCalled();
     });
 
-    it('should be case sensitive when comparing API keys', () => {
+    it('Debe distinguir entre mayúsculas y minúsculas al comparar claves API', () => {
       const validKey = 'valid-key-123';
       process.env.INTERNAL_API_KEY = validKey;
       mockRequest.headers = { 'x-api-key': 'VALID-KEY-123' };
