@@ -50,7 +50,7 @@ describe('NotificationFactory', () => {
     expect(whatsapp).toBeInstanceOf(WhatsAppNotification);
   });
 
-  it('should throw for null type', () => {
+  it('Debería lanzarse para el tipo nulo', () => {
     const factory = new NotificationFactory();
     expect(() =>
       factory.createNotification(null as any, mockData)
