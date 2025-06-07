@@ -212,27 +212,37 @@ export const action = async (args: ActionFunctionArgs) => {
     // Manejar aceptación de mesa
     if (type === "aceptacion" && mesaId && estado) {
       try {
-        const response = await fetch(
-          `${API_URL}/api/diaries/mesas/${mesaId}/aceptacion`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-api-key": INTERNAL_API_KEY,
-            },
-            body: JSON.stringify({
-              profesorId: userId,
-              estado,
-            }),
-          }
-        );
+        const url = `${API_URL}/mesas/${mesaId}/aceptacion`;
+        const body = {
+          profesorId: userId,
+          estado,
+        };
+        
+        console.log("Intentando actualizar aceptación:", {
+          url,
+          body,
+          mesaId,
+          userId,
+          estado
+        });
+
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": INTERNAL_API_KEY,
+          },
+          body: JSON.stringify(body),
+        });
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           console.error("Error response:", {
+            url,
             status: response.status,
             statusText: response.statusText,
-            errorData
+            errorData,
+            body
           });
           throw new Error(`Error al actualizar aceptación: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
         }
