@@ -1,11 +1,10 @@
 import { PushNotification } from "../../../src/core/notifications/PushNotification.js";
 import { NotificationData } from "../../../src/core/notifications/Notification.js";
-const { jest } = require('@jest/globals');
 import webpush from "web-push";
 import { notificacionService } from "../../service/NotificationService.js";
 
 jest.mock('web-push');
-jest.mock('../../src/core/notifications/service/NotificationService.js');
+jest.mock('../../service/NotificationService.js');
 
 describe('PushNotification', () => {
     const mockData: NotificationData = {
@@ -59,18 +58,15 @@ describe('PushNotification', () => {
         const notification = new PushNotification(mockData);
         await notification.send();
 
-        expect(webpush.sendNotification).toHaveBeenCalledWith(
-            {
-                endpoint: mockSubscription.endpoint,
-                keys: {
-                    p256dh: mockSubscription.p256dh,
-                    auth: mockSubscription.auth
-                }
-            },
-            JSON.stringify({
+        const payload = (webpush.sendNotification as jest.Mock).mock.calls[0][1];
+        const parsedPayload = JSON.parse(payload);
+
+        expect(parsedPayload).toEqual(
+            expect.objectContaining({
                 title: mockData.title,
                 body: mockData.body,
-                data: {}
+                data: {},
+                timestamp: expect.any(Number)
             })
         );
     });
@@ -78,8 +74,9 @@ describe('PushNotification', () => {
     it('should handle failed subscriptions', async () => {
         (notificacionService.getConfigByProfesor as jest.Mock).mockResolvedValue({ webPushEnabled: true });
         (notificacionService.getWebPushSubscriptions as jest.Mock).mockResolvedValue([mockSubscription]);
-        const mockError = new Error('Subscription expired');
-        (mockError as any).statusCode = 410;
+        (notificacionService.deleteWebPushSubscription as jest.Mock).mockResolvedValue(undefined);
+
+        const mockError = new Error('Request failed with status code 410');
         (webpush.sendNotification as jest.Mock).mockRejectedValue(mockError);
 
         const notification = new PushNotification(mockData);

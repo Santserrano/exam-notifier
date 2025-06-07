@@ -2,7 +2,6 @@ import { NotificationFactory, notificationFactory } from '../../../src/core/noti
 import { EmailNotification } from '../../../src/core/notifications/EmailNotification.js';
 import { PushNotification } from '../../../src/core/notifications/PushNotification.js';
 import { WhatsAppNotification } from '../../../src/core/notifications/WhatsAppNotification.js';
-import { describe, it, expect, vi } from 'vitest';
 
 describe('NotificationFactory', () => {
   const mockData = {
