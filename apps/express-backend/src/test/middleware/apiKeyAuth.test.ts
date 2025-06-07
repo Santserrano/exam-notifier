@@ -100,7 +100,7 @@ describe('apiKeyAuth Middleware', () => {
       expect(nextFunction).not.toHaveBeenCalled();
     });
 
-    it('should return 401 if INTERNAL_API_KEY is not set', () => {
+    it('Debería devolver 401 si INTERNAL_API_KEY no está configurado', () => {
       delete process.env.INTERNAL_API_KEY;
       mockRequest.headers = { 'x-api-key': 'any-key' };
       
