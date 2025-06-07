@@ -137,15 +137,48 @@ const useMesaForm = (initialMesa?: MesaRaw) => {
 
   React.useEffect(() => {
     if (initialMesa) {
+      // Establecer modalidad
       setModalidad(initialMesa.modalidad === "Virtual" ? "Virtual" : "Presencial");
-      setCarreraSeleccionada(typeof initialMesa.carrera === 'object' ? initialMesa.carrera.id || '' : initialMesa.carrera || '');
-      setMateriaSeleccionada(typeof initialMesa.materia === 'object' ? initialMesa.materia.id || '' : initialMesa.materia || '');
-      setProfesorSeleccionado(typeof initialMesa.profesor === 'object' ? initialMesa.profesor.id || '' : initialMesa.profesor || '');
-      setVocalSeleccionado(typeof initialMesa.vocal === 'object' ? initialMesa.vocal.id || '' : initialMesa.vocal || '');
+      
+      // Establecer carrera
+      const carreraId = typeof initialMesa.carrera === 'object' 
+        ? initialMesa.carrera.id 
+        : initialMesa.carrera;
+      setCarreraSeleccionada(carreraId || '');
+      
+      // Establecer materia
+      const materiaId = typeof initialMesa.materia === 'object' 
+        ? initialMesa.materia.id 
+        : initialMesa.materia;
+      setMateriaSeleccionada(materiaId || '');
+      
+      // Establecer profesor
+      const profesorId = typeof initialMesa.profesor === 'object' 
+        ? initialMesa.profesor.id 
+        : initialMesa.profesor;
+      setProfesorSeleccionado(profesorId || '');
+      
+      // Establecer vocal
+      const vocalId = typeof initialMesa.vocal === 'object' 
+        ? initialMesa.vocal.id 
+        : initialMesa.vocal;
+      setVocalSeleccionado(vocalId || '');
+      
+      // Establecer aula y webexLink
       setAula(initialMesa.aula || "");
       setWebexLink(initialMesa.webexLink || "");
+      
+      // Establecer hora
       setHora(initialMesa.hora || "");
-      setFecha(initialMesa.fecha ? formatDate(initialMesa.fecha) : "");
+      
+      // Establecer fecha
+      if (initialMesa.fecha) {
+        const fechaObj = new Date(initialMesa.fecha);
+        const year = fechaObj.getFullYear();
+        const month = String(fechaObj.getMonth() + 1).padStart(2, '0');
+        const day = String(fechaObj.getDate()).padStart(2, '0');
+        setFecha(`${year}-${month}-${day}`);
+      }
     }
   }, [initialMesa]);
 
