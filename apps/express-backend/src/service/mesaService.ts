@@ -1,6 +1,7 @@
-import { MesaDeExamen, Prisma, Profesor, Carrera, Materia } from '@prisma/client';
-import { prisma } from '../lib/prisma.js';
+import { MesaDeExamen, Prisma } from '@prisma/client';
+
 import { notificationFactory } from '../core/notifications/NotificationFactory.js';
+import { prisma } from '../lib/prisma.js';
 import { notificacionService } from './NotificationService.js';
 
 type MesaCreateInput = {
@@ -84,22 +85,18 @@ class MesaService {
     }
 
     async getMesaById(id: number): Promise<MesaDeExamen | null> {
-        try {
-            return await prisma.mesaDeExamen.findUnique({
-                where: { id },
-                include: {
-                    profesor: true,
-                    vocal: true,
-                    materia: {
-                        include: {
-                            carrera: true
-                        }
+        return await prisma.mesaDeExamen.findUnique({
+            where: { id },
+            include: {
+                profesor: true,
+                vocal: true,
+                materia: {
+                    include: {
+                        carrera: true
                     }
                 }
-            });
-        } catch (error) {
-            throw new Error('Error al obtener la mesa');
-        }
+            }
+        });
     }
 
     async createMesa(data: MesaCreateInput): Promise<MesaResponse> {
@@ -300,41 +297,37 @@ class MesaService {
     }
 
     async updateMesa(id: number, data: Partial<MesaCreateInput>): Promise<MesaResponse> {
-        try {
-            const mesaActualizada = await prisma.mesaDeExamen.update({
-                where: { id },
-                data: {
-                    profesorId: data.profesor,
-                    vocalId: data.vocal,
-                    carreraId: data.carrera,
-                    materiaId: data.materia,
-                    fecha: data.fecha ? new Date(data.fecha) : undefined,
-                    descripcion: data.descripcion,
-                    cargo: data.cargo,
-                    verification: data.verification,
-                    modalidad: data.modalidad,
-                    aula: data.modalidad === "Presencial" ? data.aula : undefined,
-                    webexLink: data.modalidad === "Virtual" ? data.webexLink : undefined,
-                },
-                include: {
-                    profesor: true,
-                    vocal: true,
-                    materia: {
-                        include: {
-                            carrera: true,
-                        },
+        const mesaActualizada = await prisma.mesaDeExamen.update({
+            where: { id },
+            data: {
+                profesorId: data.profesor,
+                vocalId: data.vocal,
+                carreraId: data.carrera,
+                materiaId: data.materia,
+                fecha: data.fecha ? new Date(data.fecha) : undefined,
+                descripcion: data.descripcion,
+                cargo: data.cargo,
+                verification: data.verification,
+                modalidad: data.modalidad,
+                aula: data.modalidad === "Presencial" ? data.aula : undefined,
+                webexLink: data.modalidad === "Virtual" ? data.webexLink : undefined,
+            },
+            include: {
+                profesor: true,
+                vocal: true,
+                materia: {
+                    include: {
+                        carrera: true,
                     },
-                    carrera: true,
                 },
-            });
+                carrera: true,
+            },
+        });
 
-            return {
-                success: true,
-                data: mesaActualizada,
-            };
-        } catch (error) {
-            throw error;
-        }
+        return {
+            success: true,
+            data: mesaActualizada,
+        };
     }
 
     async deleteMesa(id: number): Promise<MesaDeExamen | null> {

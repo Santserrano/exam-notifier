@@ -1,5 +1,6 @@
-import { EmailNotification } from '../../../src/core/notifications/EmailNotification.js';
 import { Resend } from 'resend';
+
+import { EmailNotification } from '../../../src/core/notifications/EmailNotification';
 
 jest.mock('resend', () => {
   return {

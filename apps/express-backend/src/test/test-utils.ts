@@ -1,6 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { MesaDeExamen, PrismaClient } from '@prisma/client';
 
-export const createTestMesa = async (prisma: PrismaClient, data: any = {}) => {
+export const createTestMesa = async (prisma: PrismaClient, data: Partial<MesaDeExamen> = {}) => {
   return await prisma.mesaDeExamen.create({
     data: {
       profesorId: 'prof-test-1',
@@ -24,8 +24,11 @@ export const clearDatabase = async (prisma: PrismaClient) => {
 
   await Promise.all(
     modelNames.map(async (modelName) => {
-      // @ts-ignore - Dynamic access to prisma models
+      // @ts-expect-error - Dynamic access to prisma models
       await prisma[modelName].deleteMany();
     })
   );
 };
+
+// Mock implementation
+global.fetch = jest.fn();

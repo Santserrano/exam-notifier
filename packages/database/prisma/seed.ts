@@ -454,14 +454,14 @@ async function main() {
 
     // Crear algunas aceptaciones de mesas
     await Promise.all([
-        prisma.MesaAceptacion.create({
+        prisma.mesaAceptacion.create({
             data: {
                 mesaId: mesas[0].id,
                 profesorId: profesores[0].id,
                 estado: 'ACEPTADA',
             },
         }),
-        prisma.MesaAceptacion.create({
+        prisma.mesaAceptacion.create({
             data: {
                 mesaId: mesas[0].id,
                 profesorId: profesores[1].id,

@@ -1,7 +1,7 @@
+import { afterAll, beforeAll, beforeEach } from '@jest/globals';
 import { PrismaClient } from '@prisma/client';
-import dotenv from 'dotenv';
-import { beforeAll, afterAll, beforeEach } from '@jest/globals';
 import { execSync } from 'child_process';
+import dotenv from 'dotenv';
 
 
 dotenv.config({ path: '.env.test' });
@@ -57,10 +57,10 @@ afterAll(async () => {
 export const testUtils = {
   prisma,
   resetTestDatabase,
-  seedTestData: async (data: Record<string, any[]>) => {
+  seedTestData: async (data: Record<string, unknown[]>) => {
     await Promise.all(
       Object.entries(data).map(async ([model, records]) => {
-        // @ts-ignore - Dynamic access to prisma models
+        // @ts-expect-error - Dynamic access to prisma models
         await prisma[model].createMany({ data: records });
       })
     );
@@ -70,3 +70,6 @@ export const testUtils = {
 // Exportaciones
 export { prisma };
 export * from './test-utils.js';
+
+// Mock implementation
+global.fetch = jest.fn();

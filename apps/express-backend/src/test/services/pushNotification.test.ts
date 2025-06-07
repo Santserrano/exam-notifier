@@ -1,7 +1,7 @@
 import webpush from 'web-push';
 
-import { notificacionService } from '../../service/NotificationService.js';
-import { sendPushToProfesor } from '../../service/SendPushNotification.js';
+import { notificacionService } from '../../../src/service/NotificationService';
+import { sendPushToProfesor } from '../../../src/service/SendPushNotification';
 
 // Mock de web-push
 jest.mock('web-push', () => ({
@@ -10,7 +10,7 @@ jest.mock('web-push', () => ({
 }));
 
 // Mock de NotificationService
-jest.mock('../../service/NotificationService.js', () => ({
+jest.mock('../../../src/service/NotificationService', () => ({
     notificacionService: {
         getWebPushSubscriptions: jest.fn(),
         deleteWebPushSubscription: jest.fn()

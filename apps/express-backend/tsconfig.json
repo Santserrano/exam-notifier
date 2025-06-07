@@ -1,38 +1,31 @@
 {
     "extends": "@exam-notifier/tsconfig/base.json",
     "compilerOptions": {
-        "target": "ES2020",
+        "outDir": "dist",
+        "rootDir": "src",
         "module": "ESNext",
+        "target": "ESNext",
         "moduleResolution": "bundler",
-        "allowImportingTsExtensions": false,
+        "allowImportingTsExtensions": true,
         "resolveJsonModule": true,
         "isolatedModules": true,
-        "noEmit": false,
-        "esModuleInterop": true,
-        "allowJs": true,
         "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
         "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "baseUrl": ".",
-        "paths": {
-            "@/*": [
-                "src/*"
-            ]
-        },
-        "types": [
-            "node",
-            "jest"
-        ],
         "incremental": true,
         "tsBuildInfoFile": "./dist/.tsbuildinfo",
-        "outDir": "./dist"
+        "declaration": true
     },
     "include": [
-        "src/**/*",
-        "test/**/*"
+        "src/**/*"
     ],
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        "test",
+        "**/*.test.ts",
+        "**/*.spec.ts"
     ]
 }

@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { getAceptacionesProfesor, crearAceptacionMesa, getAceptaciones } from "../controllers/diary.controller.js";
+
+import { crearAceptacionMesa, getAceptaciones, getAceptacionesProfesor } from "../controllers/diary.controller.js";
 
 const router = Router();
 
