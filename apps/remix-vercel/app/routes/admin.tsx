@@ -448,6 +448,7 @@ export default function AdminRoute() {
         setAula(mesa.aula || "");
         setWebexLink(mesa.webexLink || "");
         setHora(mesa.hora || "");
+        setFecha(mesa.fecha ? formatDate(mesa.fecha) : "");
       }
     }, [mesa]);
 
@@ -498,7 +499,8 @@ export default function AdminRoute() {
             type="date"
             name="fecha"
             required
-            defaultValue={mesa?.fecha ? formatDate(mesa.fecha) : ""}
+            value={fecha}
+            onChange={e => setFecha(e.target.value)}
             disabled={isSubmitting}
           />
           <label className="text-sm font-semibold text-green-900">
@@ -559,7 +561,7 @@ export default function AdminRoute() {
             className="rounded border px-2 py-2"
             required
             value={profesorSeleccionado}
-            onChange={(e) => setProfesorSeleccionado(e.target.value)}
+            onChange={e => setProfesorSeleccionado(e.target.value)}
             disabled={!materiaSeleccionada || isSubmitting}
           >
             <option value="">Seleccionar</option>
@@ -581,7 +583,7 @@ export default function AdminRoute() {
             className="rounded border px-2 py-2"
             required
             value={vocalSeleccionado}
-            onChange={(e) => setVocalSeleccionado(e.target.value)}
+            onChange={e => setVocalSeleccionado(e.target.value)}
             disabled={!materiaSeleccionada || isSubmitting}
           >
             <option value="">Seleccionar</option>
@@ -601,7 +603,7 @@ export default function AdminRoute() {
             className="rounded border px-2 py-2"
             required
             value={hora}
-            onChange={(e) => setHora(e.target.value)}
+            onChange={e => setHora(e.target.value)}
             disabled={isSubmitting}
           >
             <option value="">Seleccionar</option>
