@@ -3,9 +3,9 @@ import { getServerEnv } from "./env.server";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 
 export interface NotificationConfig {
-    webPushEnabled: boolean;
-    smsEnabled: boolean;
-    emailEnabled: boolean;
+    webPushEnabled?: boolean;
+    smsEnabled?: boolean;
+    emailEnabled?: boolean;
 }
 
 const DEFAULT_CONFIG: NotificationConfig = {

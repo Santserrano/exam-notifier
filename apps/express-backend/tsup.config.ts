@@ -3,14 +3,20 @@ import { defineConfig } from 'tsup'
 export default defineConfig({
   entry: ['src/index.ts'],
   format: ['esm'],
-  dts: false,
+  dts: true,
   splitting: false,
-  sourcemap: false,
+  sourcemap: true,
   clean: true,
-  target: 'es2020',
-  minify: true,
+  target: 'node18',
+  minify: false,
   treeshake: true,
   env: {
     NODE_ENV: 'production'
+  },
+  platform: 'node',
+  esbuildOptions(options) {
+    options.banner = {
+      js: 'import { createRequire } from "module"; const require = createRequire(import.meta.url);',
+    }
   }
 }) 

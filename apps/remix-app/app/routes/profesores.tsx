@@ -61,9 +61,6 @@ export const loader = async (args: LoaderFunctionArgs) => {
       carrerasResponse.ok ? carrerasResponse.json() : []
     ]);
 
-    console.log('Profesores raw:', profesoresRaw);
-    console.log('Carreras raw:', carrerasRaw);
-
     // Procesar los datos para asegurar que solo contengan strings o números
     const profesores = profesoresRaw.map((profesor: unknown) => {
       if (typeof profesor !== 'object' || profesor === null) {
@@ -127,7 +124,6 @@ export const loader = async (args: LoaderFunctionArgs) => {
 
     return json({ profesores, carreras });
   } catch (error) {
-    console.error("Error en el loader:", error);
     return json({ profesores: [], carreras: [] });
   }
 };
@@ -170,7 +166,6 @@ export const action = async ({ request, params, context }: ActionFunctionArgs) =
 
     return json<ActionData>(data);
   } catch (error) {
-    console.error("Error al actualizar configuración:", error);
     return json<ActionData>(
       { error: "Error al actualizar la configuración" }, 
       { status: 500 }
@@ -180,8 +175,6 @@ export const action = async ({ request, params, context }: ActionFunctionArgs) =
 
 export default function AdminProfesoresRoute() {
   const { profesores, carreras } = useLoaderData<typeof loader>();
-  console.log('Profesores en el componente:', profesores);
-  console.log('Carreras en el componente:', carreras);
   const [profesorSeleccionado, setProfesorSeleccionado] = useState<Profesor | null>(null);
   const [showModal, setShowModal] = useState(false);
   const fetcher = useFetcher<ActionData>();

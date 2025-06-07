@@ -3,7 +3,6 @@ import express from 'express';
 
 import { notificationFactory } from '../core/notifications/NotificationFactory.js';
 import { NotificationType } from '../core/notifications/types.js';
-import { cacheMiddleware, invalidateCache } from '../middleware/cache.js';
 import { notificacionService } from '../service/NotificationService.js';
 
 const router = express.Router();
@@ -22,7 +21,7 @@ const validateApiKey = (req: express.Request, res: express.Response, next: expre
 router.use(validateApiKey);
 
 // GET /api/diaries/notificaciones/config/:profesorId
-router.get('/config/:profesorId', cacheMiddleware(1800), async (req, res) => {
+router.get('/config/:profesorId', async (req, res) => {
   const profesorId = req.params.profesorId;
   if (!profesorId) {
     return res.status(400).json({ error: 'ID de profesor no proporcionado' });
@@ -73,10 +72,6 @@ router.patch('/config/:profesorId', async (req, res) => {
       ...updates
     });
 
-    // Invalidar la caché de la configuración
-    await invalidateCache(`/config/${profesorId}`);
-    await invalidateCache(`/subscriptions/${profesorId}`);
-
     return res.status(200).json(updated);
   } catch (error) {
     return res.status(500).json({
@@ -123,10 +118,6 @@ router.post('/push-subscription', async (req, res) => {
       webPushEnabled: true
     });
 
-    // Invalidar la caché
-    await invalidateCache(`/config/${profesorId}`);
-    await invalidateCache(`/subscriptions/${profesorId}`);
-
     return res.status(201).json({
       message: 'Suscripción guardada exitosamente',
       subscription: saved,
@@ -143,7 +134,7 @@ router.post('/push-subscription', async (req, res) => {
 });
 
 // GET /api/diaries/notificaciones/subscriptions/:profesorId
-router.get('/subscriptions/:profesorId', cacheMiddleware(1800), async (req, res) => {
+router.get('/subscriptions/:profesorId', async (req, res) => {
   const profesorId = req.params.profesorId;
   if (!profesorId) {
     return res.status(400).json({ error: 'ID de profesor no proporcionado' });
