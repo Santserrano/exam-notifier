@@ -36,6 +36,6 @@ export async function initRedis() {
     try {
         await redis.connect();
     } catch (error) {
-        throw error;
+        throw new CustomError("Redis falló", { cause: error });
     }
-} 
+}

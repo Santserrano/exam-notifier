@@ -1,6 +1,7 @@
 import webpush from 'web-push';
-import { sendPushToProfesor } from '../../service/SendPushNotification.js';
+
 import { notificacionService } from '../../service/NotificationService.js';
+import { sendPushToProfesor } from '../../service/SendPushNotification.js';
 
 // Mock de web-push
 jest.mock('web-push', () => ({

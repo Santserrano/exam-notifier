@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+
 import { enviarEmailNotificacion } from '../../service/emailService.js';
 
 // Mock de Resend
