@@ -43,7 +43,7 @@ describe('EmailNotification', () => {
     });
   });
 
-  it('should not throw when resend fails', async () => {
+  it('No se debe lanzar cuando falla el reenvío', async () => {
     const error = new Error('API Error');
     const notification = new EmailNotification(mockData);
     vi.mocked(notification['resend'].emails.send).mockRejectedValue(error);
