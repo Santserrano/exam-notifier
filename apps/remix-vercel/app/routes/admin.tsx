@@ -422,6 +422,15 @@ export default function AdminRoute() {
     const [webexLink, setWebexLink] = useState(mesa?.webexLink ?? "");
     const [hora, setHora] = useState(mesa?.hora ?? "");
 
+    // Función para formatear la fecha correctamente
+    const formatDate = (dateString: string) => {
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
     // Resetear materia cuando cambia la carrera
     React.useEffect(() => {
       if (!isEdit) {
@@ -490,7 +499,7 @@ export default function AdminRoute() {
             type="date"
             name="fecha"
             required
-            defaultValue={mesa?.fecha ? new Date(mesa.fecha).toISOString().split('T')[0] : ""}
+            defaultValue={mesa?.fecha ? formatDate(mesa.fecha) : ""}
             disabled={isSubmitting}
           />
           <label className="text-sm font-semibold text-green-900">
