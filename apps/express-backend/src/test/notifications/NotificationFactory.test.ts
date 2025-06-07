@@ -57,7 +57,7 @@ describe('NotificationFactory', () => {
     ).toThrow('Tipo de notificación no soportado: null');
   });
 
-  it('should throw for empty string type', () => {
+  it('Debería lanzarse para un tipo de cadena vacía', () => {
     const factory = new NotificationFactory();
     expect(() =>
       factory.createNotification('' as any, mockData)
