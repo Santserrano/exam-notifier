@@ -211,26 +211,37 @@ export const action = async (args: ActionFunctionArgs) => {
   try {
     // Manejar aceptación de mesa
     if (type === "aceptacion" && mesaId && estado) {
-      const response = await fetch(
-        `${API_URL}/api/diaries/mesas/${mesaId}/aceptacion`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": INTERNAL_API_KEY,
-          },
-          body: JSON.stringify({
-            profesorId: userId,
-            estado,
-          }),
+      try {
+        const response = await fetch(
+          `${API_URL}/api/diaries/mesas/${mesaId}/aceptacion`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": INTERNAL_API_KEY,
+            },
+            body: JSON.stringify({
+              profesorId: userId,
+              estado,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Error response:", {
+            status: response.status,
+            statusText: response.statusText,
+            errorData
+          });
+          throw new Error(`Error al actualizar aceptación: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
         }
-      );
 
-      if (!response.ok) {
-        throw new Error("Error al actualizar aceptación");
+        return json({ success: true });
+      } catch (error) {
+        console.error("Error detallado:", error);
+        throw error;
       }
-
-      return json({ success: true });
     }
 
     // Manejar configuración de notificaciones
