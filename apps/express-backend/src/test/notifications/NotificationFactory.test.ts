@@ -64,7 +64,7 @@ describe('NotificationFactory', () => {
     ).toThrow('Tipo de notificación no soportado: ');
   });
 
-  it('should throw for unsupported type', () => {
+  it('Debería lanzarse para un tipo no compatible', () => {
     const factory = new NotificationFactory();
     expect(() =>
       factory.createNotification('unsupported' as any, mockData)
