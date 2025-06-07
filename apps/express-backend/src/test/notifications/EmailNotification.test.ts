@@ -30,7 +30,7 @@ describe('EmailNotification', () => {
     expect(notification).toBeInstanceOf(EmailNotification);
   });
 
-  it('should call resend.emails.send with correct parameters', async () => {
+  it('Debería llamar a resend.emails.send con los parámetros correctos', async () => {
     const notification = new EmailNotification(mockData);
     await notification.send();
 
