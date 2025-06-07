@@ -182,4 +182,57 @@ router.get('/mesas/profesor/:profesorId', async (req, res) => {
   }
 });
 
+// Actualizar configuración de profesor
+router.put('/profesores/:profesorId/config', async (req, res) => {
+  try {
+    const { profesorId } = req.params;
+    const { carreras, materias } = req.body;
+
+    if (!profesorId || !carreras || !materias) {
+      return res.status(400).json({ error: 'Faltan datos requeridos' });
+    }
+
+    // Actualizar carreras del profesor
+    await prisma.profesor.update({
+      where: { id: profesorId },
+      data: {
+        carreras: {
+          set: carreras.map((id: string) => ({ id }))
+        },
+        materias: {
+          set: materias.map((id: string) => ({ id }))
+        }
+      }
+    });
+
+    // Obtener el profesor actualizado con sus relaciones
+    const profesorActualizado = await prisma.profesor.findUnique({
+      where: { id: profesorId },
+      include: {
+        carreras: {
+          select: {
+            id: true,
+            nombre: true
+          }
+        },
+        materias: {
+          select: {
+            id: true,
+            nombre: true,
+            carreraId: true
+          }
+        }
+      }
+    });
+
+    res.json(profesorActualizado);
+  } catch (error) {
+    console.error('Error al actualizar configuración:', error);
+    res.status(500).json({
+      error: 'Error al actualizar la configuración',
+      details: error instanceof Error ? error.message : 'Error desconocido'
+    });
+  }
+});
+
 export default router;
