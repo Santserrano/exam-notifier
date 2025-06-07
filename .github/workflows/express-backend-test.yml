@@ -25,8 +25,8 @@ jobs:
     env:
       NODE_ENV: test
       RESEND_API_KEY: re_test_key
-      VAPID_PUBLIC_KEY: test_public_key
-      VAPID_PRIVATE_KEY: test_private_key
+      VAPID_PUBLIC_KEY: "BPHh5JgQJgQJgQJgQJgQJgQJgQJgQJgQJgQJgQJgQJgQJgQJgQJgQJgQJgQJgQJgQJgQJgQJgQJgQ"
+      VAPID_PRIVATE_KEY: "test_private_key_for_web_push_testing_purposes_only"
       INTERNAL_API_KEY: test_internal_key
       WHATSAPP_API_KEY: test_whatsapp_key
       WHATSAPP_PHONE_NUMBER_ID: test_phone_id
