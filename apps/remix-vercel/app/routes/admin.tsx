@@ -478,6 +478,14 @@ export default function AdminRoute() {
       });
     }, [profesores, carreraSeleccionada, materiaSeleccionada]);
 
+    // Efecto para cerrar el modal y recargar la página si la acción fue exitosa (añadir mesa)
+    React.useEffect(() => {
+      if ((fetcher.data as { success?: boolean })?.success) {
+        handleClose();
+        window.location.reload();
+      }
+    }, [fetcher.data]);
+
     if (!open) return null;
 
     return (
