@@ -23,12 +23,12 @@ describe('EmailNotification', () => {
     process.env.RESEND_API_KEY = 'test-key';
   });
 
-  it('should create an instance with provided data', () => {
+  it('Debe crear una instancia con los datos proporcionados', () => {
     const notification = new EmailNotification(mockData);
     expect(notification).toBeInstanceOf(EmailNotification);
   });
 
-  it('should call resend.emails.send with correct parameters', async () => {
+  it('Debería llamar a resend.emails.send con los parámetros correctos', async () => {
     const notification = new EmailNotification(mockData);
     await notification.send();
 
@@ -41,7 +41,7 @@ describe('EmailNotification', () => {
     });
   });
 
-  it('should not throw when resend fails', async () => {
+  it('No se debe lanzar cuando falla el reenvío', async () => {
     const error = new Error('API Error');
     const notification = new EmailNotification(mockData);
     (notification['resend'].emails.send as jest.Mock).mockRejectedValue(error);

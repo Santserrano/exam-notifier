@@ -105,7 +105,7 @@ describe('MesaAdapter', () => {
     });
   });
 
-  it('should maintain data integrity', () => {
+  it('debe mantener la integridad de los datos', () => {
     const result = adapter.adapt(fullMock);
 
     // Verificamos que los tipos sean correctos
