@@ -67,7 +67,7 @@ describe('MesaAdapter', () => {
     });
   });
 
-  it('should handle null optional fields', () => {
+  it('debe manejar campos opcionales nulos', () => {
     const result = adapter.adapt(nullMock);
 
     expect(result).toEqual({
