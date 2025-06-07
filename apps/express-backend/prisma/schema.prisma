@@ -1,0 +1,123 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Carrera {
+  id         String         @id @default(uuid())
+  nombre     String         @unique
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  materias   Materia[]
+  mesas      MesaDeExamen[]
+  profesores Profesor[]     @relation("CarreraToProfesor")
+}
+
+model Materia {
+  id         String         @id @default(uuid())
+  nombre     String
+  carreraId  String
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  carrera    Carrera        @relation(fields: [carreraId], references: [id])
+  mesas      MesaDeExamen[]
+  profesores Profesor[]     @relation("MateriaToProfesor")
+
+  @@unique([nombre, carreraId])
+}
+
+model Profesor {
+  id                   String                @id
+  nombre               String
+  apellido             String
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  email                String                @unique
+  telefono             String?
+  aceptaciones         MesaAceptacion[]
+  mesasTitular         MesaDeExamen[]        @relation("ProfesorTitular")
+  mesasVocal           MesaDeExamen[]        @relation("ProfesorVocal")
+  notificacionConfig   NotificacionConfig?
+  webPushSubscriptions WebPushSubscription[]
+  carreras             Carrera[]             @relation("CarreraToProfesor")
+  materias             Materia[]             @relation("MateriaToProfesor")
+}
+
+model MesaDeExamen {
+  id           Int              @id @default(autoincrement())
+  fecha        DateTime
+  descripcion  String
+  cargo        String
+  verification Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  modalidad    String?          @default("Presencial")
+  updatedAt    DateTime         @updatedAt
+  profesorId   String
+  vocalId      String
+  aula         String?
+  webexLink    String?
+  carreraId    String
+  materiaId    String
+  aceptaciones MesaAceptacion[]
+  carrera      Carrera          @relation(fields: [carreraId], references: [id])
+  materia      Materia          @relation(fields: [materiaId], references: [id])
+  profesor     Profesor         @relation("ProfesorTitular", fields: [profesorId], references: [id])
+  vocal        Profesor         @relation("ProfesorVocal", fields: [vocalId], references: [id])
+  alumnos      Alumno[]         @relation("AlumnosEnMesa")
+}
+
+model NotificacionConfig {
+  id               String   @id @default(uuid())
+  profesorId       String   @unique
+  webPushEnabled   Boolean  @default(false)
+  emailEnabled     Boolean  @default(false)
+  smsEnabled       Boolean  @default(false)
+  avisoPrevioHoras Int      @default(24)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  profesor         Profesor @relation(fields: [profesorId], references: [id])
+}
+
+model WebPushSubscription {
+  id         String   @id @default(uuid())
+  profesorId String
+  endpoint   String
+  auth       String
+  p256dh     String
+  createdAt  DateTime @default(now())
+  profesor   Profesor @relation(fields: [profesorId], references: [id])
+}
+
+model Alumno {
+  id       Int            @id @default(autoincrement())
+  nombre   String
+  apellido String
+  carrera  String
+  dni      String         @unique
+  mesas    MesaDeExamen[] @relation("AlumnosEnMesa")
+}
+
+model MesaAceptacion {
+  id         String           @id @default(uuid())
+  mesaId     Int
+  profesorId String
+  estado     EstadoAceptacion @default(PENDIENTE)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  mesa       MesaDeExamen     @relation(fields: [mesaId], references: [id])
+  profesor   Profesor         @relation(fields: [profesorId], references: [id])
+
+  @@unique([mesaId, profesorId])
+}
+
+enum EstadoAceptacion {
+  PENDIENTE
+  ACEPTADA
+  RECHAZADA
+}
