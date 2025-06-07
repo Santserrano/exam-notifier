@@ -41,15 +41,17 @@ export const loader = async (args: LoaderFunctionArgs) => {
     return redirect("/");
   }
 
+  const { API_URL } = getServerEnv();
+
   try {
     const [profesoresResponse, carrerasResponse] = await Promise.all([
-      fetch("http://localhost:3005/api/diaries/profesores", {
+      fetch(`${API_URL}/api/diaries/profesores`, {
         headers: {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
           "Content-Type": "application/json"
         }
       }),
-      fetch("http://localhost:3005/api/diaries/carreras", {
+      fetch(`${API_URL}/api/diaries/carreras`, {
         headers: {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
           "Content-Type": "application/json"
