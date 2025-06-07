@@ -22,6 +22,14 @@ jobs:
     defaults:
       run:
         working-directory: apps/express-backend
+    env:
+      NODE_ENV: test
+      RESEND_API_KEY: re_test_key
+      VAPID_PUBLIC_KEY: test_public_key
+      VAPID_PRIVATE_KEY: test_private_key
+      INTERNAL_API_KEY: test_internal_key
+      WHATSAPP_API_KEY: test_whatsapp_key
+      WHATSAPP_PHONE_NUMBER_ID: test_phone_id
     steps:
       - uses: actions/checkout@v4
 
