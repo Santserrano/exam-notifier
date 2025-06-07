@@ -1,0 +1,67 @@
+name: Express Backend Unit Tests
+
+on:
+  push:
+    paths:
+      - 'apps/express-backend/**'
+      - '.github/workflows/express-backend-test.yml'
+      - 'packages/database/**'
+    branches:
+      - '**'
+  pull_request:
+    paths:
+      - 'apps/express-backend/**'
+      - '.github/workflows/express-backend-test.yml'
+      - 'packages/database/**'
+    branches:
+      - '**'
+
+jobs:
+  test-express-backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/express-backend
+    env:
+      NODE_ENV: test
+      RESEND_API_KEY: re_test_key
+      VAPID_PUBLIC_KEY: "BH_BM7ZUT1IEuq-kVDBJYLujB2ftsjn-hlDrdF2PtPrzw3sk4Lw0J_U52psg9kZ9TkSyQEFWQ6mfFlTNaQbpyFk"
+      VAPID_PRIVATE_KEY: "Fc5KdThXdA8krJO3ppnlE7NVClnQYwdlQ7orrKS8u1U"
+      INTERNAL_API_KEY: test_internal_key
+      WHATSAPP_API_KEY: test_whatsapp_key
+      WHATSAPP_PHONE_NUMBER_ID: test_phone_id
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: pnpm --filter @exam-notifier/database generate
+
+      - name: Run Express Backend Unit Tests
+        run: pnpm turbo test --filter=express-backend 

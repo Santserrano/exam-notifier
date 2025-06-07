@@ -137,15 +137,48 @@ const useMesaForm = (initialMesa?: MesaRaw) => {
 
   React.useEffect(() => {
     if (initialMesa) {
+      // Establecer modalidad
       setModalidad(initialMesa.modalidad === "Virtual" ? "Virtual" : "Presencial");
-      setCarreraSeleccionada(typeof initialMesa.carrera === 'object' ? initialMesa.carrera.id || '' : initialMesa.carrera || '');
-      setMateriaSeleccionada(typeof initialMesa.materia === 'object' ? initialMesa.materia.id || '' : initialMesa.materia || '');
-      setProfesorSeleccionado(typeof initialMesa.profesor === 'object' ? initialMesa.profesor.id || '' : initialMesa.profesor || '');
-      setVocalSeleccionado(typeof initialMesa.vocal === 'object' ? initialMesa.vocal.id || '' : initialMesa.vocal || '');
+      
+      // Establecer carrera
+      const carreraId = typeof initialMesa.carrera === 'object' 
+        ? initialMesa.carrera.id 
+        : initialMesa.carrera;
+      setCarreraSeleccionada(carreraId || '');
+      
+      // Establecer materia
+      const materiaId = typeof initialMesa.materia === 'object' 
+        ? initialMesa.materia.id 
+        : initialMesa.materia;
+      setMateriaSeleccionada(materiaId || '');
+      
+      // Establecer profesor
+      const profesorId = typeof initialMesa.profesor === 'object' 
+        ? initialMesa.profesor.id 
+        : initialMesa.profesor;
+      setProfesorSeleccionado(profesorId || '');
+      
+      // Establecer vocal
+      const vocalId = typeof initialMesa.vocal === 'object' 
+        ? initialMesa.vocal.id 
+        : initialMesa.vocal;
+      setVocalSeleccionado(vocalId || '');
+      
+      // Establecer aula y webexLink
       setAula(initialMesa.aula || "");
       setWebexLink(initialMesa.webexLink || "");
+      
+      // Establecer hora
       setHora(initialMesa.hora || "");
-      setFecha(initialMesa.fecha ? formatDate(initialMesa.fecha) : "");
+      
+      // Establecer fecha
+      if (initialMesa.fecha) {
+        const fechaObj = new Date(initialMesa.fecha);
+        const year = fechaObj.getFullYear();
+        const month = String(fechaObj.getMonth() + 1).padStart(2, '0');
+        const day = String(fechaObj.getDate()).padStart(2, '0');
+        setFecha(`${year}-${month}-${day}`);
+      }
     }
   }, [initialMesa]);
 
@@ -286,6 +319,9 @@ const MesaModal = ({ open, onClose, mesa, profesores, carreras }: {
         method="post"
         className="flex max-h-[80vh] flex-col gap-3 overflow-y-auto pr-2"
       >
+        {isEdit && mesa?.id && (
+          <input type="hidden" name="mesaId" value={mesa.id} />
+        )}
         <div className="sticky top-0 mb-2 flex items-center gap-2 bg-white pb-2">
           <button
             type="button"
@@ -356,11 +392,6 @@ const FormFields = ({ formState, formActions, isSubmitting, profesoresFiltrados,
         disabled={isSubmitting}
       >
         <option value="">Seleccionar</option>
-        {formState.carreraSeleccionada && !carreras.some((c) => c.id === formState.carreraSeleccionada) && (
-          <option value={formState.carreraSeleccionada}>
-            {formState.carreraSeleccionada}
-          </option>
-        )}
         {carreras.map((c) => (
           <option key={c.id} value={c.id}>
             {c.nombre}
@@ -378,10 +409,6 @@ const FormFields = ({ formState, formActions, isSubmitting, profesoresFiltrados,
         disabled={!formState.carreraSeleccionada || isSubmitting}
       >
         <option value="">Seleccionar</option>
-        {formState.materiaSeleccionada && formState.carreraSeleccionada &&
-          !carreras.find((c) => c.id === formState.carreraSeleccionada)?.materias?.some((m) => m.id === formState.materiaSeleccionada) && (
-            <option value={formState.materiaSeleccionada}>{formState.materiaSeleccionada}</option>
-        )}
         {formState.carreraSeleccionada &&
           carreras
             .find((c) => c.id === formState.carreraSeleccionada)
@@ -402,9 +429,6 @@ const FormFields = ({ formState, formActions, isSubmitting, profesoresFiltrados,
         disabled={!formState.materiaSeleccionada || isSubmitting}
       >
         <option value="">Seleccionar</option>
-        {formState.profesorSeleccionado && !profesoresFiltrados.some((p) => p.id === formState.profesorSeleccionado) && (
-          <option value={formState.profesorSeleccionado}>{formState.profesorSeleccionado}</option>
-        )}
         {profesoresFiltrados.map((profesor) => (
           <option key={profesor.id} value={profesor.id}>
             {`${profesor.nombre} ${profesor.apellido}`}
@@ -422,9 +446,6 @@ const FormFields = ({ formState, formActions, isSubmitting, profesoresFiltrados,
         disabled={!formState.materiaSeleccionada || isSubmitting}
       >
         <option value="">Seleccionar</option>
-        {formState.vocalSeleccionado && !profesoresFiltrados.some((p) => p.id === formState.vocalSeleccionado) && (
-          <option value={formState.vocalSeleccionado}>{formState.vocalSeleccionado}</option>
-        )}
         {profesoresFiltrados.map((profesor) => (
           <option key={profesor.id} value={profesor.id}>
             {`${profesor.nombre} ${profesor.apellido}`}
@@ -442,9 +463,6 @@ const FormFields = ({ formState, formActions, isSubmitting, profesoresFiltrados,
         disabled={isSubmitting}
       >
         <option value="">Seleccionar</option>
-        {formState.hora && !HORAS.includes(formState.hora) && (
-          <option value={formState.hora}>{formState.hora}</option>
-        )}
         {HORAS.map((h) => (
           <option key={h} value={h}>
             {h}
@@ -521,6 +539,7 @@ export default function AdminRoute() {
   const [sede, setSede] = useState("");
   const [showAddMesa, setShowAddMesa] = useState(false);
   const [mesaAEditar, setMesaAEditar] = useState<MesaRaw | null>(null);
+  const [isLoadingProfesores, setIsLoadingProfesores] = useState(false);
 
   const mesasFormateadas = React.useMemo(() => 
     mesas.map((mesa: MesaRaw, index: number) => procesarMesa(mesa, index)),
@@ -537,6 +556,10 @@ export default function AdminRoute() {
     [mesasFormateadas, search, carrera, fecha]
   );
 
+  const handleProfesoresClick = () => {
+    setIsLoadingProfesores(true);
+  };
+
   return (
     <div className="mx-auto max-w-md pb-8">
       <HeaderClerk notificationConfig={notificationConfig} userRole="admin" env={env} />
@@ -550,8 +573,30 @@ export default function AdminRoute() {
           <h2 className="text-center text-base md:text-lg font-bold">
             Administración
           </h2>
-          <Link to="/profesores" prefetch="intent">
-            <Button variant="outline">Gestionar Profesores</Button>
+          <Link 
+            to="/profesores" 
+            prefetch="render"
+            onClick={handleProfesoresClick}
+          >
+            <Button 
+              variant="outline" 
+              disabled={isLoadingProfesores}
+              className="relative"
+            >
+              {isLoadingProfesores ? (
+                <>
+                  <span className="opacity-0">Gestionar Profesores</span>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <svg className="animate-spin h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                </>
+              ) : (
+                "Gestionar Profesores"
+              )}
+            </Button>
           </Link>
         </div>
         <SearchBar
@@ -593,7 +638,11 @@ export default function AdminRoute() {
             <MesaCardAdmin
               key={mesa.id}
               {...mesa}
-              onClick={() => setMesaAEditar(mesa as MesaRaw)}
+              onClick={() => {
+                // Buscar la mesa original por ID y pasarla al modal
+                const mesaRaw = mesas.find((m: MesaRaw) => m.id?.toString() === mesa.id);
+                setMesaAEditar(mesaRaw || null);
+              }}
             />
           ))}
         </div>
@@ -772,6 +821,7 @@ export const action = async (args: ActionFunctionArgs) => {
 
   const { API_URL, INTERNAL_API_KEY } = getServerEnv();
   const formData = await request.formData();
+  const mesaId = formData.get("mesaId") as string;
   const fecha = formData.get("fecha") as string;
   const materia = formData.get("asignatura") as string;
   const carrera = formData.get("carrera") as string;
@@ -792,32 +842,38 @@ export const action = async (args: ActionFunctionArgs) => {
   // Enviar la fecha directamente sin convertir
   const fechaUTC = fechaLocal;
 
+  const mesaData = {
+    profesor: profesorId,
+    vocal: vocalId,
+    carrera,
+    materia,
+    fecha: fechaUTC.toISOString(),
+    descripcion: "Mesa de examen",
+    cargo: "Titular",
+    verification: false,
+    modalidad,
+    aula: modalidad === "Presencial" ? aula : undefined,
+    webexLink: modalidad === "Virtual" ? webexLink : undefined,
+  };
+
   try {
-    const response = await fetch(`${API_URL}/api/diaries/mesas`, {
-      method: "POST",
+    const url = mesaId 
+      ? `${API_URL}/api/diaries/mesas/${mesaId}`
+      : `${API_URL}/api/diaries/mesas`;
+
+    const response = await fetch(url, {
+      method: mesaId ? "PUT" : "POST",
       headers: {
         "x-api-key": INTERNAL_API_KEY,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        profesor: profesorId,
-        vocal: vocalId,
-        carrera,
-        materia,
-        fecha: fechaUTC.toISOString(),
-        descripcion: "Mesa de examen",
-        cargo: "Titular",
-        verification: false,
-        modalidad,
-        aula: modalidad === "Presencial" ? aula : undefined,
-        webexLink: modalidad === "Virtual" ? webexLink : undefined,
-      }),
+      body: JSON.stringify(mesaData),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
       return json(
-        { error: errorData.error || "Error al crear la mesa" },
+        { error: errorData.error || "Error al procesar la mesa" },
         { status: response.status }
       );
     }
@@ -828,7 +884,7 @@ export const action = async (args: ActionFunctionArgs) => {
     console.error("Error en el action:", error);
     return json(
       {
-        error: error instanceof Error ? error.message : "Error al crear la mesa",
+        error: error instanceof Error ? error.message : "Error al procesar la mesa",
       },
       { status: 500 }
     );

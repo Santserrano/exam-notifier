@@ -1,6 +1,5 @@
 import { WhatsAppNotification } from '../../../src/core/notifications/WhatsAppNotification.js';
 import { NotificationData } from "../../../src/core/notifications/Notification.js";
-const { jest } = require('@jest/globals');
 import axios from 'axios';
 
 jest.mock('axios');
@@ -44,7 +43,7 @@ describe('WhatsAppNotification', () => {
 
     it('should format phone numbers correctly', async () => {
         const notification = new WhatsAppNotification(mockData);
-        
+
         // Test with different phone formats
         expect(notification['formatPhoneNumber']('11 2345-6789')).toBe('541123456789');
         expect(notification['formatPhoneNumber']('+54 9 11 2345 6789')).toBe('5491123456789');

@@ -2,8 +2,6 @@ import { MesaDeExamen } from '@prisma/client';
 
 import { MesaAdapter } from '../../Adapters/MasaAdapter.js';
 
-
-
 describe('MesaAdapter', () => {
   const adapter = new MesaAdapter();
 
@@ -109,7 +107,7 @@ describe('MesaAdapter', () => {
 
   it('should maintain data integrity', () => {
     const result = adapter.adapt(fullMock);
-    
+
     // Verificamos que los tipos sean correctos
     expect(typeof result.id).toBe('number');
     expect(typeof result.profesor).toBe('string');

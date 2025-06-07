@@ -1,4 +1,3 @@
-
 import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
 import { beforeAll, afterAll, beforeEach } from '@jest/globals';
@@ -70,4 +69,4 @@ export const testUtils = {
 
 // Exportaciones
 export { prisma };
-export * from './test-utils';
+export * from './test-utils.js';
