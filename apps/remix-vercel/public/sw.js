@@ -2,9 +2,7 @@ const CACHE_NAME = "exam-notifier-v1";
 const urlsToCache = [
   "/",
   "/mesas",
-  "/icon-ucp.png",
-  "/checkmark.png",
-  "/xmark.png",
+  "/icon-ucp.png"
 ];
 
 // Forzar la activación inmediata
@@ -17,7 +15,6 @@ self.addEventListener("install", (event) => {
       .open(CACHE_NAME)
       .then((cache) => {
         console.log("[Service Worker] Cache abierto");
-        // Cachear recursos uno por uno para manejar errores individualmente
         return Promise.allSettled(
           urlsToCache.map((url) =>
             fetch(url)
@@ -29,7 +26,6 @@ self.addEventListener("install", (event) => {
               })
               .catch((error) => {
                 console.warn(`[Service Worker] Error al cachear ${url}:`, error);
-                // Continuar con el siguiente recurso
                 return Promise.resolve();
               })
           )
@@ -41,7 +37,6 @@ self.addEventListener("install", (event) => {
       })
       .catch((error) => {
         console.error("[Service Worker] Error durante la instalación:", error);
-        // Continuar con la activación incluso si hay errores
         return self.skipWaiting();
       })
   );
@@ -98,8 +93,10 @@ self.addEventListener("fetch", (event) => {
 });
 
 self.addEventListener("push", function (event) {
+  console.log("[Service Worker] Push recibido:", event);
   if (event.data) {
     const data = event.data.json();
+    console.log("[Service Worker] Datos de la notificación:", data);
     const options = {
       body: data.body,
       icon: "/icon-ucp.png",
@@ -113,20 +110,48 @@ self.addEventListener("push", function (event) {
       actions: [
         {
           action: "explore",
-          title: "Ver detalles",
-          icon: "/checkmark.png",
+          title: "Ver detalles"
         },
         {
           action: "close",
-          title: "Cerrar",
-          icon: "/xmark.png",
-        },
+          title: "Cerrar"
+        }
       ],
-      timestamp: data.data?.timestamp ? new Date(data.data.timestamp).getTime() : Date.now(),
+      timestamp: data.data?.fecha ? new Date(data.data.fecha).getTime() : Date.now(),
       tag: data.data?.mesaId ? `mesa-${data.data.mesaId}` : undefined,
       renotify: true
     };
 
+    // Formatear la fecha para el body usando la zona horaria de Argentina
+    if (data.data?.fecha) {
+      console.log('Fecha recibida en SW:', data.data.fecha);
+      const fechaObj = new Date(data.data.fecha);
+      console.log('Fecha como Date en SW:', fechaObj.toISOString());
+
+      const fecha = fechaObj.toLocaleDateString('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
+
+      const hora = fechaObj.toLocaleTimeString('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+
+      console.log('Fecha formateada en SW:', fecha);
+      console.log('Hora formateada en SW:', hora);
+
+      options.body = data.body.replace(
+        /\d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}/,
+        `${fecha} a las ${hora}`
+      );
+    }
+
+    console.log("[Service Worker] Opciones de la notificación:", options);
     event.waitUntil(self.registration.showNotification(data.title, options));
   }
 });

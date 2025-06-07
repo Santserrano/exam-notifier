@@ -4,8 +4,6 @@ import { redirect, type LoaderFunctionArgs } from "@remix-run/node";
 export async function loader(args: LoaderFunctionArgs) {
   const { userId, sessionClaims } = await getAuth(args);
 
-  console.log("sessionClaims:", sessionClaims);
-
   if (!userId) {
     return redirect("/sign-in");
   }

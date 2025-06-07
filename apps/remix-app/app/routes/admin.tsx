@@ -106,7 +106,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
   try {
     // Obtener las mesas y profesores del backend
     const [mesasResponse, profesoresResponse, carrerasResponse] = await Promise.all([
-      fetch("http://localhost:3005/api/diaries/mesas", {
+      fetch(`${process.env.API_URL}/api/diaries/mesas`, {
         headers: {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
           "Content-Type": "application/json"
@@ -115,7 +115,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
         console.error("Error al obtener mesas:", error);
         return { ok: false, status: 500, json: () => [] };
       }),
-      fetch("http://localhost:3005/api/diaries/profesores", {
+      fetch(`${process.env.API_URL}/api/diaries/profesores`, {
         headers: {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
           "Content-Type": "application/json"
@@ -124,7 +124,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
         console.error("Error al obtener profesores:", error);
         return { ok: false, status: 500, json: () => [] };
       }),
-      fetch("http://localhost:3005/api/diaries/carreras", {
+      fetch(`${process.env.API_URL}/api/diaries/carreras`, {
         headers: {
           "x-api-key": process.env.INTERNAL_API_KEY || "",
           "Content-Type": "application/json"
@@ -140,8 +140,6 @@ export const loader = async (args: LoaderFunctionArgs) => {
       profesoresResponse.ok ? profesoresResponse.json() : [],
       carrerasResponse.ok ? carrerasResponse.json() : []
     ]);
-
-    console.log('Mesas raw del backend:', mesasRaw);
 
     const meses = ["ene.", "feb.", "mar.", "abr.", "may.", "jun.", "jul.", "ago.", "sep.", "oct.", "nov.", "dic."];
     const mesas = mesasRaw.map((m: {

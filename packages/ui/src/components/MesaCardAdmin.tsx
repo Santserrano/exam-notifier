@@ -69,48 +69,43 @@ export const MesaCardAdmin: React.FC<MesaCardProps> = ({
   // Resumen de aceptaciones
   const total = aceptaciones.length;
   const aceptadas = aceptaciones.filter(a => a.estado === "ACEPTADA").length;
+  const rechazadas = aceptaciones.filter(a => a.estado === "RECHAZADA").length;
+  const pendientes = aceptaciones.filter(a => a.estado === "PENDIENTE").length;
 
   return (
     <div
+      className={`${styles.bg} flex cursor-pointer flex-col gap-2 rounded-lg p-4 ${styles.text}`}
       onClick={onClick}
-      className={`flex items-center gap-4 p-4 mb-4 rounded-3xl border ${color === "green" ? "border-green-200" : "border-blue-200"} shadow hover:shadow-md transition cursor-pointer bg-white ring-2 ring-transparent ${color === "green" ? "hover:ring-green-200" : "hover:ring-blue-200"}`}
     >
-      {/* Fecha */}
-      <div className="flex flex-col items-center justify-center w-14">
-        <span className="text-2xl font-bold text-blue-900 leading-none">{dia}</span>
-        <span className="text-[11px] font-semibold text-blue-800 uppercase tracking-wide">{mes}</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className={`h-2 w-2 rounded-full ${styles.dot}`} />
+          <span className="text-sm font-medium">{modalidad}</span>
+        </div>
+        <div className="text-sm font-medium">
+          {aceptadas}/{total} aceptadas
+        </div>
       </div>
-
-      {/* Info principal */}
-      <div className="flex-1 min-w-0">
-        <div className="font-semibold text-green-900 text-base truncate">{materia}</div>
-        <div className="text-sm text-gray-500 truncate">{carrera}</div>
-        {/* Estado de aceptación */}
+      <div className="text-lg font-semibold">{materia}</div>
+      <div className="text-sm">{carrera}</div>
+      <div className="text-sm">
+        {dia} {mes}
+      </div>
+      {aceptaciones.length > 0 && (
         <div className="mt-2 flex flex-col gap-1">
-          <div className="text-xs text-gray-700 font-semibold mb-1">
-            Estado: {aceptadas}/{total} aceptaron
-          </div>
-          {aceptaciones.map((aceptacion) => (
-            <div key={aceptacion.profesor.id} className="flex items-center gap-2">
-              <span className="text-xs text-gray-600">
-                {aceptacion.profesor.nombre} {aceptacion.profesor.apellido}:
+          {aceptaciones.map((aceptacion, index) => (
+            <div key={index} className="flex items-center justify-between text-sm">
+              <span>
+                {aceptacion.profesor.nombre} {aceptacion.profesor.apellido}
               </span>
-              <div className="flex items-center gap-1">
+              <div className={`flex items-center gap-1 ${getEstadoColor(aceptacion.estado)}`}>
                 {getEstadoIcon(aceptacion.estado)}
-                <span className={`text-xs ${getEstadoColor(aceptacion.estado)}`}>{aceptacion.estado}</span>
+                <span>{aceptacion.estado}</span>
               </div>
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Modalidad Badge */}
-      <div className="flex items-center justify-end min-w-[100px]">
-        <div className={`flex items-center gap-2 ${styles.bg} px-3 py-1 rounded-full`}>
-          <div className={`w-3 h-3 rounded-full ${styles.dot}`} />
-          <span className={`text-xs font-medium ${styles.text}`}>{modalidad}</span>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

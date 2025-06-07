@@ -8,7 +8,7 @@ export class NotificationFactory {
     createNotification(type: NotificationType, data: NotificationData): Notification {
         switch (type) {
             case 'push':
-                return PushNotification.getInstance(data);
+                return new PushNotification(data);
             case 'whatsapp':
                 return new WhatsAppNotification(data);
             case 'email':
