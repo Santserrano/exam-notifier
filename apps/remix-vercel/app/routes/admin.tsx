@@ -286,6 +286,9 @@ const MesaModal = ({ open, onClose, mesa, profesores, carreras }: {
         method="post"
         className="flex max-h-[80vh] flex-col gap-3 overflow-y-auto pr-2"
       >
+        {isEdit && mesa?.id && (
+          <input type="hidden" name="mesaId" value={mesa.id} />
+        )}
         <div className="sticky top-0 mb-2 flex items-center gap-2 bg-white pb-2">
           <button
             type="button"
@@ -356,11 +359,6 @@ const FormFields = ({ formState, formActions, isSubmitting, profesoresFiltrados,
         disabled={isSubmitting}
       >
         <option value="">Seleccionar</option>
-        {formState.carreraSeleccionada && !carreras.some((c) => c.id === formState.carreraSeleccionada) && (
-          <option value={formState.carreraSeleccionada}>
-            {formState.carreraSeleccionada}
-          </option>
-        )}
         {carreras.map((c) => (
           <option key={c.id} value={c.id}>
             {c.nombre}
@@ -378,10 +376,6 @@ const FormFields = ({ formState, formActions, isSubmitting, profesoresFiltrados,
         disabled={!formState.carreraSeleccionada || isSubmitting}
       >
         <option value="">Seleccionar</option>
-        {formState.materiaSeleccionada && formState.carreraSeleccionada &&
-          !carreras.find((c) => c.id === formState.carreraSeleccionada)?.materias?.some((m) => m.id === formState.materiaSeleccionada) && (
-            <option value={formState.materiaSeleccionada}>{formState.materiaSeleccionada}</option>
-        )}
         {formState.carreraSeleccionada &&
           carreras
             .find((c) => c.id === formState.carreraSeleccionada)
@@ -402,9 +396,6 @@ const FormFields = ({ formState, formActions, isSubmitting, profesoresFiltrados,
         disabled={!formState.materiaSeleccionada || isSubmitting}
       >
         <option value="">Seleccionar</option>
-        {formState.profesorSeleccionado && !profesoresFiltrados.some((p) => p.id === formState.profesorSeleccionado) && (
-          <option value={formState.profesorSeleccionado}>{formState.profesorSeleccionado}</option>
-        )}
         {profesoresFiltrados.map((profesor) => (
           <option key={profesor.id} value={profesor.id}>
             {`${profesor.nombre} ${profesor.apellido}`}
@@ -422,9 +413,6 @@ const FormFields = ({ formState, formActions, isSubmitting, profesoresFiltrados,
         disabled={!formState.materiaSeleccionada || isSubmitting}
       >
         <option value="">Seleccionar</option>
-        {formState.vocalSeleccionado && !profesoresFiltrados.some((p) => p.id === formState.vocalSeleccionado) && (
-          <option value={formState.vocalSeleccionado}>{formState.vocalSeleccionado}</option>
-        )}
         {profesoresFiltrados.map((profesor) => (
           <option key={profesor.id} value={profesor.id}>
             {`${profesor.nombre} ${profesor.apellido}`}
@@ -442,9 +430,6 @@ const FormFields = ({ formState, formActions, isSubmitting, profesoresFiltrados,
         disabled={isSubmitting}
       >
         <option value="">Seleccionar</option>
-        {formState.hora && !HORAS.includes(formState.hora) && (
-          <option value={formState.hora}>{formState.hora}</option>
-        )}
         {HORAS.map((h) => (
           <option key={h} value={h}>
             {h}
@@ -772,6 +757,7 @@ export const action = async (args: ActionFunctionArgs) => {
 
   const { API_URL, INTERNAL_API_KEY } = getServerEnv();
   const formData = await request.formData();
+  const mesaId = formData.get("mesaId") as string;
   const fecha = formData.get("fecha") as string;
   const materia = formData.get("asignatura") as string;
   const carrera = formData.get("carrera") as string;
@@ -792,32 +778,38 @@ export const action = async (args: ActionFunctionArgs) => {
   // Enviar la fecha directamente sin convertir
   const fechaUTC = fechaLocal;
 
+  const mesaData = {
+    profesor: profesorId,
+    vocal: vocalId,
+    carrera,
+    materia,
+    fecha: fechaUTC.toISOString(),
+    descripcion: "Mesa de examen",
+    cargo: "Titular",
+    verification: false,
+    modalidad,
+    aula: modalidad === "Presencial" ? aula : undefined,
+    webexLink: modalidad === "Virtual" ? webexLink : undefined,
+  };
+
   try {
-    const response = await fetch(`${API_URL}/api/diaries/mesas`, {
-      method: "POST",
+    const url = mesaId 
+      ? `${API_URL}/api/diaries/mesas/${mesaId}`
+      : `${API_URL}/api/diaries/mesas`;
+
+    const response = await fetch(url, {
+      method: mesaId ? "PUT" : "POST",
       headers: {
         "x-api-key": INTERNAL_API_KEY,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        profesor: profesorId,
-        vocal: vocalId,
-        carrera,
-        materia,
-        fecha: fechaUTC.toISOString(),
-        descripcion: "Mesa de examen",
-        cargo: "Titular",
-        verification: false,
-        modalidad,
-        aula: modalidad === "Presencial" ? aula : undefined,
-        webexLink: modalidad === "Virtual" ? webexLink : undefined,
-      }),
+      body: JSON.stringify(mesaData),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
       return json(
-        { error: errorData.error || "Error al crear la mesa" },
+        { error: errorData.error || "Error al procesar la mesa" },
         { status: response.status }
       );
     }
@@ -828,7 +820,7 @@ export const action = async (args: ActionFunctionArgs) => {
     console.error("Error en el action:", error);
     return json(
       {
-        error: error instanceof Error ? error.message : "Error al crear la mesa",
+        error: error instanceof Error ? error.message : "Error al procesar la mesa",
       },
       { status: 500 }
     );
