@@ -39,7 +39,7 @@ describe('Módulo Redis', () => {
       process.env.REDIS_URL = originalUrl;
     });
 
-    it('should create a redis client with the correct URL', () => {
+    it('Debería crear un cliente redis con la URL correcta', () => {
       expect(redis).toBeDefined();
       expect(createClient).toHaveBeenCalledWith({
         url: process.env.REDIS_URL
