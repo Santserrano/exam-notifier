@@ -638,7 +638,11 @@ export default function AdminRoute() {
             <MesaCardAdmin
               key={mesa.id}
               {...mesa}
-              onClick={() => setMesaAEditar(mesa as MesaRaw)}
+              onClick={() => {
+                // Buscar la mesa original por ID y pasarla al modal
+                const mesaRaw = mesas.find((m: MesaRaw) => m.id?.toString() === mesa.id);
+                setMesaAEditar(mesaRaw || null);
+              }}
             />
           ))}
         </div>
