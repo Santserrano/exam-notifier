@@ -36,7 +36,7 @@ describe('apiKeyAuth Middleware', () => {
   });
 
   describe('validateApiKey', () => {
-    it('should return 401 if no API key is provided', () => {
+    it('Debería devolver 401 si no se proporciona una clave API', () => {
       process.env.INTERNAL_API_KEY = 'valid-key-123';
       
       validateApiKey(
