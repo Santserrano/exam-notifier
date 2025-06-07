@@ -88,37 +88,33 @@ export const loader = async (args: LoaderFunctionArgs) => {
   const notificationConfig = await getNotificationConfig(args);
 
   try {
-    const response = await fetch(
-      `${API_URL}/api/diaries/mesas/profesor/${userId}`,
-      {
-        headers: {
-          "x-api-key": INTERNAL_API_KEY,
-          "Content-Type": "application/json",
-        },
-      },
-    );
+    const [mesasResponse, aceptacionesResponse] = await Promise.all([
+      fetch(
+        `${API_URL}/api/diaries/mesas/profesor/${userId}`,
+        {
+          headers: {
+            "x-api-key": INTERNAL_API_KEY,
+            "Content-Type": "application/json",
+          },
+        }
+      ),
+      fetch(
+        `${API_URL}/api/diaries/mesas/aceptaciones/profesor/${userId}`,
+        {
+          headers: {
+            "x-api-key": INTERNAL_API_KEY,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+    ]);
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Error al obtener mesas: ${response.statusText}`);
+    if (!mesasResponse.ok) {
+      const errorData = await mesasResponse.json().catch(() => ({}));
+      throw new Error(errorData.message || `Error al obtener mesas: ${mesasResponse.statusText}`);
     }
 
-    const mesasRaw = await response.json();
-
-    const aceptacionesResponse = await fetch(
-      `${API_URL}/api/diaries/mesas/aceptaciones/profesor/${userId}`,
-      {
-        headers: {
-          "x-api-key": INTERNAL_API_KEY,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (!aceptacionesResponse.ok) {
-      console.error("Error al obtener aceptaciones:", aceptacionesResponse.statusText);
-    }
-
+    const mesasRaw = await mesasResponse.json();
     const aceptaciones = aceptacionesResponse.ok ? await aceptacionesResponse.json() : [];
 
     const meses = [
@@ -543,8 +539,6 @@ interface DetalleMesaProps {
 function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
   const fetcher = useFetcher();
   const { user } = useUser();
-  const [estadoAceptacion, setEstadoAceptacion] = useState(mesa.estadoAceptacion);
-
   const esProfesorAsignado = user?.id === mesa.profesorId || user?.id === mesa.vocalId;
 
   const handleAceptacion = (estado: "ACEPTADA" | "RECHAZADA") => {
@@ -553,7 +547,6 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
     formData.append("mesaId", mesa.id);
     formData.append("estado", estado);
     fetcher.submit(formData, { method: "post" });
-    setEstadoAceptacion(estado);
   };
 
   const fechaObj = new Date(mesa.fechaOriginal);
@@ -649,7 +642,7 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
           <div className="text-sm font-semibold text-gray-700">
             Estado de aceptación:
           </div>
-          {estadoAceptacion === "PENDIENTE" ? (
+          {mesa.estadoAceptacion === "PENDIENTE" ? (
             <div className="flex flex-col gap-2">
               <div className="text-xs text-gray-500 mb-2">
                 Por favor, confirma tu disponibilidad para esta mesa:
@@ -673,14 +666,14 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
             </div>
           ) : (
             <div className={`flex items-center gap-2 text-sm font-medium ${
-              estadoAceptacion === "ACEPTADA" ? "text-green-600" : "text-red-600"
+              mesa.estadoAceptacion === "ACEPTADA" ? "text-green-600" : "text-red-600"
             }`}>
-              {estadoAceptacion === "ACEPTADA" ? (
+              {mesa.estadoAceptacion === "ACEPTADA" ? (
                 <CheckCircle2 className="h-5 w-5" />
               ) : (
                 <XCircle className="h-5 w-5" />
               )}
-              Mesa {estadoAceptacion === "ACEPTADA" ? "aceptada" : "rechazada"}
+              Mesa {mesa.estadoAceptacion === "ACEPTADA" ? "aceptada" : "rechazada"}
             </div>
           )}
         </div>

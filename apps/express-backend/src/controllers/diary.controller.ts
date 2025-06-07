@@ -25,6 +25,22 @@ export const getAceptacionesProfesor = async (req: Request, res: Response) => {
     }
 };
 
+export const getAceptaciones = async (req: Request, res: Response) => {
+    try {
+        const aceptaciones = await prisma.mesaAceptacion.findMany({
+            include: {
+                mesa: true,
+                profesor: true
+            }
+        });
+
+        res.json(aceptaciones);
+    } catch (error) {
+        console.error("Error al obtener aceptaciones:", error);
+        res.status(500).json({ error: "Error al obtener aceptaciones" });
+    }
+};
+
 export const crearAceptacionMesa = async (req: Request, res: Response) => {
     try {
         const { mesaId, profesorId, estado } = req.body;
