@@ -4,12 +4,19 @@ import { PushNotification } from '../../../src/core/notifications/PushNotificati
 import { WhatsAppNotification } from '../../../src/core/notifications/WhatsAppNotification.js';
 import { describe, it, expect, vi } from 'vitest';
 
+beforeAll(() => {
+  process.env.RESEND_API_KEY = 'test-resend-key';
+  process.env.VAPID_PUBLIC_KEY = 'test-public-key';
+  process.env.VAPID_PRIVATE_KEY = 'test-private-key';
+});
+
+const mockData = {
+  title: 'Test Notification',
+  body: 'This is a test',
+  recipient: 'test@example.com',
+};
+
 describe('NotificationFactory', () => {
-  const mockData = {
-    title: 'Test Notification',
-    body: 'This is a test',
-    recipient: 'test@example.com',
-  };
 
   it('should create email notification', () => {
     const factory = new NotificationFactory();
@@ -17,7 +24,10 @@ describe('NotificationFactory', () => {
     expect(notification).toBeInstanceOf(EmailNotification);
   });
 
-  it('should create push notification', () => {
+  it('should create push notification (with valid VAPID keys)', () => {
+    const urlSafeBase64 = Buffer.alloc(65).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    process.env.VAPID_PUBLIC_KEY = urlSafeBase64;
+    process.env.VAPID_PRIVATE_KEY = Buffer.alloc(32).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     const factory = new NotificationFactory();
     const notification = factory.createNotification('push', mockData);
     expect(notification).toBeInstanceOf(PushNotification);
@@ -27,6 +37,31 @@ describe('NotificationFactory', () => {
     const factory = new NotificationFactory();
     const notification = factory.createNotification('whatsapp', mockData);
     expect(notification).toBeInstanceOf(WhatsAppNotification);
+  });
+
+  it('should create notifications with extra fields in data', () => {
+    const factory = new NotificationFactory();
+    const extendedData = { ...mockData, extra: 'field' };
+    const email = factory.createNotification('email', extendedData);
+    const push = factory.createNotification('push', extendedData);
+    const whatsapp = factory.createNotification('whatsapp', extendedData);
+    expect(email).toBeInstanceOf(EmailNotification);
+    expect(push).toBeInstanceOf(PushNotification);
+    expect(whatsapp).toBeInstanceOf(WhatsAppNotification);
+  });
+
+  it('should throw for null type', () => {
+    const factory = new NotificationFactory();
+    expect(() =>
+      factory.createNotification(null as any, mockData)
+    ).toThrow('Tipo de notificación no soportado: null');
+  });
+
+  it('should throw for empty string type', () => {
+    const factory = new NotificationFactory();
+    expect(() =>
+      factory.createNotification('' as any, mockData)
+    ).toThrow('Tipo de notificación no soportado: ');
   });
 
   it('should throw for unsupported type', () => {
@@ -40,5 +75,36 @@ describe('NotificationFactory', () => {
     const instance1 = notificationFactory;
     const instance2 = notificationFactory;
     expect(instance1).toBe(instance2);
+  });
+
+  it('should create different instances for different factories', () => {
+    const factory1 = new NotificationFactory();
+    const factory2 = new NotificationFactory();
+    expect(factory1).not.toBe(factory2);
+  });
+
+  it('should pass correct data to EmailNotification', () => {
+    const emailNotificationSpy = jest.spyOn(EmailNotification.prototype, 'send').mockImplementation(async () => {});
+    const factory = new NotificationFactory();
+    const notification = factory.createNotification('email', mockData);
+    notification.send();
+    expect(emailNotificationSpy).toHaveBeenCalled();
+    emailNotificationSpy.mockRestore();
+  });
+
+  it('should pass correct data to WhatsAppNotification', () => {
+    const sendSpy = jest.spyOn(WhatsAppNotification.prototype, 'send').mockImplementation(async () => {});
+    const factory = new NotificationFactory();
+    const notification = factory.createNotification('whatsapp', mockData);
+    notification.send();
+    expect(sendSpy).toHaveBeenCalled();
+    sendSpy.mockRestore();
+  });
+
+  it('should throw if type is undefined', () => {
+    const factory = new NotificationFactory();
+    expect(() =>
+      factory.createNotification(undefined as any, mockData)
+    ).toThrow('Tipo de notificación no soportado: undefined');
   });
 });
