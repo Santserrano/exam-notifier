@@ -71,7 +71,7 @@ describe('NotificationFactory', () => {
     ).toThrow('Tipo de notificación no soportado: unsupported');
   });
 
-  it('should provide a singleton instance', () => {
+  it('debe proporcionar una instancia singleton', () => {
     const instance1 = notificationFactory;
     const instance2 = notificationFactory;
     expect(instance1).toBe(instance2);
