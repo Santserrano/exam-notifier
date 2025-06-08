@@ -2819,7 +2819,7 @@ packages:
     dependencies:
       '@jest/fake-timers': 30.0.0-beta.3
       '@jest/types': 30.0.0-beta.3
-      '@types/node': 20.17.46
+      '@types/node': 20.19.0
       jest-mock: 30.0.0-beta.3
     dev: true
 
@@ -2875,7 +2875,7 @@ packages:
     dependencies:
       '@jest/types': 30.0.0-beta.3
       '@sinonjs/fake-timers': 13.0.5
-      '@types/node': 20.17.46
+      '@types/node': 20.19.0
       jest-message-util: 30.0.0-beta.3
       jest-mock: 30.0.0-beta.3
       jest-util: 30.0.0-beta.3
@@ -2894,6 +2894,18 @@ packages:
       '@jest/expect': 29.7.0
       '@jest/types': 29.6.3
       jest-mock: 29.7.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /@jest/globals@30.0.0-beta.3:
+    resolution: {integrity: sha512-VHeYkAz/hhj5cSNsdVEjJw0qSpred2LR7Q/UNgDasopVb7ue3DcAtwHx3f/lYsn8iRTyHQZFTZmx3rCMVlS7Vw==}
+    engines: {node: ^18.14.0 || ^20.0.0 || >=22.0.0}
+    dependencies:
+      '@jest/environment': 30.0.0-beta.3
+      '@jest/expect': 30.0.0-beta.3
+      '@jest/types': 30.0.0-beta.3
+      jest-mock: 30.0.0-beta.3
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -2955,6 +2967,16 @@ packages:
     engines: {node: ^18.14.0 || ^20.0.0 || >=22.0.0}
     dependencies:
       '@sinclair/typebox': 0.34.33
+    dev: true
+
+  /@jest/snapshot-utils@30.0.0-beta.3:
+    resolution: {integrity: sha512-MmizhZf+FDqbc5lh0EH6B6dUlSZBGHuFwqIPpsB3wVoHFPfnx52YUFeqYCD+GkToKDU4gdbrlONIJqohK+uYpQ==}
+    engines: {node: ^18.14.0 || ^20.0.0 || >=22.0.0}
+    dependencies:
+      '@jest/types': 30.0.0-beta.3
+      chalk: 4.1.2
+      graceful-fs: 4.2.11
+      natural-compare: 1.4.0
     dev: true
 
   /@jest/source-map@29.6.3:
@@ -4121,19 +4143,14 @@ packages:
       '@sinonjs/commons': 3.0.1
     dev: true
 
-
-  /@storybook/builder-vite@8.6.14(storybook@8.6.14)(vite@5.4.19):
-    resolution: {integrity: sha512-ajWYhy32ksBWxwWHrjwZzyC0Ii5ZTeu5lsqA95Q/EQBB0P5qWlHWGM3AVyv82Mz/ND03ebGy123uVwgf6olnYQ==}
-
   /@sinonjs/fake-timers@13.0.5:
     resolution: {integrity: sha512-36/hTbH2uaWuGVERyC6da9YwGWnzUZXuPro/F2LfsdOsLnCojz/iSH8MxUt/FD2S5XBSVPhmArFUXcpCQ2Hkiw==}
     dependencies:
       '@sinonjs/commons': 3.0.1
     dev: true
 
-  /@storybook/builder-vite@8.6.12(storybook@8.6.14)(vite@5.4.19):
-    resolution: {integrity: sha512-Gju21ud/3Qw4v2vLNaa5SuJECsI9ICNRr2G0UyCCzRvCHg8jpA9lDReu2NqhLDyFIuDG+ZYT38gcaHEUoNQ8KQ==}
-
+  /@storybook/builder-vite@8.6.14(storybook@8.6.14)(vite@5.4.19):
+    resolution: {integrity: sha512-ajWYhy32ksBWxwWHrjwZzyC0Ii5ZTeu5lsqA95Q/EQBB0P5qWlHWGM3AVyv82Mz/ND03ebGy123uVwgf6olnYQ==}
     peerDependencies:
       storybook: ^8.6.14
       vite: ^4.0.0 || ^5.0.0 || ^6.0.0
@@ -9270,7 +9287,7 @@ packages:
     engines: {node: ^18.14.0 || ^20.0.0 || >=22.0.0}
     dependencies:
       '@jest/types': 30.0.0-beta.3
-      '@types/node': 20.17.46
+      '@types/node': 20.19.0
       jest-util: 30.0.0-beta.3
     dev: true
 

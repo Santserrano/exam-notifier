@@ -1,5 +1,5 @@
 import { EmailNotification } from '../../../src/core/notifications/EmailNotification';
-import { notificationFactory } from '../../../src/core/notifications/NotificationFactory';
+import { notificationFactory, NotificationFactory } from '../../../src/core/notifications/NotificationFactory';
 import { PushNotification } from '../../../src/core/notifications/PushNotification';
 import { NotificationType } from '../../../src/core/notifications/types';
 import { WhatsAppNotification } from '../../../src/core/notifications/WhatsAppNotification';
@@ -12,11 +12,23 @@ interface NotificationData {
   body: string;
 }
 
-<<<<<<< HEAD
+const mockData = {
+  title: 'Test Notification',
+  body: 'This is a test',
+  recipient: 'test@example.com',
+  message: 'Test message'
+};
+
+beforeAll(() => {
+  process.env.RESEND_API_KEY = 'test-resend-key';
+  process.env.VAPID_PUBLIC_KEY = 'test-public-key';
+  process.env.VAPID_PRIVATE_KEY = 'test-private-key';
+});
+
 describe('NotificationFactory', () => {
   it('should create EmailNotification instance', () => {
     const data: NotificationData = {
-      type: 'email' as NotificationType,
+      type: 'email',
       recipient: 'test@example.com',
       message: 'Test message',
       title: 'Test Title',
@@ -28,7 +40,7 @@ describe('NotificationFactory', () => {
 
   it('should create PushNotification instance', () => {
     const data: NotificationData = {
-      type: 'push' as NotificationType,
+      type: 'push',
       recipient: 'test@example.com',
       message: 'Test message',
       title: 'Test Title',
@@ -40,7 +52,7 @@ describe('NotificationFactory', () => {
 
   it('should create WhatsAppNotification instance', () => {
     const data: NotificationData = {
-      type: 'whatsapp' as NotificationType,
+      type: 'whatsapp',
       recipient: '1234567890',
       message: 'Test message',
       title: 'Test Title',
@@ -60,20 +72,7 @@ describe('NotificationFactory', () => {
     };
     expect(() => notificationFactory.createNotification(data.type, data))
       .toThrow('Tipo de notificación no soportado: unknown');
-=======
-beforeAll(() => {
-  process.env.RESEND_API_KEY = 'test-resend-key';
-  process.env.VAPID_PUBLIC_KEY = 'test-public-key';
-  process.env.VAPID_PRIVATE_KEY = 'test-private-key';
-});
-
-const mockData = {
-  title: 'Test Notification',
-  body: 'This is a test',
-  recipient: 'test@example.com',
-};
-
-describe('NotificationFactory', () => {
+  });
 
   it('Debería crear una notificación por correo electrónico', () => {
     const factory = new NotificationFactory();
@@ -132,7 +131,6 @@ describe('NotificationFactory', () => {
     const instance1 = notificationFactory;
     const instance2 = notificationFactory;
     expect(instance1).toBe(instance2);
->>>>>>> 06dfebfe88b7548c64f74f857833cf36428310a9
   });
 
   it('Debería crear diferentes instancias para diferentes fábricas', () => {
