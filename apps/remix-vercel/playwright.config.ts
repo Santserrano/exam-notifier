@@ -8,7 +8,7 @@ export default defineConfig({
     workers: process.env.CI ? 1 : undefined,
     reporter: 'html',
     use: {
-        baseURL: 'http://localhost:3000',
+        baseURL: 'https://ucpmesas.site',
         trace: 'on-first-retry',
         video: 'on-first-retry',
     },
@@ -26,9 +26,5 @@ export default defineConfig({
             use: { ...devices['Desktop Safari'] },
         },
     ],
-    webServer: {
-        command: 'pnpm dev',
-        url: 'http://localhost:3000',
-        reuseExistingServer: !process.env.CI,
-    },
+    // webServer desactivado para pruebas contra producción
 }); 

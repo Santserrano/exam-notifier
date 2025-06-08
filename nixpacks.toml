@@ -9,6 +9,7 @@ cacheDirectories = [
 [phases.install]
 cmds = [
   "cd /app",
+  "rm -rf node_modules .pnpm-store",
   "pnpm install --no-frozen-lockfile",
   "pnpm install --no-frozen-lockfile --filter=express-backend --filter=@exam-notifier/database"
 ]
