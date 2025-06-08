@@ -403,11 +403,13 @@ export default function MesasRoute() {
 
   const mesasFiltradas = mesas.filter((m: MesaProcesada) => {
     const futura = new Date(m.fechaOriginal) > new Date();
+    const fechaMesa = m.fecha.toLowerCase();
+    const fechaFiltro = fecha.toLowerCase();
     return (
       (searchParams.get("tab") === "pasadas" ? !futura : futura) &&
       (!search || m.materia.toLowerCase().includes(search.toLowerCase())) &&
       (!carrera || m.carrera === carrera) &&
-      (!fecha || m.fecha.includes(fecha)) &&
+      (!fecha || fechaMesa.includes(fechaFiltro)) &&
       (!sede || m.sede === sede)
     );
   });

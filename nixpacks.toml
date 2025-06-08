@@ -16,7 +16,7 @@ cmds = [
 [phases.build]
 cmds = [
   "cd /app/packages/database && NODE_OPTIONS='--max-old-space-size=2048' pnpm prisma generate",
-  "cd /app && pnpm install && pnpm turbo run build --filter=express-backend --filter=@exam-notifier/database -- --skip-tests"
+  "cd /app && pnpm install && pnpm turbo run build --filter=express-backend --filter=@exam-notifier/database"
 ]
 
 [start]
