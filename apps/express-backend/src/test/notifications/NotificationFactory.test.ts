@@ -77,7 +77,7 @@ describe('NotificationFactory', () => {
     expect(instance1).toBe(instance2);
   });
 
-  it('should create different instances for different factories', () => {
+  it('Debería crear diferentes instancias para diferentes fábricas', () => {
     const factory1 = new NotificationFactory();
     const factory2 = new NotificationFactory();
     expect(factory1).not.toBe(factory2);
