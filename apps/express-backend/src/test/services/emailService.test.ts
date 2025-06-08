@@ -1,5 +1,4 @@
 import { jest } from '@jest/globals';
-
 import { enviarEmailNotificacion } from '../../../src/service/emailService';
 
 const mockSend = jest.fn();
