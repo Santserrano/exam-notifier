@@ -1,7 +1,8 @@
 import { jest } from '@jest/globals';
+import { MesaAceptacion, MesaDeExamen, PrismaClient, Profesor } from '@prisma/client';
 import { Request, Response } from 'express';
-import { getAceptacionesProfesor, getAceptaciones, crearAceptacionMesa } from '../../../src/controllers/diary.controller';
-import { PrismaClient, MesaAceptacion, MesaDeExamen, Profesor } from '@prisma/client';
+
+import { crearAceptacionMesa,getAceptaciones, getAceptacionesProfesor } from '../../../src/controllers/diary.controller';
 
 // Mock de PrismaClient
 jest.mock('@prisma/client', () => ({
