@@ -122,3 +122,23 @@ Thumbs.db
 dist
 build
 coverage
+
+# Tests
+**/test/
+**/*.test.ts
+**/*.spec.ts
+**/__tests__/
+**/coverage/
+
+# Development
+**/.git
+**/.turbo
+**/node_modules
+**/.env
+**/.env.*
+**/.DS_Store
+**/dist
+**/.next
+**/.vercel
+**/.vscode
+**/.idea
