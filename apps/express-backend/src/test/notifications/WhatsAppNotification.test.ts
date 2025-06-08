@@ -42,7 +42,7 @@ describe('WhatsAppNotification', () => {
         );
     });
 
-    it('should format phone numbers correctly', async () => {
+    it('Debería formatear los números de teléfono correctamente.', async () => {
         const notification = new WhatsAppNotification(mockData);
         
         // Test with different phone formats
