@@ -17,7 +17,7 @@ describe('WhatsAppNotification', () => {
         process.env.VONAGE_API_KEY = 'test_api_key';
     });
 
-    it('should send a WhatsApp message successfully', async () => {
+    it('Debería enviar un mensaje de WhatsApp con éxito.', async () => {
         (axios.post as jest.Mock).mockResolvedValue({ status: 200 });
 
         const notification = new WhatsAppNotification(mockData);
@@ -42,7 +42,7 @@ describe('WhatsAppNotification', () => {
         );
     });
 
-    it('should format phone numbers correctly', async () => {
+    it('Debería formatear los números de teléfono correctamente.', async () => {
         const notification = new WhatsAppNotification(mockData);
 
         // Test with different phone formats
