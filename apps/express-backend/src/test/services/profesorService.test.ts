@@ -1,29 +1,26 @@
 import { jest } from '@jest/globals';
 import { ProfesorService } from '../../../src/service/profesorService';
-import { PrismaClient, Profesor } from '@prisma/client';
 
-// Mock de PrismaClient
-jest.mock('@prisma/client', () => ({
-    PrismaClient: jest.fn().mockImplementation(() => ({
-        profesor: {
-            findMany: jest.fn(),
-            findUnique: jest.fn()
-        }
-    }))
-}));
-
-// Mock del módulo prisma
-jest.mock('../../../src/lib/prisma', () => ({
-    prisma: new PrismaClient()
-}));
+// Mock del módulo @prisma/client
+jest.mock('@prisma/client', () => {
+    return {
+        PrismaClient: jest.fn().mockImplementation(() => ({
+            profesor: {
+                findMany: jest.fn(),
+                findUnique: jest.fn()
+            }
+        }))
+    };
+});
 
 describe('ProfesorService', () => {
     let profesorService: ProfesorService;
-    let mockPrisma: jest.Mocked<PrismaClient>;
+    let mockPrisma: any;
 
     beforeEach(() => {
-        mockPrisma = new PrismaClient() as jest.Mocked<PrismaClient>;
         profesorService = new ProfesorService();
+        // Accede al mock interno de la instancia
+        mockPrisma = (profesorService as any).prisma;
         jest.clearAllMocks();
     });
 
@@ -34,31 +31,29 @@ describe('ProfesorService', () => {
                     id: '1',
                     nombre: 'Juan',
                     apellido: 'Pérez',
+                    carreras: [{ id: '1', nombre: 'Carrera 1' }],
+                    materias: [{ id: '1', nombre: 'Materia 1', carreraId: '1' }],
                     email: 'juan@example.com',
                     telefono: '123456789',
                     createdAt: new Date('2025-06-08T01:07:25.735Z'),
-                    updatedAt: new Date('2025-06-08T01:07:25.735Z'),
-                    carreras: [{ id: '1', nombre: 'Carrera 1' }],
-                    materias: [{ id: '1', nombre: 'Materia 1', carreraId: '1' }]
+                    updatedAt: new Date('2025-06-08T01:07:25.735Z')
                 }
-            ] as unknown as Profesor[];
+            ];
 
-            (mockPrisma.profesor.findMany as jest.Mock).mockResolvedValue(mockProfesores);
+            mockPrisma.profesor.findMany.mockResolvedValue(mockProfesores);
 
             const result = await profesorService.getAllProfesores();
             expect(result).toEqual(mockProfesores);
             expect(mockPrisma.profesor.findMany).toHaveBeenCalledWith({
                 include: {
-                    carreras: true,
-                    materias: true
+                    carreras: { select: { id: true, nombre: true } },
+                    materias: { select: { id: true, nombre: true, carreraId: true } }
                 }
             });
         });
 
         it('should throw error when getting profesores fails', async () => {
-            const error = new Error('Database error');
-            (mockPrisma.profesor.findMany as jest.Mock).mockRejectedValue(error);
-
+            mockPrisma.profesor.findMany.mockRejectedValue(new Error('DB error'));
             await expect(profesorService.getAllProfesores()).rejects.toThrow('Error al obtener los profesores');
         });
     });
@@ -69,13 +64,15 @@ describe('ProfesorService', () => {
                 id: '1',
                 nombre: 'Juan',
                 apellido: 'Pérez',
+                carreras: [],
+                materias: [],
                 email: 'juan@example.com',
                 telefono: '123456789',
                 createdAt: new Date('2025-06-08T01:07:25.764Z'),
                 updatedAt: new Date('2025-06-08T01:07:25.764Z')
-            } as unknown as Profesor;
+            };
 
-            (mockPrisma.profesor.findUnique as jest.Mock).mockResolvedValue(mockProfesor);
+            mockPrisma.profesor.findUnique.mockResolvedValue(mockProfesor);
 
             const result = await profesorService.getProfesorById('1');
             expect(result).toEqual(mockProfesor);
@@ -85,9 +82,7 @@ describe('ProfesorService', () => {
         });
 
         it('should throw error when getting profesor fails', async () => {
-            const error = new Error('Database error');
-            (mockPrisma.profesor.findUnique as jest.Mock).mockRejectedValue(error);
-
+            mockPrisma.profesor.findUnique.mockRejectedValue(new Error('DB error'));
             await expect(profesorService.getProfesorById('1')).rejects.toThrow('Error al obtener el profesor');
         });
     });
@@ -99,38 +94,30 @@ describe('ProfesorService', () => {
                     id: '1',
                     nombre: 'Juan',
                     apellido: 'Pérez',
+                    carreras: [{ id: '1', nombre: 'Carrera 1' }],
+                    materias: [{ id: '1', nombre: 'Materia 1' }],
                     email: 'juan@example.com',
                     telefono: '123456789',
                     createdAt: new Date('2025-06-08T01:07:25.768Z'),
-                    updatedAt: new Date('2025-06-08T01:07:25.768Z'),
-                    carreras: [{ id: '1', nombre: 'Carrera 1' }],
-                    materias: [{ id: '1', nombre: 'Materia 1' }]
+                    updatedAt: new Date('2025-06-08T01:07:25.768Z')
                 }
-            ] as unknown as Profesor[];
+            ];
 
-            (mockPrisma.profesor.findMany as jest.Mock).mockResolvedValue(mockProfesores);
+            mockPrisma.profesor.findMany.mockResolvedValue(mockProfesores);
 
             const result = await profesorService.getProfesoresByCarrera('1');
             expect(result).toEqual(mockProfesores);
             expect(mockPrisma.profesor.findMany).toHaveBeenCalledWith({
-                where: {
-                    carreras: {
-                        some: {
-                            id: '1'
-                        }
-                    }
-                },
+                where: { carreras: { some: { id: '1' } } },
                 include: {
-                    carreras: true,
-                    materias: true
+                    carreras: { select: { id: true, nombre: true } },
+                    materias: { select: { id: true, nombre: true } }
                 }
             });
         });
 
         it('should throw error when getting profesores by carrera fails', async () => {
-            const error = new Error('Database error');
-            (mockPrisma.profesor.findMany as jest.Mock).mockRejectedValue(error);
-
+            mockPrisma.profesor.findMany.mockRejectedValue(new Error('DB error'));
             await expect(profesorService.getProfesoresByCarrera('1')).rejects.toThrow('Error al obtener los profesores por carrera');
         });
     });
@@ -142,39 +129,31 @@ describe('ProfesorService', () => {
                     id: '1',
                     nombre: 'Juan',
                     apellido: 'Pérez',
+                    carreras: [{ id: '1', nombre: 'Carrera 1' }],
+                    materias: [{ id: '1', nombre: 'Materia 1' }],
                     email: 'juan@example.com',
                     telefono: '123456789',
                     createdAt: new Date('2025-06-08T01:07:25.772Z'),
-                    updatedAt: new Date('2025-06-08T01:07:25.772Z'),
-                    carreras: [{ id: '1', nombre: 'Carrera 1' }],
-                    materias: [{ id: '1', nombre: 'Materia 1' }]
+                    updatedAt: new Date('2025-06-08T01:07:25.772Z')
                 }
-            ] as unknown as Profesor[];
+            ];
 
-            (mockPrisma.profesor.findMany as jest.Mock).mockResolvedValue(mockProfesores);
+            mockPrisma.profesor.findMany.mockResolvedValue(mockProfesores);
 
             const result = await profesorService.getProfesoresByMateria('1');
             expect(result).toEqual(mockProfesores);
             expect(mockPrisma.profesor.findMany).toHaveBeenCalledWith({
-                where: {
-                    materias: {
-                        some: {
-                            id: '1'
-                        }
-                    }
-                },
+                where: { materias: { some: { id: '1' } } },
                 include: {
-                    carreras: true,
-                    materias: true
+                    carreras: { select: { id: true, nombre: true } },
+                    materias: { select: { id: true, nombre: true } }
                 }
             });
         });
 
         it('should throw error when getting profesores by materia fails', async () => {
-            const error = new Error('Database error');
-            (mockPrisma.profesor.findMany as jest.Mock).mockRejectedValue(error);
-
+            mockPrisma.profesor.findMany.mockRejectedValue(new Error('DB error'));
             await expect(profesorService.getProfesoresByMateria('1')).rejects.toThrow('Error al obtener los profesores por materia');
         });
     });
-}); 
+});

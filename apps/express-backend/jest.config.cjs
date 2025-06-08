@@ -9,6 +9,7 @@ module.exports = {
     transform: {
         '^.+\\.ts$': 'ts-jest',
     },
+    
     moduleFileExtensions: ['ts', 'js', 'json', 'node'],
     setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
     collectCoverageFrom: [

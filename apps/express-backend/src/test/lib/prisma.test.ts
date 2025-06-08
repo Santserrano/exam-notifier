@@ -1,54 +1,58 @@
 import { jest } from '@jest/globals';
-import { PrismaClient } from '.prisma/client';
-import { prisma } from '../../lib/prisma';
 
-// Mock de PrismaClient
+jest.resetModules();
 jest.mock('.prisma/client', () => ({
-    PrismaClient: jest.fn().mockImplementation(() => ({
-        $connect: jest.fn(),
-        $disconnect: jest.fn()
-    }))
+  PrismaClient: jest.fn().mockImplementation(() => ({
+    $connect: jest.fn(),
+    $disconnect: jest.fn()
+  }))
 }));
 
 describe('Prisma Singleton', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
-        // Limpiar la instancia global antes de cada prueba
-        global.prisma = undefined;
+  let PrismaClient: any;
+
+  beforeEach(() => {
+    jest.resetModules();
+    global.prisma = undefined;
+    PrismaClient = require('.prisma/client').PrismaClient;
+  });
+
+  it('should create a new PrismaClient instance when none exists', () => {
+    const { prisma } = require('../../lib/prisma');
+    expect(prisma).toBeDefined();
+    expect(PrismaClient).toHaveBeenCalledWith({
+      log: ['query', 'error', 'warn']
     });
+  });
 
-    it('should create a new PrismaClient instance when none exists', () => {
-        const instance = prisma;
-        expect(instance).toBeDefined();
-        expect(PrismaClient).toHaveBeenCalledWith({
-            log: ['query', 'error', 'warn']
-        });
-    });
+  it('should reuse the same PrismaClient instance', () => {
+    const { prisma: instance1 } = require('../../lib/prisma');
+    const { prisma: instance2 } = require('../../lib/prisma');
+    expect(instance1).toBe(instance2);
+    expect(PrismaClient).toHaveBeenCalledTimes(1);
+  });
 
-    it('should reuse the same PrismaClient instance', () => {
-        const instance1 = prisma;
-        const instance2 = prisma;
-        expect(instance1).toBe(instance2);
-        expect(PrismaClient).toHaveBeenCalledTimes(1);
-    });
+  it('should store the instance in globalThis in non-production environment', () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+    jest.resetModules();
+    global.prisma = undefined;
 
-    it('should store the instance in globalThis in non-production environment', () => {
-        const originalNodeEnv = process.env.NODE_ENV;
-        process.env.NODE_ENV = 'development';
+    const { prisma } = require('../../lib/prisma');
+    expect(global.prisma).toBe(prisma);
 
-        const instance = prisma;
-        expect(global.prisma).toBe(instance);
+    process.env.NODE_ENV = originalNodeEnv;
+  });
 
-        process.env.NODE_ENV = originalNodeEnv;
-    });
+  it('should not store the instance in globalThis in production environment', () => {
+    const originalNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    jest.resetModules();
+    global.prisma = undefined;
 
-    it('should not store the instance in globalThis in production environment', () => {
-        const originalNodeEnv = process.env.NODE_ENV;
-        process.env.NODE_ENV = 'production';
+    const { prisma } = require('../../lib/prisma');
+    expect(global.prisma).toBeUndefined();
 
-        const instance = prisma;
-        expect(global.prisma).toBeUndefined();
-
-        process.env.NODE_ENV = originalNodeEnv;
-    });
-}); 
+    process.env.NODE_ENV = originalNodeEnv;
+  });
+});

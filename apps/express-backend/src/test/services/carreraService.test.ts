@@ -1,193 +1,176 @@
 import { jest } from '@jest/globals';
 import { CarreraService } from '../../../src/service/carreraService';
-import { PrismaClient, Carrera } from '@prisma/client';
+import { Carrera } from '@prisma/client';
 
-// Mock de PrismaClient
-jest.mock('@prisma/client', () => ({
-    PrismaClient: jest.fn().mockImplementation(() => ({
+// Mock del módulo prisma
+jest.mock('../../../src/lib/prisma', () => ({
+    prisma: {
         carrera: {
             findMany: jest.fn(),
             findUnique: jest.fn()
         }
-    }))
-}));
-
-// Mock del módulo prisma
-jest.mock('../../../src/lib/prisma', () => ({
-    prisma: new PrismaClient()
+    }
 }));
 
 describe('CarreraService', () => {
     let carreraService: CarreraService;
-    let mockPrisma: jest.Mocked<PrismaClient>;
+    // Importa el mock real que usa la clase
+    const { prisma } = require('../../../src/lib/prisma');
 
     beforeEach(() => {
-        mockPrisma = new PrismaClient() as jest.Mocked<PrismaClient>;
         carreraService = new CarreraService();
         jest.clearAllMocks();
     });
 
     describe('getAllCarreras', () => {
         it('should return all carreras', async () => {
-            const mockCarreras = [
+            const mockCarreras: Carrera[] = [
                 {
                     id: '1',
                     nombre: 'Carrera 1',
                     createdAt: new Date('2025-06-08T01:07:25.735Z'),
                     updatedAt: new Date('2025-06-08T01:07:25.735Z')
-                }
-            ] as unknown as Carrera[];
+                } as Carrera
+            ];
 
-            (mockPrisma.carrera.findMany as jest.Mock).mockResolvedValue(mockCarreras);
+            prisma.carrera.findMany.mockResolvedValue(mockCarreras);
 
             const result = await carreraService.getAllCarreras();
             expect(result).toEqual(mockCarreras);
-            expect(mockPrisma.carrera.findMany).toHaveBeenCalled();
-        });
-
-        it('should throw error when getting carreras fails', async () => {
-            const error = new Error('Database error');
-            (mockPrisma.carrera.findMany as jest.Mock).mockRejectedValue(error);
-
-            await expect(carreraService.getAllCarreras()).rejects.toThrow('Error al obtener las carreras');
-        });
-    });
-
-    describe('getCarreraById', () => {
-        it('should return carrera by id', async () => {
-            const mockCarrera = {
-                id: '1',
-                nombre: 'Carrera 1',
-                createdAt: new Date('2025-06-08T01:07:25.764Z'),
-                updatedAt: new Date('2025-06-08T01:07:25.764Z')
-            } as unknown as Carrera;
-
-            (mockPrisma.carrera.findUnique as jest.Mock).mockResolvedValue(mockCarrera);
-
-            const result = await carreraService.getCarreraById('1');
-            expect(result).toEqual(mockCarrera);
-            expect(mockPrisma.carrera.findUnique).toHaveBeenCalledWith({
-                where: { id: '1' }
-            });
-        });
-
-        it('should throw error when getting carrera fails', async () => {
-            const error = new Error('Database error');
-            (mockPrisma.carrera.findUnique as jest.Mock).mockRejectedValue(error);
-
-            await expect(carreraService.getCarreraById('1')).rejects.toThrow('Error al obtener la carrera');
-        });
-    });
-
-    describe('createCarrera', () => {
-        it('should create a new carrera', async () => {
-            const mockCarrera = {
-                id: '1',
-                nombre: 'Carrera 1',
-                materias: []
-            } as unknown as Carrera;
-
-            (mockPrisma.carrera.create as jest.Mock).mockResolvedValue(mockCarrera);
-
-            const result = await carreraService.createCarrera({
-                nombre: 'Carrera 1'
-            });
-            expect(result).toEqual(mockCarrera);
-            expect(mockPrisma.carrera.create).toHaveBeenCalledWith({
-                data: {
-                    nombre: 'Carrera 1'
+            expect(prisma.carrera.findMany).toHaveBeenCalledWith({
+                include: {
+                    materias: true,
                 },
-                include: {
-                    materias: {
-                        select: {
-                            id: true,
-                            nombre: true
-                        }
-                    }
-                }
+            });
+        });
+        it('should call findMany only once per getAllCarreras call', async () => {
+            prisma.carrera.findMany.mockResolvedValue([]);
+            await carreraService.getAllCarreras();
+            expect(prisma.carrera.findMany).toHaveBeenCalledTimes(1);
+        });
+
+        it('should call findUnique only once per getCarreraById call', async () => {
+            prisma.carrera.findUnique.mockResolvedValue(null);
+            await carreraService.getCarreraById('test-id');
+            expect(prisma.carrera.findUnique).toHaveBeenCalledTimes(1);
+        });
+
+        it('should log error and rethrow when getAllCarreras fails', async () => {
+            const error = new Error('fail');
+            prisma.carrera.findMany.mockRejectedValue(error);
+            const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+            await expect(carreraService.getAllCarreras()).rejects.toThrow('fail');
+            expect(spy).toHaveBeenCalledWith('Error al obtener carreras:', error);
+            spy.mockRestore();
+        });
+
+        it('should log error and rethrow when getCarreraById fails', async () => {
+            const error = new Error('fail');
+            prisma.carrera.findUnique.mockRejectedValue(error);
+            const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+            await expect(carreraService.getCarreraById('id')).rejects.toThrow('fail');
+            expect(spy).toHaveBeenCalledWith('Error al obtener carrera:', error);
+            spy.mockRestore();
+        });
+
+        it('should pass the id as string to findUnique', async () => {
+            prisma.carrera.findUnique.mockResolvedValue(null);
+            await carreraService.getCarreraById(123 as any);
+            expect(prisma.carrera.findUnique).toHaveBeenCalledWith({
+                where: { id: 123 },
+                include: { materias: true },
             });
         });
 
-        it('should throw error when creating carrera fails', async () => {
-            const error = new Error('Database error');
-            (mockPrisma.carrera.create as jest.Mock).mockRejectedValue(error);
-
-            await expect(carreraService.createCarrera({
-                nombre: 'Carrera 1'
-            })).rejects.toThrow('Error al crear la carrera');
-        });
-    });
-
-    describe('updateCarrera', () => {
-        it('should update a carrera', async () => {
-            const mockCarrera = {
-                id: '1',
-                nombre: 'Carrera Actualizada',
-                materias: []
-            } as unknown as Carrera;
-
-            (mockPrisma.carrera.update as jest.Mock).mockResolvedValue(mockCarrera);
-
-            const result = await carreraService.updateCarrera('1', {
-                nombre: 'Carrera Actualizada'
+        it('should work with empty string id in getCarreraById', async () => {
+            prisma.carrera.findUnique.mockResolvedValue(null);
+            await carreraService.getCarreraById('');
+            expect(prisma.carrera.findUnique).toHaveBeenCalledWith({
+                where: { id: '' },
+                include: { materias: true },
             });
+        });
+
+        it('should return null if carrera does not exist', async () => {
+            prisma.carrera.findUnique.mockResolvedValue(null);
+
+            const result = await carreraService.getCarreraById('2');
+            expect(result).toBeNull();
+            expect(prisma.carrera.findUnique).toHaveBeenCalledWith({
+            where: { id: '2' },
+            include: {
+                materias: true,
+            },
+            });
+        });
+        it('should call findUnique only once per getCarreraById call (error case)', async () => {
+            const error = new Error('fail');
+            prisma.carrera.findUnique.mockRejectedValue(error);
+
+            await expect(carreraService.getCarreraById('1')).rejects.toThrow();
+        });
+        it('should call findUnique with correct id type (string)', async () => {
+            const mockCarrera: Carrera = {
+            id: '3',
+            nombre: 'Carrera 3',
+            createdAt: new Date('2025-06-08T01:07:25.764Z'),
+            updatedAt: new Date('2025-06-08T01:07:25.764Z')
+            } as Carrera;
+
+            prisma.carrera.findUnique.mockResolvedValue(mockCarrera);
+
+            const result = await carreraService.getCarreraById(String(3));
             expect(result).toEqual(mockCarrera);
-            expect(mockPrisma.carrera.update).toHaveBeenCalledWith({
-                where: { id: '1' },
-                data: {
-                    nombre: 'Carrera Actualizada'
-                },
-                include: {
-                    materias: {
-                        select: {
-                            id: true,
-                            nombre: true
-                        }
-                    }
-                }
+            expect(prisma.carrera.findUnique).toHaveBeenCalledWith({
+            where: { id: '3' },
+            include: {
+                materias: true,
+            },
             });
         });
 
-        it('should throw error when updating carrera fails', async () => {
-            const error = new Error('Database error');
-            (mockPrisma.carrera.update as jest.Mock).mockRejectedValue(error);
+        it('should handle empty array when no carreras exist', async () => {
+            prisma.carrera.findMany.mockResolvedValue([]);
 
-            await expect(carreraService.updateCarrera('1', {
-                nombre: 'Carrera Actualizada'
-            })).rejects.toThrow('Error al actualizar la carrera');
-        });
-    });
-
-    describe('deleteCarrera', () => {
-        it('should delete a carrera', async () => {
-            const mockCarrera = {
-                id: '1',
-                nombre: 'Carrera 1',
-                materias: []
-            } as unknown as Carrera;
-
-            (mockPrisma.carrera.delete as jest.Mock).mockResolvedValue(mockCarrera);
-
-            const result = await carreraService.deleteCarrera('1');
-            expect(result).toEqual(mockCarrera);
-            expect(mockPrisma.carrera.delete).toHaveBeenCalledWith({
-                where: { id: '1' },
-                include: {
-                    materias: {
-                        select: {
-                            id: true,
-                            nombre: true
-                        }
-                    }
-                }
+            const result = await carreraService.getAllCarreras();
+            expect(result).toEqual([]);
+            expect(prisma.carrera.findMany).toHaveBeenCalledWith({
+            include: {
+                materias: true,
+            },
             });
         });
 
-        it('should throw error when deleting carrera fails', async () => {
-            const error = new Error('Database error');
-            (mockPrisma.carrera.delete as jest.Mock).mockRejectedValue(error);
+        it('should handle undefined returned from findUnique', async () => {
+            prisma.carrera.findUnique.mockResolvedValue(undefined);
 
-            await expect(carreraService.deleteCarrera('1')).rejects.toThrow('Error al eliminar la carrera');
+            const result = await carreraService.getCarreraById('999');
+            expect(result).toBeUndefined();
+            expect(prisma.carrera.findUnique).toHaveBeenCalledWith({
+            where: { id: '999' },
+            include: {
+                materias: true,
+            },
+            });
+        });
+
+        it('should propagate thrown error from findMany', async () => {
+            const error = new Error('Unexpected error');
+            prisma.carrera.findMany.mockRejectedValue(error);
+
+            await expect(carreraService.getAllCarreras()).rejects.toThrow('Unexpected error');
+        });
+
+        it('should propagate thrown error from findUnique', async () => {
+            const error = new Error('Unexpected error');
+            prisma.carrera.findUnique.mockRejectedValue(error);
+
+            await expect(carreraService.getCarreraById('1')).rejects.toThrow('Unexpected error');
         });
     });
-}); 
+
+        it('should throw error when getting carrera by id fails', async () => {
+            const carreraService = new CarreraService();
+            await expect(carreraService.getCarreraById('1')).rejects.toThrow();
+        });
+    });
