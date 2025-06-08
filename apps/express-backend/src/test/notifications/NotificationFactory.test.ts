@@ -83,7 +83,7 @@ describe('NotificationFactory', () => {
     expect(factory1).not.toBe(factory2);
   });
 
-  it('should pass correct data to EmailNotification', () => {
+  it('Debe pasar datos correctos a EmailNotification', () => {
     const emailNotificationSpy = jest.spyOn(EmailNotification.prototype, 'send').mockImplementation(async () => {});
     const factory = new NotificationFactory();
     const notification = factory.createNotification('email', mockData);
