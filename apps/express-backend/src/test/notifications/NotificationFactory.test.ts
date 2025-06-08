@@ -101,7 +101,7 @@ describe('NotificationFactory', () => {
     sendSpy.mockRestore();
   });
 
-  it('should throw if type is undefined', () => {
+  it('Debería lanzarse si el tipo no está definido', () => {
     const factory = new NotificationFactory();
     expect(() =>
       factory.createNotification(undefined as any, mockData)
