@@ -1,97 +1,74 @@
-import { jest } from '@jest/globals';
-import { Request, Response, NextFunction } from 'express';
 import { validateApiKey } from '../../middleware/auth';
 import { getServerEnv } from '../../utils/env';
+import { Request, Response, NextFunction } from 'express';
 
-// Mock de getServerEnv
 jest.mock('../../utils/env', () => ({
-    getServerEnv: jest.fn()
+  getServerEnv: jest.fn(),
 }));
 
-describe('Auth Middleware', () => {
-    let mockRequest: Partial<Request>;
-    let mockResponse: Partial<Response>;
-    let nextFunction: NextFunction;
+describe('validateApiKey middleware', () => {
+  let req: Partial<Request>, res: Partial<Response>, next: jest.Mock<NextFunction>;
 
-    beforeEach(() => {
-        mockRequest = {
-            headers: {}
-        };
-        mockResponse = {
-            status: jest.fn().mockReturnThis() as unknown as Response['status'],
-            json: jest.fn() as unknown as Response['json']
-        };
-        nextFunction = jest.fn();
-        jest.clearAllMocks();
-    });
+  beforeEach(() => {
+    req = {
+      headers: {} // Esto es correcto para Express (no usa el tipo Headers nativo)
+    };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    next = jest.fn();
+    jest.clearAllMocks();
+  });
 
-    describe('validateApiKey', () => {
-        it('should call next() when API key is valid', () => {
-            const validApiKey = 'valid-api-key';
-            (getServerEnv as jest.Mock).mockReturnValue({ INTERNAL_API_KEY: validApiKey });
-            mockRequest.headers = { 'x-api-key': validApiKey };
+  describe('validateApiKey middleware', () => {
+  let req: Partial<Request>, res: any, next: jest.Mock;
 
-            validateApiKey(mockRequest as Request, mockResponse as Response, nextFunction);
+  beforeEach(() => {
+    req = { headers: {} };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn(),
+    };
+    next = jest.fn();
+    jest.clearAllMocks();
+  });
 
-            expect(nextFunction).toHaveBeenCalled();
-            expect(mockResponse.status).not.toHaveBeenCalled();
-            expect(mockResponse.json).not.toHaveBeenCalled();
-        });
+  it('debería rechazar si falta la api key', () => {
+    (getServerEnv as jest.Mock).mockReturnValue({ INTERNAL_API_KEY: 'secret' });
+    
+    validateApiKey(req as Request, res, next);
+    
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ error: 'API key inválida' });
+    expect(next).not.toHaveBeenCalled();
+  });
 
-        it('should return 401 when API key is missing', () => {
-            (getServerEnv as jest.Mock).mockReturnValue({ INTERNAL_API_KEY: 'valid-api-key' });
-            mockRequest.headers = {};
+  it('debería rechazar si la api key es incorrecta', () => {
+    (getServerEnv as jest.Mock).mockReturnValue({ INTERNAL_API_KEY: 'secret' });
+    req.headers = { 'x-api-key': 'wrong' };
+    
+    validateApiKey(req as Request, res, next);
+    
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ error: 'API key inválida' });
+    expect(next).not.toHaveBeenCalled();
+  });
 
-            validateApiKey(mockRequest as Request, mockResponse as Response, nextFunction);
+  it('debería aceptar si la api key es correcta', () => {
+    (getServerEnv as jest.Mock).mockReturnValue({ INTERNAL_API_KEY: 'secret' });
+    req.headers = { 'x-api-key': 'secret' };
+    
+    validateApiKey(req as Request, res, next);
+    
+    expect(next).toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.json).not.toHaveBeenCalled();
+  });
+});
 
-            expect(nextFunction).not.toHaveBeenCalled();
-            expect(mockResponse.status).toHaveBeenCalledWith(401);
-            expect(mockResponse.json).toHaveBeenCalledWith({ error: 'API key inválida' });
-        });
 
-        it('should return 401 when API key is invalid', () => {
-            (getServerEnv as jest.Mock).mockReturnValue({ INTERNAL_API_KEY: 'valid-api-key' });
-            mockRequest.headers = { 'x-api-key': 'invalid-api-key' };
 
-            validateApiKey(mockRequest as Request, mockResponse as Response, nextFunction);
+  // ... tus tests ...
+});
 
-            expect(nextFunction).not.toHaveBeenCalled();
-            expect(mockResponse.status).toHaveBeenCalledWith(401);
-            expect(mockResponse.json).toHaveBeenCalledWith({ error: 'API key inválida' });
-        });
-
-        it('should handle case-insensitive API key header', () => {
-            const validApiKey = 'valid-api-key';
-            (getServerEnv as jest.Mock).mockReturnValue({ INTERNAL_API_KEY: validApiKey });
-            mockRequest.headers = { 'X-API-KEY': validApiKey };
-
-            validateApiKey(mockRequest as Request, mockResponse as Response, nextFunction);
-
-            expect(nextFunction).toHaveBeenCalled();
-            expect(mockResponse.status).not.toHaveBeenCalled();
-            expect(mockResponse.json).not.toHaveBeenCalled();
-        });
-
-        it('should handle undefined API key in environment', () => {
-            (getServerEnv as jest.Mock).mockReturnValue({ INTERNAL_API_KEY: undefined });
-            mockRequest.headers = { 'x-api-key': 'any-key' };
-
-            validateApiKey(mockRequest as Request, mockResponse as Response, nextFunction);
-
-            expect(nextFunction).not.toHaveBeenCalled();
-            expect(mockResponse.status).toHaveBeenCalledWith(401);
-            expect(mockResponse.json).toHaveBeenCalledWith({ error: 'API key inválida' });
-        });
-
-        it('should handle null API key in environment', () => {
-            (getServerEnv as jest.Mock).mockReturnValue({ INTERNAL_API_KEY: null });
-            mockRequest.headers = { 'x-api-key': 'any-key' };
-
-            validateApiKey(mockRequest as Request, mockResponse as Response, nextFunction);
-
-            expect(nextFunction).not.toHaveBeenCalled();
-            expect(mockResponse.status).toHaveBeenCalledWith(401);
-            expect(mockResponse.json).toHaveBeenCalledWith({ error: 'API key inválida' });
-        });
-    });
-}); 

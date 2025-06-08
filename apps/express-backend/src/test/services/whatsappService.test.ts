@@ -8,9 +8,9 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('WhatsApp Service', () => {
     beforeEach(() => {
-        process.env.VONAGE_API_KEY = 'test-api-key';
-        process.env.VONAGE_API_SECRET = 'test-api-secret';
-        jest.clearAllMocks();
+  process.env.VONAGE_API_KEY = 'test-api-key';
+  process.env.VONAGE_API_SECRET = 'test-api-secret';
+  process.env.RESEND_API_KEY = 're_123';
     });
 
     it('should send WhatsApp message successfully', async () => {

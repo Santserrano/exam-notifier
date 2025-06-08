@@ -9,6 +9,9 @@ module.exports = {
     transform: {
         '^.+\\.ts$': 'ts-jest',
     },
+    moduleNameMapper: {
+        '^(\\.{1,2}/.*)\\.js$': '$1', // quita la extensión .js de los imports relativos
+    },
     
     moduleFileExtensions: ['ts', 'js', 'json', 'node'],
     setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
