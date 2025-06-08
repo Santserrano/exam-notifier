@@ -8,7 +8,7 @@
         "dev": "cross-env NODE_ENV=development EXPRESS_PORT=3001 node --loader ts-node/esm src/index.ts",
         "dev:debug": "cross-env NODE_ENV=development node --loader ts-node/esm --inspect src/index.ts",
         "prisma:generate": "prisma generate --schema=../../packages/database/prisma/schema.prisma",
-        "build": "pnpm install && pnpm prisma:generate && tsup && tsc --emitDeclarationOnly --skipLibCheck",
+        "build": "pnpm install && pnpm prisma:generate && tsup src/index.ts --format esm,cjs --dts --clean && tsc --emitDeclarationOnly --skipLibCheck",
         "start": "node --experimental-specifier-resolution=node -r dotenv/config dist/index.js",
         "start:prod": "node --experimental-specifier-resolution=node dist/index.js",
         "test": "jest",
