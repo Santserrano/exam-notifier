@@ -15,7 +15,7 @@ describe('apiKeyAuth Middleware', () => {
     process.env = originalEnv;
   });
 
-
+a
   it('should validate correct API key', () => {
     process.env.INTERNAL_API_KEY = 'test-api-key';
     const req = {
