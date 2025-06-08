@@ -92,7 +92,7 @@ describe('NotificationFactory', () => {
     emailNotificationSpy.mockRestore();
   });
 
-  it('should pass correct data to WhatsAppNotification', () => {
+  it('Debe pasar datos correctos a WhatsAppNotification', () => {
     const sendSpy = jest.spyOn(WhatsAppNotification.prototype, 'send').mockImplementation(async () => {});
     const factory = new NotificationFactory();
     const notification = factory.createNotification('whatsapp', mockData);
