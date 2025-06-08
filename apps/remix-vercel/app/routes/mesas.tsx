@@ -212,7 +212,7 @@ export const action = async (args: ActionFunctionArgs) => {
     // Manejar aceptación de mesa
     if (type === "aceptacion" && mesaId && estado) {
       try {
-        const url = `${API_URL}/mesas/${mesaId}/aceptacion`;
+        const url = `${API_URL}/api/diaries/mesas/${mesaId}/aceptacion`;
         const body = {
           profesorId: userId,
           estado,
