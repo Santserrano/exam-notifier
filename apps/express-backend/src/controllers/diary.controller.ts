@@ -44,20 +44,29 @@ export const getAceptaciones = async (_req: Request, res: Response) => {
 
 export const crearAceptacionMesa = async (_req: Request, res: Response) => {
     try {
+        console.log("Recibiendo solicitud de aceptación:", {
+            params: _req.params,
+            body: _req.body,
+            headers: _req.headers
+        });
+
         const { mesaId, profesorId, estado } = _req.body;
 
         if (!mesaId || !profesorId || !estado) {
+            console.log("Faltan parámetros:", { mesaId, profesorId, estado });
             return res.status(400).json({ error: "Faltan parámetros requeridos" });
         }
 
         // Validar que el estado sea válido
         if (!["PENDIENTE", "ACEPTADA", "RECHAZADA"].includes(estado)) {
+            console.log("Estado inválido:", estado);
             return res.status(400).json({ error: "Estado de aceptación inválido" });
         }
 
         // Convertir mesaId a número
         const mesaIdNum = parseInt(mesaId.toString(), 10);
         if (isNaN(mesaIdNum)) {
+            console.log("ID de mesa inválido:", mesaId);
             return res.status(400).json({ error: "ID de mesa inválido" });
         }
 
@@ -67,6 +76,7 @@ export const crearAceptacionMesa = async (_req: Request, res: Response) => {
         });
 
         if (!mesa) {
+            console.log("Mesa no encontrada:", mesaIdNum);
             return res.status(404).json({ error: "Mesa no encontrada" });
         }
 
@@ -76,8 +86,15 @@ export const crearAceptacionMesa = async (_req: Request, res: Response) => {
         });
 
         if (!profesor) {
+            console.log("Profesor no encontrado:", profesorId);
             return res.status(404).json({ error: "Profesor no encontrado" });
         }
+
+        console.log("Creando/actualizando aceptación:", {
+            mesaId: mesaIdNum,
+            profesorId,
+            estado
+        });
 
         const aceptacion = await prisma.mesaAceptacion.upsert({
             where: {
@@ -100,6 +117,7 @@ export const crearAceptacionMesa = async (_req: Request, res: Response) => {
             },
         });
 
+        console.log("Aceptación creada/actualizada:", aceptacion);
         res.json(aceptacion);
     } catch (error) {
         console.error("Error al crear/actualizar aceptación:", error);
