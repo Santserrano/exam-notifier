@@ -14,7 +14,11 @@ describe('WhatsApp Service', () => {
     });
 
     it('should send WhatsApp message successfully', async () => {
-        const mockResponse = { data: { message_uuid: 'test-uuid' } };
+        const mockResponse = {
+            data: { message_uuid: 'test-uuid' },
+            status: 200
+        };
+
         mockedAxios.post.mockResolvedValueOnce(mockResponse);
 
         await enviarWhatsapp('1234567890', 'Test message');
@@ -30,12 +34,12 @@ describe('WhatsApp Service', () => {
             },
             {
                 auth: {
-                    username: process.env.VONAGE_API_KEY,
-                    password: process.env.VONAGE_API_SECRET
+                    username: 'test-api-key',
+                    password: 'test-api-secret'
                 },
                 headers: {
                     'Content-Type': 'application/json',
-                    Accept: 'application/json'
+                    'Accept': 'application/json'
                 }
             }
         );
@@ -45,23 +49,18 @@ describe('WhatsApp Service', () => {
         const error = new Error('Failed to send WhatsApp');
         mockedAxios.post.mockRejectedValueOnce(error);
 
-        await enviarWhatsapp('1234567890', 'Test message');
-
-        // La función no debería lanzar el error, solo registrarlo
-        expect(mockedAxios.post).toHaveBeenCalled();
+        await expect(enviarWhatsapp('1234567890', 'Test message')).rejects.toThrow('Failed to send WhatsApp');
     });
 
     it('should throw error if VONAGE_API_KEY is not set', async () => {
         delete process.env.VONAGE_API_KEY;
 
-        await expect(enviarWhatsapp('1234567890', 'Test message'))
-            .rejects.toThrow('VONAGE_API_KEY is not defined');
+        await expect(enviarWhatsapp('1234567890', 'Test message')).rejects.toThrow('VONAGE_API_KEY is not defined');
     });
 
     it('should throw error if VONAGE_API_SECRET is not set', async () => {
         delete process.env.VONAGE_API_SECRET;
 
-        await expect(enviarWhatsapp('1234567890', 'Test message'))
-            .rejects.toThrow('VONAGE_API_SECRET is not defined');
+        await expect(enviarWhatsapp('1234567890', 'Test message')).rejects.toThrow('VONAGE_API_SECRET is not defined');
     });
 }); 

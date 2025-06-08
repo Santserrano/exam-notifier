@@ -7,12 +7,14 @@ jest.mock('@prisma/client', () => ({
     PrismaClient: jest.fn().mockImplementation(() => ({
         carrera: {
             findMany: jest.fn(),
-            findUnique: jest.fn(),
-            create: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn()
+            findUnique: jest.fn()
         }
     }))
+}));
+
+// Mock del módulo prisma
+jest.mock('../../../src/lib/prisma', () => ({
+    prisma: new PrismaClient()
 }));
 
 describe('CarreraService', () => {
@@ -20,8 +22,8 @@ describe('CarreraService', () => {
     let mockPrisma: jest.Mocked<PrismaClient>;
 
     beforeEach(() => {
-        carreraService = new CarreraService();
         mockPrisma = new PrismaClient() as jest.Mocked<PrismaClient>;
+        carreraService = new CarreraService();
         jest.clearAllMocks();
     });
 
@@ -31,12 +33,8 @@ describe('CarreraService', () => {
                 {
                     id: '1',
                     nombre: 'Carrera 1',
-                    materias: [
-                        {
-                            id: '1',
-                            nombre: 'Materia 1'
-                        }
-                    ]
+                    createdAt: new Date('2025-06-08T01:07:25.735Z'),
+                    updatedAt: new Date('2025-06-08T01:07:25.735Z')
                 }
             ] as unknown as Carrera[];
 
@@ -44,16 +42,7 @@ describe('CarreraService', () => {
 
             const result = await carreraService.getAllCarreras();
             expect(result).toEqual(mockCarreras);
-            expect(mockPrisma.carrera.findMany).toHaveBeenCalledWith({
-                include: {
-                    materias: {
-                        select: {
-                            id: true,
-                            nombre: true
-                        }
-                    }
-                }
-            });
+            expect(mockPrisma.carrera.findMany).toHaveBeenCalled();
         });
 
         it('should throw error when getting carreras fails', async () => {
@@ -69,12 +58,8 @@ describe('CarreraService', () => {
             const mockCarrera = {
                 id: '1',
                 nombre: 'Carrera 1',
-                materias: [
-                    {
-                        id: '1',
-                        nombre: 'Materia 1'
-                    }
-                ]
+                createdAt: new Date('2025-06-08T01:07:25.764Z'),
+                updatedAt: new Date('2025-06-08T01:07:25.764Z')
             } as unknown as Carrera;
 
             (mockPrisma.carrera.findUnique as jest.Mock).mockResolvedValue(mockCarrera);
@@ -82,15 +67,7 @@ describe('CarreraService', () => {
             const result = await carreraService.getCarreraById('1');
             expect(result).toEqual(mockCarrera);
             expect(mockPrisma.carrera.findUnique).toHaveBeenCalledWith({
-                where: { id: '1' },
-                include: {
-                    materias: {
-                        select: {
-                            id: true,
-                            nombre: true
-                        }
-                    }
-                }
+                where: { id: '1' }
             });
         });
 

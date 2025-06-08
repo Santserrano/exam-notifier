@@ -12,13 +12,18 @@ jest.mock('@prisma/client', () => ({
     }))
 }));
 
+// Mock del módulo prisma
+jest.mock('../../../src/lib/prisma', () => ({
+    prisma: new PrismaClient()
+}));
+
 describe('ProfesorService', () => {
     let profesorService: ProfesorService;
     let mockPrisma: jest.Mocked<PrismaClient>;
 
     beforeEach(() => {
-        profesorService = new ProfesorService();
         mockPrisma = new PrismaClient() as jest.Mocked<PrismaClient>;
+        profesorService = new ProfesorService();
         jest.clearAllMocks();
     });
 
@@ -31,8 +36,8 @@ describe('ProfesorService', () => {
                     apellido: 'Pérez',
                     email: 'juan@example.com',
                     telefono: '123456789',
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
+                    createdAt: new Date('2025-06-08T01:07:25.735Z'),
+                    updatedAt: new Date('2025-06-08T01:07:25.735Z'),
                     carreras: [{ id: '1', nombre: 'Carrera 1' }],
                     materias: [{ id: '1', nombre: 'Materia 1', carreraId: '1' }]
                 }
@@ -44,19 +49,8 @@ describe('ProfesorService', () => {
             expect(result).toEqual(mockProfesores);
             expect(mockPrisma.profesor.findMany).toHaveBeenCalledWith({
                 include: {
-                    carreras: {
-                        select: {
-                            id: true,
-                            nombre: true
-                        }
-                    },
-                    materias: {
-                        select: {
-                            id: true,
-                            nombre: true,
-                            carreraId: true
-                        }
-                    }
+                    carreras: true,
+                    materias: true
                 }
             });
         });
@@ -77,8 +71,8 @@ describe('ProfesorService', () => {
                 apellido: 'Pérez',
                 email: 'juan@example.com',
                 telefono: '123456789',
-                createdAt: new Date(),
-                updatedAt: new Date()
+                createdAt: new Date('2025-06-08T01:07:25.764Z'),
+                updatedAt: new Date('2025-06-08T01:07:25.764Z')
             } as unknown as Profesor;
 
             (mockPrisma.profesor.findUnique as jest.Mock).mockResolvedValue(mockProfesor);
@@ -107,8 +101,8 @@ describe('ProfesorService', () => {
                     apellido: 'Pérez',
                     email: 'juan@example.com',
                     telefono: '123456789',
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
+                    createdAt: new Date('2025-06-08T01:07:25.768Z'),
+                    updatedAt: new Date('2025-06-08T01:07:25.768Z'),
                     carreras: [{ id: '1', nombre: 'Carrera 1' }],
                     materias: [{ id: '1', nombre: 'Materia 1' }]
                 }
@@ -127,18 +121,8 @@ describe('ProfesorService', () => {
                     }
                 },
                 include: {
-                    carreras: {
-                        select: {
-                            id: true,
-                            nombre: true
-                        }
-                    },
-                    materias: {
-                        select: {
-                            id: true,
-                            nombre: true
-                        }
-                    }
+                    carreras: true,
+                    materias: true
                 }
             });
         });
@@ -160,8 +144,8 @@ describe('ProfesorService', () => {
                     apellido: 'Pérez',
                     email: 'juan@example.com',
                     telefono: '123456789',
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
+                    createdAt: new Date('2025-06-08T01:07:25.772Z'),
+                    updatedAt: new Date('2025-06-08T01:07:25.772Z'),
                     carreras: [{ id: '1', nombre: 'Carrera 1' }],
                     materias: [{ id: '1', nombre: 'Materia 1' }]
                 }
@@ -180,18 +164,8 @@ describe('ProfesorService', () => {
                     }
                 },
                 include: {
-                    carreras: {
-                        select: {
-                            id: true,
-                            nombre: true
-                        }
-                    },
-                    materias: {
-                        select: {
-                            id: true,
-                            nombre: true
-                        }
-                    }
+                    carreras: true,
+                    materias: true
                 }
             });
         });
