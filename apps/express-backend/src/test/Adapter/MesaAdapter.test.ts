@@ -45,7 +45,7 @@ describe('MesaAdapter', () => {
     createdAt: new Date('2022-12-15T08:00:00Z')
   } as MesaDeExamen;
 
-  it('should correctly adapt full MesaDeExamen to MesaData', () => {
+  it('Debería adaptar correctamente MesaDeExamen completo a MesaData', () => {
     const result = adapter.adapt(fullMock);
 
     expect(result).toEqual({
@@ -65,7 +65,7 @@ describe('MesaAdapter', () => {
     });
   });
 
-  it('should handle null optional fields', () => {
+  it('debe manejar campos opcionales nulos', () => {
     const result = adapter.adapt(nullMock);
 
     expect(result).toEqual({
@@ -85,7 +85,7 @@ describe('MesaAdapter', () => {
     });
   });
 
-  it('should handle missing optional fields', () => {
+  it('Debería gestionar los campos opcionales faltantes', () => {
     const result = adapter.adapt(minimalMock);
 
     expect(result).toEqual({
@@ -105,7 +105,7 @@ describe('MesaAdapter', () => {
     });
   });
 
-  it('should maintain data integrity', () => {
+  it('debe mantener la integridad de los datos', () => {
     const result = adapter.adapt(fullMock);
 
     // Verificamos que los tipos sean correctos

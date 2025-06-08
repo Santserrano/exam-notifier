@@ -41,6 +41,7 @@
     "typecheck": "turbo run typecheck",
     "validate": "turbo run lint typecheck test",
     "build:css": "tailwindcss -c tailwind.config.ts -i ./app/styles/tailwind.css -o ./app/styles/tailwind.css --minify"
+    
   },
   "dependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.3.1",

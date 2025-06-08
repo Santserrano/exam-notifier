@@ -1,262 +1,334 @@
-import { jest } from '@jest/globals';
+// src/test/services/mesaService.test.ts
 import { MesaService } from '../../../src/service/mesaService';
-import { PrismaClient, MesaDeExamen } from '@prisma/client';
-import { notificationFactory } from '../../../src/core/notifications/NotificationFactory';
-import { notificacionService } from '../../../src/service/NotificationService';
+import { PrismaClient } from '@prisma/client';
 
-// Mock de PrismaClient
-jest.mock('@prisma/client', () => ({
-    PrismaClient: jest.fn().mockImplementation(() => ({
-        mesaDeExamen: {
-            findMany: jest.fn(),
-            findUnique: jest.fn(),
-            create: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn()
-        }
-    }))
+// Mocks
+const mockPrisma = {
+  mesaDeExamen: {
+    findMany: jest.fn(),
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  },
+  profesor: {
+    findUnique: jest.fn(),
+  },
+  carrera: {
+    findUnique: jest.fn(),
+  },
+  materia: {
+    findUnique: jest.fn(),
+  },
+};
+
+const mockNotificationFactory = {
+  createNotification: jest.fn(),
+};
+
+const mockNotificacionService = {
+  getConfigByProfesor: jest.fn(),
+};
+
+jest.mock('../../../src/lib/prisma', () => ({
+  __esModule: true,
+  prisma: mockPrisma,
 }));
 
-// Mock de notificationFactory
 jest.mock('../../../src/core/notifications/NotificationFactory', () => ({
-    notificationFactory: {
-        createNotification: jest.fn()
-    }
+  __esModule: true,
+  notificationFactory: mockNotificationFactory,
 }));
 
-// Mock de notificacionService
 jest.mock('../../../src/service/NotificationService', () => ({
-    notificacionService: {
-        getConfigByProfesor: jest.fn()
-    }
+  __esModule: true,
+  notificacionService: mockNotificacionService,
 }));
 
 describe('MesaService', () => {
-    let mesaService: MesaService;
-    let mockPrisma: jest.Mocked<PrismaClient>;
+  let mesaService: MesaService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mesaService = new MesaService();
+  });
+
+  describe('getAllMesas', () => {
+    it('should return all mesas', async () => {
+      const mockMesas = [
+        { id: 1, descripcion: 'Mesa 1' },
+        { id: 2, descripcion: 'Mesa 2' },
+      ];
+
+      mockPrisma.mesaDeExamen.findMany.mockResolvedValue(mockMesas);
+
+      const result = await mesaService.getAllMesas();
+      expect(result).toEqual(mockMesas);
+      expect(mockPrisma.mesaDeExamen.findMany).toHaveBeenCalledWith({
+        include: {
+          profesor: true,
+          vocal: true,
+          materia: { include: { carrera: true } },
+          carrera: true,
+        },
+      });
+    });
+
+    it('should throw error when getting mesas fails', async () => {
+      mockPrisma.mesaDeExamen.findMany.mockRejectedValue(new Error('DB Error'));
+
+      await expect(mesaService.getAllMesas()).rejects.toThrow('Error al obtener las mesas');
+    });
+  });
+
+  describe('getMesasByProfesorId', () => {
+    it('should return mesas for profesor', async () => {
+      const mockMesas = [
+        { id: 1, profesorId: 'prof1', descripcion: 'Mesa 1' },
+      ];
+
+      mockPrisma.mesaDeExamen.findMany.mockResolvedValue(mockMesas);
+
+      const result = await mesaService.getMesasByProfesorId('prof1');
+      expect(result).toEqual(mockMesas);
+      expect(mockPrisma.mesaDeExamen.findMany).toHaveBeenCalledWith({
+        where: {
+          OR: [
+            { profesorId: 'prof1' },
+            { vocalId: 'prof1' },
+          ],
+        },
+        include: {
+          profesor: true,
+          vocal: true,
+          materia: { include: { carrera: true } },
+          carrera: true,
+        },
+      });
+    });
+
+    it('should throw error when getting mesas fails', async () => {
+      mockPrisma.mesaDeExamen.findMany.mockRejectedValue(new Error('DB Error'));
+
+      await expect(mesaService.getMesasByProfesorId('prof1'))
+        .rejects.toThrow('Error al obtener las mesas del profesor');
+    });
+  });
+
+  describe('getMesaById', () => {
+    it('should return a mesa by id', async () => {
+      const mockMesa = { id: 1, descripcion: 'Mesa 1' };
+      mockPrisma.mesaDeExamen.findUnique.mockResolvedValue(mockMesa);
+
+      const result = await mesaService.getMesaById(1);
+      expect(result).toEqual(mockMesa);
+      expect(mockPrisma.mesaDeExamen.findUnique).toHaveBeenCalledWith({
+        where: { id: 1 },
+        include: {
+          profesor: true,
+          vocal: true,
+          materia: { include: { carrera: true } },
+        },
+      });
+    });
+
+    it('should return null if mesa not found', async () => {
+      mockPrisma.mesaDeExamen.findUnique.mockResolvedValue(null);
+
+      const result = await mesaService.getMesaById(999);
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('createMesa', () => {
+    const mockData = {
+      profesor: 'prof1',
+      vocal: 'prof2',
+      carrera: 'carr1',
+      materia: 'mat1',
+      fecha: '2023-01-01T10:00:00Z',
+      descripcion: 'Mesa de prueba',
+    };
+
+    const mockProfesor = { id: 'prof1', nombre: 'Profesor 1', email: 'prof1@test.com', telefono: '+123456789' };
+    const mockVocal = { id: 'prof2', nombre: 'Vocal 1', email: 'prof2@test.com', telefono: '+987654321' };
+    const mockCarrera = { id: 'carr1', nombre: 'Carrera 1' };
+    const mockMateria = { id: 'mat1', nombre: 'Materia 1', carrera: mockCarrera };
+
+    const mockNuevaMesa = {
+      id: 1,
+      profesor: mockProfesor,
+      vocal: mockVocal,
+      materia: mockMateria,
+      carrera: mockCarrera,
+      fecha: new Date(mockData.fecha),
+      descripcion: mockData.descripcion,
+    };
 
     beforeEach(() => {
-        mockPrisma = new PrismaClient() as jest.Mocked<PrismaClient>;
-        mesaService = new MesaService();
-        jest.clearAllMocks();
+      mockPrisma.profesor.findUnique.mockImplementation((args) => {
+        if (args.where.id === 'prof1') return Promise.resolve(mockProfesor);
+        if (args.where.id === 'prof2') return Promise.resolve(mockVocal);
+        return Promise.resolve(null);
+      });
+
+      mockPrisma.carrera.findUnique.mockResolvedValue(mockCarrera);
+      mockPrisma.materia.findUnique.mockResolvedValue(mockMateria);
+      mockPrisma.mesaDeExamen.create.mockResolvedValue(mockNuevaMesa);
+
+      (mockNotificacionService.getConfigByProfesor as jest.Mock).mockImplementation((id) => {
+        return Promise.resolve({
+          webPushEnabled: true,
+          emailEnabled: true,
+          smsEnabled: true,
+        });
+      });
+
+      (mockNotificationFactory.createNotification as jest.Mock).mockImplementation((type) => {
+        return {
+          send: jest.fn().mockResolvedValue(true),
+        };
+      });
     });
 
-    describe('getAllMesas', () => {
-        it('should return all mesas', async () => {
-            const mockMesas = [
-                {
-                    id: 1,
-                    nombre: 'Mesa 1',
-                    fecha: new Date('2025-06-08T01:07:25.735Z'),
-                    hora: '10:00',
-                    lugar: 'Aula 1',
-                    materiaId: '1',
-                    createdAt: new Date('2025-06-08T01:07:25.735Z'),
-                    updatedAt: new Date('2025-06-08T01:07:25.735Z')
-                }
-            ] as unknown as MesaDeExamen[];
+    it('should create a new mesa successfully', async () => {
+      const result = await mesaService.createMesa(mockData);
 
-            (mockPrisma.mesaDeExamen.findMany as jest.Mock).mockResolvedValue(mockMesas);
-
-            const result = await mesaService.getAllMesas();
-            expect(result).toEqual(mockMesas);
-            expect(mockPrisma.mesaDeExamen.findMany).toHaveBeenCalled();
-        });
-
-        it('should throw error when getting mesas fails', async () => {
-            const error = new Error('Database error');
-            (mockPrisma.mesaDeExamen.findMany as jest.Mock).mockRejectedValue(error);
-
-            await expect(mesaService.getAllMesas()).rejects.toThrow('Error al obtener las mesas');
-        });
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(mockNuevaMesa);
+      expect(mockPrisma.mesaDeExamen.create).toHaveBeenCalled();
     });
 
-    describe('getMesaById', () => {
-        it('should return mesa by id', async () => {
-            const mockMesa = {
-                id: 1,
-                nombre: 'Mesa 1',
-                fecha: new Date('2025-06-08T01:07:25.764Z'),
-                hora: '10:00',
-                lugar: 'Aula 1',
-                materiaId: '1',
-                createdAt: new Date('2025-06-08T01:07:25.764Z'),
-                updatedAt: new Date('2025-06-08T01:07:25.764Z')
-            } as unknown as MesaDeExamen;
+    it('should validate required fields', async () => {
+      const result = await mesaService.createMesa({
+        profesor: '',
+        vocal: '',
+        carrera: '',
+        materia: '',
+        fecha: '',
+      });
 
-            (mockPrisma.mesaDeExamen.findUnique as jest.Mock).mockResolvedValue(mockMesa);
-
-            const result = await mesaService.getMesaById(1);
-            expect(result).toEqual(mockMesa);
-            expect(mockPrisma.mesaDeExamen.findUnique).toHaveBeenCalledWith({
-                where: { id: 1 }
-            });
-        });
-
-        it('should throw error when getting mesa fails', async () => {
-            const error = new Error('Database error');
-            (mockPrisma.mesaDeExamen.findUnique as jest.Mock).mockRejectedValue(error);
-
-            await expect(mesaService.getMesaById(1)).rejects.toThrow('Error al obtener la mesa');
-        });
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Faltan datos requeridos');
     });
 
-    describe('getMesasByMateria', () => {
-        it('should return mesas by materia', async () => {
-            const mockMesas = [
-                {
-                    id: 1,
-                    nombre: 'Mesa 1',
-                    fecha: new Date('2025-06-08T01:07:25.768Z'),
-                    hora: '10:00',
-                    lugar: 'Aula 1',
-                    materiaId: '1',
-                    createdAt: new Date('2025-06-08T01:07:25.768Z'),
-                    updatedAt: new Date('2025-06-08T01:07:25.768Z')
-                }
-            ] as unknown as MesaDeExamen[];
+    it('should validate profesor exists', async () => {
+      mockPrisma.profesor.findUnique.mockResolvedValueOnce(null);
 
-            (mockPrisma.mesaDeExamen.findMany as jest.Mock).mockResolvedValue(mockMesas);
-
-            const result = await mesaService.getMesasByMateria('1');
-            expect(result).toEqual(mockMesas);
-            expect(mockPrisma.mesaDeExamen.findMany).toHaveBeenCalledWith({
-                where: { materiaId: '1' }
-            });
-        });
-
-        it('should throw error when getting mesas by materia fails', async () => {
-            const error = new Error('Database error');
-            (mockPrisma.mesaDeExamen.findMany as jest.Mock).mockRejectedValue(error);
-
-            await expect(mesaService.getMesasByMateria('1')).rejects.toThrow('Error al obtener las mesas por materia');
-        });
+      const result = await mesaService.createMesa(mockData);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Profesor no encontrado');
     });
 
-    describe('createMesa', () => {
-        it('should create a new mesa', async () => {
-            const mockMesa = {
-                id: 1,
-                nombre: 'Mesa 1',
-                fecha: new Date('2025-06-08T01:07:25.772Z'),
-                hora: '10:00',
-                lugar: 'Aula 1',
-                materiaId: '1',
-                createdAt: new Date('2025-06-08T01:07:25.772Z'),
-                updatedAt: new Date('2025-06-08T01:07:25.772Z')
-            } as unknown as MesaDeExamen;
+    it('should validate vocal exists', async () => {
+      mockPrisma.profesor.findUnique.mockImplementationOnce((args) => {
+        if (args.where.id === 'prof1') return Promise.resolve(mockProfesor);
+        return Promise.resolve(null);
+      });
 
-            (mockPrisma.mesaDeExamen.create as jest.Mock).mockResolvedValue(mockMesa);
-
-            const result = await mesaService.createMesa({
-                nombre: 'Mesa 1',
-                fecha: new Date('2025-06-08T01:07:25.772Z'),
-                hora: '10:00',
-                lugar: 'Aula 1',
-                materiaId: '1'
-            });
-            expect(result).toEqual(mockMesa);
-            expect(mockPrisma.mesaDeExamen.create).toHaveBeenCalledWith({
-                data: {
-                    nombre: 'Mesa 1',
-                    fecha: new Date('2025-06-08T01:07:25.772Z'),
-                    hora: '10:00',
-                    lugar: 'Aula 1',
-                    materiaId: '1'
-                }
-            });
-        });
-
-        it('should throw error when creating mesa fails', async () => {
-            const error = new Error('Database error');
-            (mockPrisma.mesaDeExamen.create as jest.Mock).mockRejectedValue(error);
-
-            await expect(mesaService.createMesa({
-                nombre: 'Mesa 1',
-                fecha: new Date('2025-06-08T01:07:25.772Z'),
-                hora: '10:00',
-                lugar: 'Aula 1',
-                materiaId: '1'
-            })).rejects.toThrow('Error al crear la mesa');
-        });
+      const result = await mesaService.createMesa(mockData);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Vocal no encontrado');
     });
 
-    describe('updateMesa', () => {
-        it('should update a mesa', async () => {
-            const mockMesa = {
-                id: 1,
-                nombre: 'Mesa 1 Actualizada',
-                fecha: new Date('2025-06-08T01:07:25.776Z'),
-                hora: '11:00',
-                lugar: 'Aula 2',
-                materiaId: '1',
-                createdAt: new Date('2025-06-08T01:07:25.776Z'),
-                updatedAt: new Date('2025-06-08T01:07:25.776Z')
-            } as unknown as MesaDeExamen;
+    it('should validate carrera exists', async () => {
+      mockPrisma.carrera.findUnique.mockResolvedValueOnce(null);
 
-            (mockPrisma.mesaDeExamen.update as jest.Mock).mockResolvedValue(mockMesa);
-
-            const result = await mesaService.updateMesa(1, {
-                nombre: 'Mesa 1 Actualizada',
-                fecha: new Date('2025-06-08T01:07:25.776Z'),
-                hora: '11:00',
-                lugar: 'Aula 2',
-                materiaId: '1'
-            });
-            expect(result).toEqual(mockMesa);
-            expect(mockPrisma.mesaDeExamen.update).toHaveBeenCalledWith({
-                where: { id: 1 },
-                data: {
-                    nombre: 'Mesa 1 Actualizada',
-                    fecha: new Date('2025-06-08T01:07:25.776Z'),
-                    hora: '11:00',
-                    lugar: 'Aula 2',
-                    materiaId: '1'
-                }
-            });
-        });
-
-        it('should throw error when updating mesa fails', async () => {
-            const error = new Error('Database error');
-            (mockPrisma.mesaDeExamen.update as jest.Mock).mockRejectedValue(error);
-
-            await expect(mesaService.updateMesa(1, {
-                nombre: 'Mesa 1 Actualizada',
-                fecha: new Date('2025-06-08T01:07:25.776Z'),
-                hora: '11:00',
-                lugar: 'Aula 2',
-                materiaId: '1'
-            })).rejects.toThrow('Error al actualizar la mesa');
-        });
+      const result = await mesaService.createMesa(mockData);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Carrera no encontrada');
     });
 
-    describe('deleteMesa', () => {
-        it('should delete a mesa', async () => {
-            const mockMesa = {
-                id: 1,
-                nombre: 'Mesa 1',
-                fecha: new Date('2025-06-08T01:07:25.780Z'),
-                hora: '10:00',
-                lugar: 'Aula 1',
-                materiaId: '1',
-                createdAt: new Date('2025-06-08T01:07:25.780Z'),
-                updatedAt: new Date('2025-06-08T01:07:25.780Z')
-            } as unknown as MesaDeExamen;
+    it('should validate materia exists', async () => {
+      mockPrisma.materia.findUnique.mockResolvedValueOnce(null);
 
-            (mockPrisma.mesaDeExamen.delete as jest.Mock).mockResolvedValue(mockMesa);
-
-            const result = await mesaService.deleteMesa(1);
-            expect(result).toEqual(mockMesa);
-            expect(mockPrisma.mesaDeExamen.delete).toHaveBeenCalledWith({
-                where: { id: 1 }
-            });
-        });
-
-        it('should throw error when deleting mesa fails', async () => {
-            const error = new Error('Database error');
-            (mockPrisma.mesaDeExamen.delete as jest.Mock).mockRejectedValue(error);
-
-            await expect(mesaService.deleteMesa(1)).rejects.toThrow('Error al eliminar la mesa');
-        });
+      const result = await mesaService.createMesa(mockData);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Materia no encontrada');
     });
-}); 
+
+    it('should send notifications to profesor and vocal', async () => {
+      await mesaService.createMesa(mockData);
+
+      // Verificar que se crearon notificaciones
+      expect(mockNotificationFactory.createNotification).toHaveBeenCalledTimes(6); // 3 por profesor + 3 por vocal
+      expect(mockNotificacionService.getConfigByProfesor).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle notification errors gracefully', async () => {
+      (mockNotificationFactory.createNotification as jest.Mock).mockImplementationOnce(() => {
+        throw new Error('Notification error');
+      });
+
+      const result = await mesaService.createMesa(mockData);
+      expect(result.success).toBe(true); // El error de notificación no debería fallar la creación
+    });
+  });
+
+  describe('updateMesa', () => {
+    it('should update a mesa successfully', async () => {
+      const mockUpdatedMesa = {
+        id: 1,
+        profesor: { id: 'prof1' },
+        vocal: { id: 'prof2' },
+        materia: { id: 'mat1', carrera: { id: 'carr1' } },
+        carrera: { id: 'carr1' },
+        fecha: new Date('2023-01-01T10:00:00Z'),
+      };
+
+      mockPrisma.mesaDeExamen.update.mockResolvedValue(mockUpdatedMesa);
+
+      const result = await mesaService.updateMesa(1, {
+        profesor: 'prof1',
+        vocal: 'prof2',
+        carrera: 'carr1',
+        materia: 'mat1',
+        fecha: '2023-01-01T10:00:00Z',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(mockUpdatedMesa);
+      expect(mockPrisma.mesaDeExamen.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: {
+          profesorId: 'prof1',
+          vocalId: 'prof2',
+          carreraId: 'carr1',
+          materiaId: 'mat1',
+          fecha: new Date('2023-01-01T10:00:00Z'),
+          descripcion: undefined,
+          cargo: undefined,
+          verification: undefined,
+          modalidad: undefined,
+          aula: undefined,
+          webexLink: undefined,
+        },
+        include: {
+          profesor: true,
+          vocal: true,
+          materia: { include: { carrera: true } },
+          carrera: true,
+        },
+      });
+    });
+  });
+
+  describe('deleteMesa', () => {
+    it('should delete a mesa successfully', async () => {
+      const mockDeletedMesa = { id: 1 };
+      mockPrisma.mesaDeExamen.delete.mockResolvedValue(mockDeletedMesa);
+
+      const result = await mesaService.deleteMesa(1);
+      expect(result).toEqual(mockDeletedMesa);
+      expect(mockPrisma.mesaDeExamen.delete).toHaveBeenCalledWith({
+        where: { id: 1 },
+      });
+    });
+
+    it('should throw error when deletion fails', async () => {
+      mockPrisma.mesaDeExamen.delete.mockRejectedValue(new Error('DB Error'));
+
+      await expect(mesaService.deleteMesa(1)).rejects.toThrow('Error al eliminar la mesa');
+    });
+  });
+});

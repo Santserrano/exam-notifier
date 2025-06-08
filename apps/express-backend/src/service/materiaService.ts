@@ -1,6 +1,6 @@
 import { Materia } from '@prisma/client';
 
-import { prisma } from '../lib/prisma.js';
+import { prisma } from '../lib/prisma';
 
 export class MateriaService {
     async getAllMaterias(): Promise<Materia[]> {
