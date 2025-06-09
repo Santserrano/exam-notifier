@@ -52,7 +52,10 @@ export class PushNotification implements Notification {
                 title: this.data.title,
                 body: this.data.body,
                 timestamp: Date.now(),
-                data: this.data.metadata ?? {}
+                data: {
+                    ...this.data.metadata ?? {},
+                    horaTexto: this.data.metadata?.horaTexto
+                }
             });
 
             // Enviar la notificación a cada suscripción

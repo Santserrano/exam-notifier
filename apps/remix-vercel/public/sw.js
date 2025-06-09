@@ -135,7 +135,8 @@ self.addEventListener("push", function (event) {
         year: 'numeric'
       });
 
-      const hora = fechaObj.toLocaleTimeString('es-AR', {
+      // Usar horaTexto si está disponible, sino formatear la hora
+      const hora = data.data.horaTexto || fechaObj.toLocaleTimeString('es-AR', {
         timeZone: 'America/Argentina/Buenos_Aires',
         hour: '2-digit',
         minute: '2-digit',

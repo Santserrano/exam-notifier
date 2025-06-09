@@ -29,7 +29,9 @@ type MesaWithRelations = Prisma.MesaDeExamenGetPayload<{
         };
         carrera: true;
     };
-}>;
+}> & {
+    horaTexto?: string;
+};
 
 interface MesaResponse {
     success: boolean;
@@ -149,6 +151,12 @@ class MesaService {
                     carrera: { connect: { id: data.carrera } },
                     materia: { connect: { id: data.materia } },
                     fecha: new Date(data.fecha),
+                    horaTexto: new Date(data.fecha).toLocaleTimeString('es-AR', {
+                        timeZone: 'America/Argentina/Buenos_Aires',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    }),
                     descripcion: data.descripcion || "Mesa de examen",
                     cargo: data.cargo || "Titular",
                     verification: data.verification ?? false,
@@ -184,19 +192,12 @@ class MesaService {
             const fechaObj = new Date(data.fecha);
             console.log('Fecha para notificaciones:', fechaObj.toISOString());
 
-            // Formatear la fecha para las notificaciones usando la zona horaria de Argentina
-            const formatter = new Intl.DateTimeFormat('es-AR', {
+            const fechaFormateada = fechaObj.toLocaleDateString('es-AR', {
                 timeZone: 'America/Argentina/Buenos_Aires',
-                year: 'numeric',
-                month: '2-digit',
                 day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
+                month: 'long',
+                year: 'numeric'
             });
-
-            const fechaFormateada = formatter.format(fechaObj);
-            console.log('Fecha formateada para notificación:', fechaFormateada);
 
             // Obtener configuraciones de notificaciones
             const [configProfesor, configVocal] = await Promise.all([
@@ -214,7 +215,8 @@ class MesaService {
                         metadata: {
                             mesaId: nuevaMesa.id,
                             materia: nuevaMesa.materia.nombre,
-                            fecha: fechaObj.toISOString()
+                            fecha: fechaObj.toISOString(),
+                            horaTexto: nuevaMesa.horaTexto
                         }
                     };
 
