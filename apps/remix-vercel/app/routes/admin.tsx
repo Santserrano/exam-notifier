@@ -105,14 +105,6 @@ interface MesaProcesada {
   descripcion?: string;
   cargo?: string;
   verification?: boolean;
-  aceptaciones?: Array<{
-    profesor: {
-      id: string;
-      nombre: string;
-      apellido: string;
-    };
-    estado: "PENDIENTE" | "ACEPTADA" | "RECHAZADA";
-  }>;
 }
 
 type ActionData = {
@@ -261,7 +253,7 @@ const formatDate = (dateString: string) => {
   return match ? match[0] : '';
 };
 
-const procesarMesa = (mesa: MesaRaw, index: number, aceptaciones: any[]): MesaProcesada => {
+const procesarMesa = (mesa: MesaRaw, index: number): MesaProcesada => {
   const fechaObj = new Date(mesa.fecha);
   const fechaFormateada = fechaObj.toLocaleDateString('es-AR', {
     timeZone: 'America/Argentina/Buenos_Aires',
@@ -287,31 +279,6 @@ const procesarMesa = (mesa: MesaRaw, index: number, aceptaciones: any[]): MesaPr
     apellido: mesa.vocal?.toString().split(' ')[1] || '' 
   };
 
-  // Filtrar aceptaciones para esta mesa
-  const aceptacionesMesa = aceptaciones.filter((a: any) => a.mesaId === mesa.id);
-
-  // Asegurarse de que existan las aceptaciones para ambos profesores
-  const aceptacionesCompletas = [
-    // Aceptación del profesor titular
-    aceptacionesMesa.find((a: any) => a.profesor.id === profesorObj.id) || {
-      profesor: {
-        id: profesorObj.id,
-        nombre: profesorObj.nombre,
-        apellido: profesorObj.apellido
-      },
-      estado: "PENDIENTE"
-    },
-    // Aceptación del profesor vocal
-    aceptacionesMesa.find((a: any) => a.profesor.id === vocalObj.id) || {
-      profesor: {
-        id: vocalObj.id,
-        nombre: vocalObj.nombre,
-        apellido: vocalObj.apellido
-      },
-      estado: "PENDIENTE"
-    }
-  ];
-
   return {
     id: mesa.id?.toString() || `mesa-${index}`,
     materia: materiaNombre,
@@ -324,8 +291,8 @@ const procesarMesa = (mesa: MesaRaw, index: number, aceptaciones: any[]): MesaPr
     modalidad,
     color: modalidad === "Virtual" ? "blue" : "green",
     sede: mesa.sede || "Central",
-    profesorId: profesorObj.id,
-    vocalId: vocalObj.id,
+    profesorId: profesorObj.id || '',
+    vocalId: vocalObj.id || '',
     profesorNombre: `${profesorObj.nombre} ${profesorObj.apellido}`.trim(),
     vocalNombre: `${vocalObj.nombre} ${vocalObj.apellido}`.trim(),
     aula: mesa.aula || "Aula por confirmar",
@@ -333,8 +300,7 @@ const procesarMesa = (mesa: MesaRaw, index: number, aceptaciones: any[]): MesaPr
     webexLink: mesa.webexLink,
     descripcion: mesa.descripcion,
     cargo: mesa.cargo,
-    verification: mesa.verification,
-    aceptaciones: aceptacionesCompletas
+    verification: mesa.verification
   };
 };
 
@@ -597,7 +563,7 @@ export default function AdminRoute() {
   const [isLoadingProfesores, setIsLoadingProfesores] = useState(false);
 
   const mesasFormateadas = React.useMemo(() => 
-    mesas.map((mesa: MesaRaw, index: number) => procesarMesa(mesa, index, [])),
+    mesas.map((mesa: MesaRaw, index: number) => procesarMesa(mesa, index)),
     [mesas]
   );
 
@@ -757,8 +723,8 @@ export const loader = async (args: LoaderFunctionArgs) => {
   const notificationConfig = await getNotificationConfig(args);
 
   try {
-    // Obtener las mesas, profesores, carreras y aceptaciones del backend
-    const [mesasResponse, profesoresResponse, carrerasResponse, aceptacionesResponse] =
+    // Obtener las mesas, profesores y carreras del backend
+    const [mesasResponse, profesoresResponse, carrerasResponse] =
       await Promise.all([
         fetch(`${API_URL}/api/diaries/mesas`, {
           headers: {
@@ -787,25 +753,15 @@ export const loader = async (args: LoaderFunctionArgs) => {
           console.error("Error al obtener carreras:", error);
           return { ok: false, status: 500, json: () => [] };
         }),
-        fetch(`${API_URL}/api/diaries/mesas/aceptaciones`, {
-          headers: {
-            "x-api-key": INTERNAL_API_KEY,
-            "Content-Type": "application/json",
-          },
-        }).catch((error: unknown) => {
-          console.error("Error al obtener aceptaciones:", error);
-          return { ok: false, status: 500, json: () => [] };
-        }),
       ]);
 
-    const [mesas, profesores, carreras, aceptaciones] = await Promise.all([
+    const [mesas, profesores, carreras] = await Promise.all([
       mesasResponse.ok ? mesasResponse.json() : [],
       profesoresResponse.ok ? profesoresResponse.json() : [],
       carrerasResponse.ok ? carrerasResponse.json() : [],
-      aceptacionesResponse.ok ? aceptacionesResponse.json() : [],
     ]);
 
-    const mesasProcesadas = mesas.map((m: MesaRaw, index: number) => procesarMesa(m, index, aceptaciones));
+    const mesasProcesadas = mesas.map((m: MesaRaw, index: number) => procesarMesa(m, index));
 
     return json({
       userId,
@@ -865,45 +821,7 @@ export const action = async (args: ActionFunctionArgs) => {
   const hora = formData.get("hora") as string;
   const aula = formData.get("aula") as string;
   const webexLink = formData.get("webexLink") as string;
-  const type = formData.get("type") as string;
 
-  // Si es una actualización de aceptación
-  if (type === "aceptacion") {
-    const estado = formData.get("estado") as "PENDIENTE" | "ACEPTADA" | "RECHAZADA";
-    const profesorId = formData.get("profesorId") as string;
-
-    try {
-      const response = await fetch(`${API_URL}/api/diaries/mesas/${mesaId}/aceptacion`, {
-        method: "POST",
-        headers: {
-          "x-api-key": INTERNAL_API_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          profesorId,
-          estado,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        return json(
-          { error: errorData.error || "Error al actualizar la aceptación" },
-          { status: response.status }
-        );
-      }
-
-      return json({ success: true });
-    } catch (error) {
-      console.error("Error en el action de aceptación:", error);
-      return json(
-        { error: "Error al actualizar la aceptación" },
-        { status: 500 }
-      );
-    }
-  }
-
-  // Si es una actualización de mesa
   const [year, month, day] = fecha.split('-').map(Number);
   const [hours, minutes] = hora.split(':').map(Number);
   
