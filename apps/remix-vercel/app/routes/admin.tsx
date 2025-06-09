@@ -105,6 +105,14 @@ interface MesaProcesada {
   descripcion?: string;
   cargo?: string;
   verification?: boolean;
+  aceptaciones: Array<{
+    profesor: {
+      id: string;
+      nombre: string;
+      apellido: string;
+    };
+    estado: "PENDIENTE" | "ACEPTADA" | "RECHAZADA";
+  }>;
 }
 
 type ActionData = {
@@ -253,7 +261,7 @@ const formatDate = (dateString: string) => {
   return match ? match[0] : '';
 };
 
-const procesarMesa = (mesa: MesaRaw, index: number): MesaProcesada => {
+const procesarMesa = (mesa: MesaRaw, index: number, aceptaciones: any[]): MesaProcesada => {
   const fechaObj = new Date(mesa.fecha);
   const fechaFormateada = fechaObj.toLocaleDateString('es-AR', {
     timeZone: 'America/Argentina/Buenos_Aires',
@@ -268,8 +276,41 @@ const procesarMesa = (mesa: MesaRaw, index: number): MesaProcesada => {
     ? mesa.carrera?.nombre || mesa.carrera?.id || ''
     : mesa.carrera || '';
   
-  const profesorObj = typeof mesa.profesor === 'object' ? mesa.profesor : null;
-  const vocalObj = typeof mesa.vocal === 'object' ? mesa.vocal : null;
+  const profesorObj = typeof mesa.profesor === 'object' ? mesa.profesor : { 
+    id: mesa.profesor?.toString() || '', 
+    nombre: mesa.profesor?.toString().split(' ')[0] || '', 
+    apellido: mesa.profesor?.toString().split(' ')[1] || '' 
+  };
+  const vocalObj = typeof mesa.vocal === 'object' ? mesa.vocal : { 
+    id: mesa.vocal?.toString() || '', 
+    nombre: mesa.vocal?.toString().split(' ')[0] || '', 
+    apellido: mesa.vocal?.toString().split(' ')[1] || '' 
+  };
+
+  // Filtrar aceptaciones para esta mesa
+  const aceptacionesMesa = aceptaciones.filter((a: any) => a.mesaId === mesa.id);
+
+  // Asegurarse de que existan las aceptaciones para ambos profesores
+  const aceptacionesCompletas = [
+    // Aceptación del profesor titular
+    aceptacionesMesa.find((a: any) => a.profesor.id === profesorObj.id) || {
+      profesor: {
+        id: profesorObj.id,
+        nombre: profesorObj.nombre,
+        apellido: profesorObj.apellido
+      },
+      estado: "PENDIENTE"
+    },
+    // Aceptación del profesor vocal
+    aceptacionesMesa.find((a: any) => a.profesor.id === vocalObj.id) || {
+      profesor: {
+        id: vocalObj.id,
+        nombre: vocalObj.nombre,
+        apellido: vocalObj.apellido
+      },
+      estado: "PENDIENTE"
+    }
+  ];
 
   return {
     id: mesa.id?.toString() || `mesa-${index}`,
@@ -283,16 +324,17 @@ const procesarMesa = (mesa: MesaRaw, index: number): MesaProcesada => {
     modalidad,
     color: modalidad === "Virtual" ? "blue" : "green",
     sede: mesa.sede || "Central",
-    profesorId: profesorObj ? profesorObj.id || '' : typeof mesa.profesor === 'string' ? mesa.profesor : '',
-    vocalId: vocalObj ? vocalObj.id || '' : typeof mesa.vocal === 'string' ? mesa.vocal : '',
-    profesorNombre: profesorObj ? `${profesorObj.nombre || ''} ${profesorObj.apellido || ''}` : typeof mesa.profesor === 'string' ? mesa.profesor : '',
-    vocalNombre: vocalObj ? `${vocalObj.nombre || ''} ${vocalObj.apellido || ''}` : typeof mesa.vocal === 'string' ? mesa.vocal : '',
+    profesorId: profesorObj.id,
+    vocalId: vocalObj.id,
+    profesorNombre: `${profesorObj.nombre} ${profesorObj.apellido}`.trim(),
+    vocalNombre: `${vocalObj.nombre} ${vocalObj.apellido}`.trim(),
     aula: mesa.aula || "Aula por confirmar",
     hora: mesa.hora,
     webexLink: mesa.webexLink,
     descripcion: mesa.descripcion,
     cargo: mesa.cargo,
     verification: mesa.verification,
+    aceptaciones: aceptacionesCompletas
   };
 };
 
@@ -555,7 +597,7 @@ export default function AdminRoute() {
   const [isLoadingProfesores, setIsLoadingProfesores] = useState(false);
 
   const mesasFormateadas = React.useMemo(() => 
-    mesas.map((mesa: MesaRaw, index: number) => procesarMesa(mesa, index)),
+    mesas.map((mesa: MesaRaw, index: number) => procesarMesa(mesa, index, [])),
     [mesas]
   );
 
@@ -763,62 +805,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
       aceptacionesResponse.ok ? aceptacionesResponse.json() : [],
     ]);
 
-    const mesasProcesadas = mesas.map((m: MesaRaw, index: number) => {
-      const fechaObj = new Date(m.fecha);
-      const fechaFormateada = fechaObj.toLocaleDateString('es-AR', {
-        timeZone: 'America/Argentina/Buenos_Aires',
-        day: 'numeric',
-        month: 'short'
-      }).replace('.', '');
-      const modalidad = m.modalidad === "Virtual" ? "Virtual" : "Presencial";
-
-      // Asegurarse de que materia y carrera sean objetos con id y nombre
-      const materiaObj = typeof m.materia === 'object' ? m.materia : { id: m.materia, nombre: m.materia };
-      const carreraObj = typeof m.carrera === 'object' ? m.carrera : { id: m.carrera, nombre: m.carrera };
-      
-      // Asegurarse de que profesor y vocal sean objetos con id, nombre y apellido
-      const profesorObj = typeof m.profesor === 'object' ? m.profesor : { 
-        id: m.profesor, 
-        nombre: m.profesor?.toString().split(' ')[0] || '', 
-        apellido: m.profesor?.toString().split(' ')[1] || '' 
-      };
-      const vocalObj = typeof m.vocal === 'object' ? m.vocal : { 
-        id: m.vocal, 
-        nombre: m.vocal?.toString().split(' ')[0] || '', 
-        apellido: m.vocal?.toString().split(' ')[1] || '' 
-      };
-
-      // Filtrar aceptaciones para esta mesa
-      const aceptacionesMesa = aceptaciones.filter((a: any) => a.mesaId === m.id);
-
-      return {
-        id: m.id?.toString() || `mesa-${index}`,
-        materia: materiaObj.nombre || '',
-        materiaId: materiaObj.id || '',
-        carrera: carreraObj.nombre || '',
-        carreraId: carreraObj.id || '',
-        fecha: fechaFormateada,
-        fechaOriginal: m.fecha,
-        modalidad,
-        color: modalidad === "Virtual" ? "blue" : "green",
-        sede: m.sede || "Central",
-        profesorId: profesorObj.id || '',
-        vocalId: vocalObj.id || '',
-        profesorNombre: `${profesorObj.nombre || ''} ${profesorObj.apellido || ''}`.trim(),
-        vocalNombre: `${vocalObj.nombre || ''} ${vocalObj.apellido || ''}`.trim(),
-        aula: m.aula || "Aula por confirmar",
-        webexLink: m.webexLink,
-        hora: m.hora,
-        aceptaciones: aceptacionesMesa.map((a: any) => ({
-          profesor: {
-            id: a.profesor.id,
-            nombre: a.profesor.nombre,
-            apellido: a.profesor.apellido,
-          },
-          estado: a.estado,
-        })),
-      };
-    });
+    const mesasProcesadas = mesas.map((m: MesaRaw, index: number) => procesarMesa(m, index, aceptaciones));
 
     return json({
       userId,
