@@ -337,13 +337,7 @@ router.post("/mesas/:mesaId/aceptacion", async (req, res) => {
       return res.status(404).json({ error: "Profesor no encontrado" });
     }
 
-    console.log("Creando/actualizando aceptación:", {
-      mesaId: mesaIdNum,
-      profesorId,
-      estado
-    });
-
-    // Primero intentamos encontrar una aceptación existente
+    // Verificar si ya existe una aceptación
     const aceptacionExistente = await prisma.mesaAceptacion.findUnique({
       where: {
         mesaId_profesorId: {
@@ -352,6 +346,15 @@ router.post("/mesas/:mesaId/aceptacion", async (req, res) => {
         },
       },
     });
+
+    // Si ya existe una aceptación y no es PENDIENTE, no permitir cambios
+    if (aceptacionExistente && aceptacionExistente.estado !== "PENDIENTE") {
+      console.log("La mesa ya fue aceptada/rechazada anteriormente:", aceptacionExistente);
+      return res.status(400).json({
+        error: "La mesa ya fue aceptada/rechazada anteriormente",
+        aceptacion: aceptacionExistente
+      });
+    }
 
     let aceptacion;
     if (aceptacionExistente) {
@@ -384,10 +387,14 @@ router.post("/mesas/:mesaId/aceptacion", async (req, res) => {
     }
 
     console.log("Aceptación creada/actualizada:", aceptacion);
-    res.json(aceptacion);
+    return res.status(200).json({
+      success: true,
+      message: "Aceptación procesada correctamente",
+      aceptacion
+    });
   } catch (error) {
     console.error("Error al crear/actualizar aceptación:", error);
-    res.status(500).json({
+    return res.status(500).json({
       error: "Error al crear/actualizar aceptación",
       details: error instanceof Error ? error.message : "Error desconocido"
     });
