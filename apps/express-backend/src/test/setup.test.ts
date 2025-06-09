@@ -1,10 +1,4 @@
-import { execSync } from "child_process";
-
 import { prisma, testUtils } from "../test/setup";
-
-jest.mock("child_process", () => ({
-  execSync: jest.fn(),
-}));
 
 describe("Test de configuración de entorno de pruebas", () => {
   beforeAll(async () => {
@@ -25,7 +19,7 @@ describe("Test de configuración de entorno de pruebas", () => {
   });
 
   it("resetTestDatabase ejecuta prisma migrate reset", () => {
-    const spy = jest.spyOn({ execSync }, "execSync").mockImplementation(jest.fn());
+    const spy = jest.spyOn(require("child_process"), "execSync").mockImplementation(jest.fn());
     testUtils.resetTestDatabase();
     expect(spy).toHaveBeenCalledWith(
       "npx prisma migrate reset --force --skip-seed",

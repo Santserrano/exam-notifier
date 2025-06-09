@@ -1,17 +1,18 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 import express from "express";
 import request from "supertest";
 
 import notificationRouter from "../../routes/notifications.js"; // Ajusta la ruta
-
+import { notificacionService } from '../../service/NotificationService.js';
+import { notificationFactory } from '../../core/notifications/NotificationFactory.js';
 // Mock de dependencias
-jest.mock("../core/notifications/NotificationFactory.js", () => ({
+jest.mock('../../core/notifications/NotificationFactory.js', () => ({
   notificationFactory: {
     createNotification: jest.fn(),
   },
 }));
 
-jest.mock("../service/NotificationService.js", () => ({
+jest.mock('../../service/NotificationService.js', () => ({
   notificacionService: {
     getConfigByProfesor: jest.fn(),
     updateConfig: jest.fn(),
@@ -30,10 +31,6 @@ jest.mock("@prisma/client", () => ({
 }));
 
 // Importaciones mockeadas
-const { notificacionService } = require("../service/NotificationService.js");
-const {
-  notificationFactory,
-} = require("../core/notifications/NotificationFactory.js");
 const prisma = new PrismaClient();
 
 // Configurar Express para pruebas
