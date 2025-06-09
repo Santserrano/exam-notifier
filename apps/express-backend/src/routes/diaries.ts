@@ -123,6 +123,7 @@ router.post('/mesas', async (req, res) => {
       carrera,
       materia,
       fecha: fechaFinal.toISOString(),
+      horaTexto: req.body.hora || req.body.horaTexto,
       descripcion,
       cargo,
       verification: verification ?? false,
