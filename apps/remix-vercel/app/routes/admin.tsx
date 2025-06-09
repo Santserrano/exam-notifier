@@ -848,6 +848,7 @@ export const action = async (args: ActionFunctionArgs) => {
     carrera,
     materia,
     fecha: fechaUTC.toISOString(),
+    horaTexto: hora,
     descripcion: "Mesa de examen",
     cargo: "Titular",
     verification: false,
