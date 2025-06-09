@@ -86,13 +86,17 @@ interface MesaRaw {
 interface MesaProcesada {
   id: string;
   materia: string;
+  materiaId: string;
   carrera: string;
+  carreraId: string;
   fecha: string;
   fechaOriginal: string;
   futura: boolean;
   modalidad: "Presencial" | "Virtual";
   color: string;
   sede: string;
+  profesorId: string;
+  vocalId: string;
   profesorNombre: string;
   vocalNombre: string;
   aula: string;
@@ -261,19 +265,19 @@ const procesarMesa = (mesa: MesaRaw, index: number): MesaProcesada => {
   return {
     id: mesa.id?.toString() || `mesa-${index}`,
     materia: materiaNombre,
+    materiaId: typeof mesa.materia === 'object' ? mesa.materia.id || '' : mesa.materia || '',
     carrera: carreraNombre,
+    carreraId: typeof mesa.carrera === 'object' ? mesa.carrera.id || '' : mesa.carrera || '',
     fecha: fechaFormateada,
     fechaOriginal: mesa.fecha,
     futura,
     modalidad,
     color: modalidad === "Virtual" ? "blue" : "green",
     sede: mesa.sede || "Central",
-    profesorNombre: profesorObj 
-      ? `${profesorObj.nombre || ''} ${profesorObj.apellido || ''}`
-      : typeof mesa.profesor === 'string' ? mesa.profesor : '',
-    vocalNombre: vocalObj
-      ? `${vocalObj.nombre || ''} ${vocalObj.apellido || ''}`
-      : typeof mesa.vocal === 'string' ? mesa.vocal : '',
+    profesorId: profesorObj ? profesorObj.id || '' : typeof mesa.profesor === 'string' ? mesa.profesor : '',
+    vocalId: vocalObj ? vocalObj.id || '' : typeof mesa.vocal === 'string' ? mesa.vocal : '',
+    profesorNombre: profesorObj ? `${profesorObj.nombre || ''} ${profesorObj.apellido || ''}` : typeof mesa.profesor === 'string' ? mesa.profesor : '',
+    vocalNombre: vocalObj ? `${vocalObj.nombre || ''} ${vocalObj.apellido || ''}` : typeof mesa.vocal === 'string' ? mesa.vocal : '',
     aula: mesa.aula || "Aula por confirmar",
     hora: mesa.hora,
     webexLink: mesa.webexLink,
@@ -642,17 +646,31 @@ export default function AdminRoute() {
                 // Buscar la mesa original por ID y pasarla al modal
                 const mesaRaw = mesas.find((m: MesaRaw) => m.id?.toString() === mesa.id);
                 if (mesaRaw) {
-                  // Asegurarse de que la mesa tenga todos los campos necesarios
-                  const mesaCompleta = {
+                  // Crear una versión completa de la mesa con todos los campos necesarios
+                  const mesaCompleta: MesaRaw = {
                     ...mesaRaw,
                     modalidad: mesa.modalidad,
-                    carrera: mesaRaw.carrera || { id: '', nombre: mesa.carrera },
-                    materia: mesaRaw.materia || { id: '', nombre: mesa.materia },
-                    profesor: mesaRaw.profesor || { id: '', nombre: mesa.profesorNombre },
-                    vocal: mesaRaw.vocal || { id: '', nombre: mesa.vocalNombre },
-                    aula: mesaRaw.aula || mesa.aula,
-                    webexLink: mesaRaw.webexLink || mesa.webexLink,
-                    hora: mesaRaw.hora || mesa.hora,
+                    carrera: {
+                      id: typeof mesaRaw.carrera === 'object' ? mesaRaw.carrera.id : mesaRaw.carrera,
+                      nombre: mesa.carrera
+                    },
+                    materia: {
+                      id: typeof mesaRaw.materia === 'object' ? mesaRaw.materia.id : mesaRaw.materia,
+                      nombre: mesa.materia
+                    },
+                    profesor: {
+                      id: typeof mesaRaw.profesor === 'object' ? mesaRaw.profesor.id : mesaRaw.profesor,
+                      nombre: mesa.profesorNombre.split(' ')[0],
+                      apellido: mesa.profesorNombre.split(' ')[1] || ''
+                    },
+                    vocal: {
+                      id: typeof mesaRaw.vocal === 'object' ? mesaRaw.vocal.id : mesaRaw.vocal,
+                      nombre: mesa.vocalNombre.split(' ')[0],
+                      apellido: mesa.vocalNombre.split(' ')[1] || ''
+                    },
+                    aula: mesa.aula,
+                    webexLink: mesa.webexLink,
+                    hora: mesa.hora
                   };
                   setMesaAEditar(mesaCompleta);
                 }
@@ -732,11 +750,6 @@ export const loader = async (args: LoaderFunctionArgs) => {
       aceptacionesResponse.ok ? aceptacionesResponse.json() : [],
     ]);
 
-    const meses = [
-      "ene.", "feb.", "mar.", "abr.", "may.", "jun.",
-      "jul.", "ago.", "sep.", "oct.", "nov.", "dic.",
-    ];
-
     const mesasProcesadas = mesas.map((m: MesaRaw, index: number) => {
       const fechaObj = new Date(m.fecha);
       const fechaFormateada = fechaObj.toLocaleDateString('es-AR', {
@@ -746,36 +759,43 @@ export const loader = async (args: LoaderFunctionArgs) => {
       }).replace('.', '');
       const modalidad = m.modalidad === "Virtual" ? "Virtual" : "Presencial";
 
-      const materiaNombre = typeof m.materia === 'object' ? m.materia?.nombre || '' : m.materia || '';
-      const carreraNombre = typeof m.carrera === 'object' 
-        ? m.carrera?.nombre || m.carrera?.id || ''
-        : m.carrera || '';
+      // Asegurarse de que materia y carrera sean objetos con id y nombre
+      const materiaObj = typeof m.materia === 'object' ? m.materia : { id: m.materia, nombre: m.materia };
+      const carreraObj = typeof m.carrera === 'object' ? m.carrera : { id: m.carrera, nombre: m.carrera };
       
-      const profesorObj = typeof m.profesor === 'object' ? m.profesor : null;
-      const vocalObj = typeof m.vocal === 'object' ? m.vocal : null;
+      // Asegurarse de que profesor y vocal sean objetos con id, nombre y apellido
+      const profesorObj = typeof m.profesor === 'object' ? m.profesor : { 
+        id: m.profesor, 
+        nombre: m.profesor?.toString().split(' ')[0] || '', 
+        apellido: m.profesor?.toString().split(' ')[1] || '' 
+      };
+      const vocalObj = typeof m.vocal === 'object' ? m.vocal : { 
+        id: m.vocal, 
+        nombre: m.vocal?.toString().split(' ')[0] || '', 
+        apellido: m.vocal?.toString().split(' ')[1] || '' 
+      };
 
       // Filtrar aceptaciones para esta mesa
       const aceptacionesMesa = aceptaciones.filter((a: any) => a.mesaId === m.id);
 
       return {
         id: m.id?.toString() || `mesa-${index}`,
-        materia: materiaNombre,
-        carrera: carreraNombre,
+        materia: materiaObj.nombre || '',
+        materiaId: materiaObj.id || '',
+        carrera: carreraObj.nombre || '',
+        carreraId: carreraObj.id || '',
         fecha: fechaFormateada,
         fechaOriginal: m.fecha,
         modalidad,
         color: modalidad === "Virtual" ? "blue" : "green",
         sede: m.sede || "Central",
-        profesorId: typeof m.profesor === 'object' ? m.profesor?.id || '' : '',
-        vocalId: typeof m.vocal === 'object' ? m.vocal?.id || '' : '',
-        profesorNombre: profesorObj 
-          ? `${profesorObj.nombre || ''} ${profesorObj.apellido || ''}`
-          : typeof m.profesor === 'string' ? m.profesor : '',
-        vocalNombre: vocalObj
-          ? `${vocalObj.nombre || ''} ${vocalObj.apellido || ''}`
-          : typeof m.vocal === 'string' ? m.vocal : '',
+        profesorId: profesorObj.id || '',
+        vocalId: vocalObj.id || '',
+        profesorNombre: `${profesorObj.nombre || ''} ${profesorObj.apellido || ''}`.trim(),
+        vocalNombre: `${vocalObj.nombre || ''} ${vocalObj.apellido || ''}`.trim(),
         aula: m.aula || "Aula por confirmar",
         webexLink: m.webexLink,
+        hora: m.hora,
         aceptaciones: aceptacionesMesa.map((a: any) => ({
           profesor: {
             id: a.profesor.id,
