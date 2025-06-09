@@ -14,6 +14,11 @@ describe("WhatsApp Service", () => {
     process.env.VONAGE_API_SECRET = "test-api-secret";
   });
 
+  afterEach(() => {
+    delete process.env.VONAGE_API_KEY;
+    delete process.env.VONAGE_API_SECRET;
+  });
+
   it("should send WhatsApp message successfully", async () => {
     const mockResponse = {
       data: { message_uuid: "test-uuid" },
