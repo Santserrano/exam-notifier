@@ -11,7 +11,6 @@ import notificationsRouter from "./routes/notifications.js";
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT ?? 3005;
 
 // Configuración de CORS
 const corsOptions = {
@@ -31,15 +30,38 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(morgan("dev"));
 
+// Health check endpoint
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok" });
+});
+
 // Rutas
 app.use("/api/diaries", diaryRouter);
 app.use("/api/diaries", diaryAcceptanceRouter);
 app.use("/api/diaries/notificaciones", notificationsRouter);
 
-if (process.env.NODE_ENV !== "test") {
-  app.listen(port, () => {
-    console.log(`Servidor corriendo en http://localhost:${port}`);
+let server: import("http").Server | undefined;
+
+export const startServer = () => {
+  return new Promise<import("http").Server>((resolve) => {
+    if (process.env.NODE_ENV === "test") {
+      resolve(undefined as any);
+      return;
+    }
+
+    const port = process.env.PORT || 3005;
+    console.log("🟢 Iniciando servidor...");
+
+    server = app.listen(port, () => {
+      console.log(`Servidor corriendo en http://localhost:${port}`);
+      resolve(server!);
+    });
   });
+};
+
+// Iniciar el servidor solo si no estamos en modo test
+if (process.env.NODE_ENV !== "test") {
+  startServer();
 }
 
 export { app };

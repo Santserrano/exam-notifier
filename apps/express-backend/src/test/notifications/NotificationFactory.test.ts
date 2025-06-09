@@ -1,7 +1,7 @@
 import { EmailNotification } from "../../../src/core/notifications/EmailNotification";
 import {
-  notificationFactory,
   NotificationFactory,
+  notificationFactory,
 } from "../../../src/core/notifications/NotificationFactory";
 import { PushNotification } from "../../../src/core/notifications/PushNotification";
 import { NotificationType } from "../../../src/core/notifications/types";

@@ -202,6 +202,12 @@ importers:
       eslint:
         specifier: ^8.0.0
         version: 8.57.1
+      eslint-plugin-simple-import-sort:
+        specifier: ^12.0.0
+        version: 12.1.1(eslint@8.57.1)
+      eslint-plugin-unused-imports:
+        specifier: ^3.0.0
+        version: 3.2.0(@typescript-eslint/eslint-plugin@6.21.0)(eslint@8.57.1)
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@20.19.0)(ts-node@10.9.2)
@@ -7450,7 +7456,6 @@ packages:
       eslint: '>=5.0.0'
     dependencies:
       eslint: 8.57.1
-    dev: false
 
   /eslint-plugin-tailwindcss@3.18.0(tailwindcss@3.4.17):
     resolution: {integrity: sha512-PQDU4ZMzFH0eb2DrfHPpbgo87Zgg2EXSMOj1NSfzdZm+aJzpuwGerfowMIaVehSREEa0idbf/eoNYAOHSJoDAQ==}
@@ -7462,6 +7467,21 @@ packages:
       postcss: 8.5.4
       tailwindcss: 3.4.17
     dev: false
+
+  /eslint-plugin-unused-imports@3.2.0(@typescript-eslint/eslint-plugin@6.21.0)(eslint@8.57.1):
+    resolution: {integrity: sha512-6uXyn6xdINEpxE1MtDjxQsyXB37lfyO2yKGVVgtD7WEWQGORSOZjgrD6hBhvGv4/SO+TOlS+UnC6JppRqbuwGQ==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    peerDependencies:
+      '@typescript-eslint/eslint-plugin': 6 - 7
+      eslint: '8'
+    peerDependenciesMeta:
+      '@typescript-eslint/eslint-plugin':
+        optional: true
+    dependencies:
+      '@typescript-eslint/eslint-plugin': 6.21.0(@typescript-eslint/parser@6.21.0)(eslint@8.57.1)(typescript@5.4.2)
+      eslint: 8.57.1
+      eslint-rule-composer: 0.3.0
+    dev: true
 
   /eslint-plugin-unused-imports@3.2.0(@typescript-eslint/eslint-plugin@7.18.0)(eslint@8.57.1):
     resolution: {integrity: sha512-6uXyn6xdINEpxE1MtDjxQsyXB37lfyO2yKGVVgtD7WEWQGORSOZjgrD6hBhvGv4/SO+TOlS+UnC6JppRqbuwGQ==}
@@ -7481,7 +7501,6 @@ packages:
   /eslint-rule-composer@0.3.0:
     resolution: {integrity: sha512-bt+Sh8CtDmn2OajxvNO+BX7Wn4CIWMpTRm3MaiKPCQcnnlm0CS2mhui6QaoeQugs+3Kj2ESKEEGJUdVafwhiCg==}
     engines: {node: '>=4.0.0'}
-    dev: false
 
   /eslint-scope@7.2.2:
     resolution: {integrity: sha512-dOt21O7lTMhDM+X9mB4GX+DZrZtCUJPL/wlcTqxyrx5IvO0IYtILdtrQGQp+8n5S0gwSVmOf9NQrjMOgfQZlIg==}

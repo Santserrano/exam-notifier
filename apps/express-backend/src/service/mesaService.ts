@@ -366,5 +366,5 @@ class MesaService {
   }
 }
 export const mesaService = new MesaService();
-export type { MesaCreateInput, MesaWithRelations, MesaResponse };
+export type { MesaCreateInput, MesaResponse,MesaWithRelations };
 export { MesaService };

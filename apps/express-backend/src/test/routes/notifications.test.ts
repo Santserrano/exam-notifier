@@ -2,9 +2,9 @@ import { PrismaClient } from '@prisma/client';
 import express from "express";
 import request from "supertest";
 
+import { notificationFactory } from '../../core/notifications/NotificationFactory.js';
 import notificationRouter from "../../routes/notifications.js"; // Ajusta la ruta
 import { notificacionService } from '../../service/NotificationService.js';
-import { notificationFactory } from '../../core/notifications/NotificationFactory.js';
 // Mock de dependencias
 jest.mock('../../core/notifications/NotificationFactory.js', () => ({
   notificationFactory: {

@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
-import { createTestMesa, clearDatabase } from "./test-utils";
+
+import { clearDatabase,createTestMesa } from "./test-utils";
 
 // Mock de PrismaClient
 jest.mock("@prisma/client", () => {

@@ -1,6 +1,7 @@
-import { execSync } from "child_process";
-import { testUtils, prisma } from "./setup";
 import { PrismaClient } from "@prisma/client";
+import { execSync } from "child_process";
+
+import { prisma,testUtils } from "./setup";
 
 // Mock de execSync
 jest.mock("child_process", () => ({

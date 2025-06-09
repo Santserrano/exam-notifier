@@ -1,4 +1,3 @@
-import * as webpush from "web-push";
 
 import { notificacionService } from "../../../src/service/NotificationService";
 import { sendPushToProfesor } from "../../../src/service/SendPushNotification";
