@@ -28,17 +28,28 @@ export const getAceptacionesProfesor = async (_req: Request, res: Response) => {
 
 export const getAceptaciones = async (_req: Request, res: Response) => {
     try {
+        console.log("Obteniendo todas las aceptaciones...");
+
         const aceptaciones = await prisma.mesaAceptacion.findMany({
             include: {
-                mesa: true,
+                mesa: {
+                    include: {
+                        materia: true,
+                        carrera: true
+                    }
+                },
                 profesor: true
             }
         });
 
+        console.log(`Se encontraron ${aceptaciones.length} aceptaciones`);
         res.json(aceptaciones);
     } catch (error) {
-        console.error("Error al obtener aceptaciones:", error);
-        res.status(500).json({ error: "Error al obtener aceptaciones" });
+        console.error("Error detallado al obtener aceptaciones:", error);
+        res.status(500).json({
+            error: "Error al obtener aceptaciones",
+            details: error instanceof Error ? error.message : "Error desconocido"
+        });
     }
 };
 
@@ -50,7 +61,8 @@ export const crearAceptacionMesa = async (_req: Request, res: Response) => {
             headers: _req.headers
         });
 
-        const { mesaId, profesorId, estado } = _req.body;
+        const { mesaId } = _req.params;
+        const { profesorId, estado } = _req.body;
 
         if (!mesaId || !profesorId || !estado) {
             console.log("Faltan parámetros:", { mesaId, profesorId, estado });
@@ -96,26 +108,45 @@ export const crearAceptacionMesa = async (_req: Request, res: Response) => {
             estado
         });
 
-        const aceptacion = await prisma.mesaAceptacion.upsert({
+        // Primero intentamos encontrar una aceptación existente
+        const aceptacionExistente = await prisma.mesaAceptacion.findUnique({
             where: {
                 mesaId_profesorId: {
                     mesaId: mesaIdNum,
                     profesorId,
                 },
             },
-            update: {
-                estado,
-            },
-            create: {
-                mesaId: mesaIdNum,
-                profesorId,
-                estado,
-            },
-            include: {
-                mesa: true,
-                profesor: true,
-            },
         });
+
+        let aceptacion;
+        if (aceptacionExistente) {
+            console.log("Actualizando aceptación existente:", aceptacionExistente);
+            aceptacion = await prisma.mesaAceptacion.update({
+                where: {
+                    id: aceptacionExistente.id,
+                },
+                data: {
+                    estado,
+                },
+                include: {
+                    mesa: true,
+                    profesor: true,
+                },
+            });
+        } else {
+            console.log("Creando nueva aceptación");
+            aceptacion = await prisma.mesaAceptacion.create({
+                data: {
+                    mesaId: mesaIdNum,
+                    profesorId,
+                    estado,
+                },
+                include: {
+                    mesa: true,
+                    profesor: true,
+                },
+            });
+        }
 
         console.log("Aceptación creada/actualizada:", aceptacion);
         res.json(aceptacion);
