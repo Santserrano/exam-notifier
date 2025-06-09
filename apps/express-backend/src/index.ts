@@ -4,6 +4,7 @@ import express from "express";
 import morgan from "morgan";
 
 import diaryRouter from "./routes/diaries.js";
+import diaryAcceptanceRouter from "./routes/diary.routes.js";
 import notificationsRouter from "./routes/notifications.js";
 
 // Cargar variables de entorno
@@ -30,13 +31,9 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(morgan("dev"));
 
-// Health check endpoint
-app.get("/health", (_req, res) => {
-  res.status(200).json({ status: "ok" });
-});
-
 // Rutas
 app.use("/api/diaries", diaryRouter);
+app.use("/api/diaries", diaryAcceptanceRouter);
 app.use("/api/diaries/notificaciones", notificationsRouter);
 
 if (process.env.NODE_ENV !== "test") {

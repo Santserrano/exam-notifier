@@ -5,8 +5,12 @@ import {
   getAceptaciones,
   getAceptacionesProfesor,
 } from "../controllers/diary.controller.js";
+import { validateApiKey } from "../middleware/auth.js";
 
 const router = Router();
+
+// Middleware para validar API key
+router.use(validateApiKey);
 
 // Rutas para aceptaciones de mesas
 router.get("/mesas/aceptaciones/profesor/:profesorId", getAceptacionesProfesor);
