@@ -9,7 +9,7 @@ import {
 import router from "../../routes/diary.routes.js"; // Ajusta la ruta según tu estructura
 
 // Mock de los controladores
-jest.mock("../controllers/diary.controller.js", () => ({
+jest.mock("../../controllers/diary.controller.js", () => ({
   getAceptacionesProfesor: jest.fn(),
   getAceptaciones: jest.fn(),
   crearAceptacionMesa: jest.fn(),

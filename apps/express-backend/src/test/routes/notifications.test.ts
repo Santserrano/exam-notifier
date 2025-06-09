@@ -137,8 +137,17 @@ describe("Notification Router Tests", () => {
         id: "1",
         profesorId: "prof1",
         webPushEnabled: true,
+        emailEnabled: false,
+        smsEnabled: false,
+        avisoPrevioHoras: 24,
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
-      const mockUpdatedConfig = { ...mockCurrentConfig, ...validUpdate };
+      const mockUpdatedConfig = {
+        ...mockCurrentConfig,
+        webPushEnabled: false,
+        updatedAt: new Date()
+      };
 
       (prisma.profesor.findUnique as jest.Mock).mockResolvedValue(mockProfesor);
       (notificacionService.getConfigByProfesor as jest.Mock).mockResolvedValue(

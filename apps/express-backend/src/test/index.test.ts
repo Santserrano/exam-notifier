@@ -24,7 +24,7 @@ describe("Express App", () => {
   beforeEach(() => {
     jest.resetModules();
     process.env = { ...originalEnv };
-    consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    consoleSpy = jest.spyOn(console, "log").mockImplementation(() => { });
   });
 
   afterEach(() => {

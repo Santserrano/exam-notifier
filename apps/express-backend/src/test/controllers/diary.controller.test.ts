@@ -131,14 +131,43 @@ describe("diary.controller", () => {
       expect(res.json).toHaveBeenCalledWith({ id: 99 });
     });
 
-    it("500 si hay error", async () => {
-      prisma.mesaDeExamen.findUnique.mockRejectedValue(new Error("fail"));
+    it("500 si hay error en upsert con Error", async () => {
+      prisma.mesaDeExamen.findUnique.mockResolvedValue({ id: 1 });
+      prisma.profesor.findUnique.mockResolvedValue({ id: "p1" });
+      const dbError = new Error("Error de base de datos");
+      prisma.mesaAceptacion.upsert.mockRejectedValue(dbError);
+
       const req: any = {
         body: { mesaId: 1, profesorId: "p1", estado: "PENDIENTE" },
       };
       const res = mockRes();
+
       await controller.crearAceptacionMesa(req, res);
+
       expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: "Error al crear/actualizar aceptación",
+        details: "Error de base de datos"
+      });
+    });
+
+    it("500 si hay error en upsert con error no Error", async () => {
+      prisma.mesaDeExamen.findUnique.mockResolvedValue({ id: 1 });
+      prisma.profesor.findUnique.mockResolvedValue({ id: "p1" });
+      prisma.mesaAceptacion.upsert.mockRejectedValue("Error no Error");
+
+      const req: any = {
+        body: { mesaId: 1, profesorId: "p1", estado: "PENDIENTE" },
+      };
+      const res = mockRes();
+
+      await controller.crearAceptacionMesa(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        error: "Error al crear/actualizar aceptación",
+        details: "Error desconocido"
+      });
     });
   });
 });

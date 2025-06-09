@@ -4,16 +4,24 @@
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
-  roots: ["<rootDir>/src"],
-  testMatch: ["**/__tests__/**/*.ts", "**/?(*.)+(spec|test).ts"],
   transform: {
-    "^.+\\.ts$": "ts-jest",
+    "^.+\\.tsx?$": ["ts-jest", {
+      tsconfig: "tsconfig.json"
+    }]
   },
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
+  rootDir: ".",
+  testMatch: ["**/__tests__/**/*.ts?(x)", "**/?(*.)+(spec|test).ts?(x)"],
+  moduleDirectories: ["node_modules", "src"],
   moduleNameMapper: {
-    "^(\\.{1,2}/.*)\\.js$": "$1", // quita la extensión .js de los imports relativos
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^(\\.{1,2}/.*)\\.ts$": "$1"
   },
-
-  moduleFileExtensions: ["ts", "js", "json", "node"],
+  transformIgnorePatterns: [
+    "node_modules/(?!(ts-jest)/)"
+  ],
+  extensionsToTreatAsEsm: [".ts", ".tsx"],
   setupFilesAfterEnv: ["<rootDir>/test/setup.ts"],
   collectCoverageFrom: [
     "src/**/*.ts",

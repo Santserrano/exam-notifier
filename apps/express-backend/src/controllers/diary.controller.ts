@@ -121,9 +121,10 @@ export const crearAceptacionMesa = async (_req: Request, res: Response) => {
     res.json(aceptacion);
   } catch (error) {
     console.error("Error al crear/actualizar aceptación:", error);
+    const errorMessage = error instanceof Error ? error.message : "Error desconocido";
     res.status(500).json({
       error: "Error al crear/actualizar aceptación",
-      details: error instanceof Error ? error.message : "Error desconocido",
+      details: errorMessage,
     });
   }
 };

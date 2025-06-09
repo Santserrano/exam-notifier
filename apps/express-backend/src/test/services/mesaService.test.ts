@@ -275,14 +275,146 @@ describe("MesaService", () => {
     });
 
     it("should handle notification errors gracefully", async () => {
-      (
-        mockNotificationFactory.createNotification as jest.Mock
-      ).mockImplementationOnce(() => {
+      mockNotificationFactory.createNotification.mockImplementationOnce(() => {
         throw new Error("Notification error");
       });
 
       const result = await mesaService.createMesa(mockData);
-      expect(result.success).toBe(true); // El error de notificación no debería fallar la creación
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(mockNuevaMesa);
+    });
+
+    it("should handle missing notification config", async () => {
+      mockNotificacionService.getConfigByProfesor.mockResolvedValueOnce(null);
+
+      const result = await mesaService.createMesa(mockData);
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(mockNuevaMesa);
+    });
+
+    it("should handle virtual mesa creation", async () => {
+      const virtualMesaData = {
+        ...mockData,
+        modalidad: "Virtual",
+        webexLink: "https://webex.com/meeting",
+      };
+
+      const virtualMesa = {
+        ...mockNuevaMesa,
+        modalidad: "Virtual",
+        webexLink: "https://webex.com/meeting",
+      };
+
+      mockPrisma.mesaDeExamen.create.mockResolvedValueOnce(virtualMesa);
+
+      const result = await mesaService.createMesa(virtualMesaData);
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(virtualMesa);
+      expect(mockPrisma.mesaDeExamen.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            modalidad: "Virtual",
+            webexLink: "https://webex.com/meeting",
+            aula: undefined,
+          }),
+        }),
+      );
+    });
+
+    it("should handle presencial mesa creation with aula", async () => {
+      const presencialMesaData = {
+        ...mockData,
+        modalidad: "Presencial",
+        aula: "Aula 101",
+      };
+
+      const presencialMesa = {
+        ...mockNuevaMesa,
+        modalidad: "Presencial",
+        aula: "Aula 101",
+      };
+
+      mockPrisma.mesaDeExamen.create.mockResolvedValueOnce(presencialMesa);
+
+      const result = await mesaService.createMesa(presencialMesaData);
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(presencialMesa);
+      expect(mockPrisma.mesaDeExamen.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            modalidad: "Presencial",
+            aula: "Aula 101",
+            webexLink: undefined,
+          }),
+        }),
+      );
+    });
+
+    it("should handle notification errors for profesor gracefully", async () => {
+      mockNotificacionService.getConfigByProfesor.mockImplementationOnce(() => {
+        throw new Error("Error al obtener configuración");
+      });
+
+      const result = await mesaService.createMesa(mockData);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Error al obtener configuración");
+    });
+
+    it("should handle notification errors for vocal gracefully", async () => {
+      mockNotificacionService.getConfigByProfesor
+        .mockResolvedValueOnce({
+          webPushEnabled: true,
+          emailEnabled: true,
+          smsEnabled: true,
+        })
+        .mockImplementationOnce(() => {
+          throw new Error("Error al obtener configuración");
+        });
+
+      const result = await mesaService.createMesa(mockData);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Error al obtener configuración");
+    });
+
+    it("should handle push notification errors gracefully", async () => {
+      mockNotificationFactory.createNotification.mockImplementationOnce(() => ({
+        send: jest.fn().mockRejectedValue(new Error("Error al enviar push")),
+      }));
+
+      const result = await mesaService.createMesa(mockData);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Error al enviar notificaciones al profesor:");
+    });
+
+    it("should handle email notification errors gracefully", async () => {
+      mockNotificationFactory.createNotification
+        .mockImplementationOnce(() => ({
+          send: jest.fn().mockResolvedValue(true),
+        }))
+        .mockImplementationOnce(() => ({
+          send: jest.fn().mockRejectedValue(new Error("Error al enviar email")),
+        }));
+
+      const result = await mesaService.createMesa(mockData);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Error al enviar notificaciones al profesor:");
+    });
+
+    it("should handle whatsapp notification errors gracefully", async () => {
+      mockNotificationFactory.createNotification
+        .mockImplementationOnce(() => ({
+          send: jest.fn().mockResolvedValue(true),
+        }))
+        .mockImplementationOnce(() => ({
+          send: jest.fn().mockResolvedValue(true),
+        }))
+        .mockImplementationOnce(() => ({
+          send: jest.fn().mockRejectedValue(new Error("Error al enviar whatsapp")),
+        }));
+
+      const result = await mesaService.createMesa(mockData);
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Error al enviar notificaciones al profesor:");
     });
   });
 
@@ -331,6 +463,21 @@ describe("MesaService", () => {
           carrera: true,
         },
       });
+    });
+
+    it("should handle database errors during update", async () => {
+      mockPrisma.mesaDeExamen.update.mockRejectedValueOnce(new Error("DB Error"));
+
+      const result = await mesaService.updateMesa(1, {
+        profesor: "prof1",
+        vocal: "prof2",
+        carrera: "carr1",
+        materia: "mat1",
+        fecha: "2023-01-01T10:00:00Z",
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Error al actualizar la mesa");
     });
   });
 
