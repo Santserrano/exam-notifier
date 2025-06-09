@@ -7,7 +7,7 @@ const __dirname = dirname(__filename)
 
 export default defineConfig({
   entry: ['src/index.ts'],
-  format: ["esm"],
+  format: ['cjs'],
   dts: {
     resolve: true,
     entry: 'src/index.ts'
