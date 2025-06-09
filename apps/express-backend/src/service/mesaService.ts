@@ -151,12 +151,7 @@ class MesaService {
                     carrera: { connect: { id: data.carrera } },
                     materia: { connect: { id: data.materia } },
                     fecha: new Date(data.fecha),
-                    horaTexto: new Date(data.fecha).toLocaleTimeString('es-AR', {
-                        timeZone: 'America/Argentina/Buenos_Aires',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false
-                    }),
+                    horaTexto: data.horaTexto,
                     descripcion: data.descripcion || "Mesa de examen",
                     cargo: data.cargo || "Titular",
                     verification: data.verification ?? false,
