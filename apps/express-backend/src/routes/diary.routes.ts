@@ -5,7 +5,7 @@ import { crearAceptacionMesa, getAceptaciones, getAceptacionesProfesor } from ".
 const router = Router();
 
 // Rutas para aceptaciones de mesas
-router.get("/mesas/aceptaciones/profesor/:profesorId", getAceptacionesProfesor);
+router.get("/mesas/aceptacion/profesor/:profesorId", getAceptacionesProfesor);
 router.get("/mesas/aceptaciones", getAceptaciones);
 router.post("/mesas/:mesaId/aceptacion", crearAceptacionMesa);
 

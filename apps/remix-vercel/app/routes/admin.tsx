@@ -115,8 +115,8 @@ type ActionData = {
 
 // Constants
 const FECHAS = [
-  "ene.", "feb.", "mar.", "abr.", "may.", "jun.",
-  "jul.", "ago.", "sep.", "oct.", "nov.", "dic.",
+  "ene", "feb", "mar", "abr", "may", "jun",
+  "jul", "ago", "sep", "oct", "nov", "dic"
 ];
 
 const SEDES = [
@@ -178,13 +178,22 @@ const useMesaForm = (initialMesa?: MesaRaw) => {
       // Establecer fecha
       if (initialMesa.fecha) {
         const fechaObj = new Date(initialMesa.fecha);
-        const year = fechaObj.getFullYear();
-        const month = String(fechaObj.getMonth() + 1).padStart(2, '0');
-        const day = String(fechaObj.getDate()).padStart(2, '0');
+        // Ajustar la fecha a la zona horaria de Argentina
+        const fechaArgentina = new Date(fechaObj.getTime() + (fechaObj.getTimezoneOffset() * 60000));
+        const year = fechaArgentina.getFullYear();
+        const month = String(fechaArgentina.getMonth() + 1).padStart(2, '0');
+        const day = String(fechaArgentina.getDate()).padStart(2, '0');
         setFecha(`${year}-${month}-${day}`);
       }
     }
   }, [initialMesa]);
+
+  // Resetear materia cuando cambia la carrera
+  React.useEffect(() => {
+    if (!carreraSeleccionada) {
+      setMateriaSeleccionada("");
+    }
+  }, [carreraSeleccionada]);
 
   const resetForm = () => {
     setModalidad("Presencial");
@@ -651,20 +660,20 @@ export default function AdminRoute() {
                     ...mesaRaw,
                     modalidad: mesa.modalidad,
                     carrera: {
-                      id: typeof mesaRaw.carrera === 'object' ? mesaRaw.carrera.id : mesaRaw.carrera,
+                      id: mesa.carreraId,
                       nombre: mesa.carrera
                     },
                     materia: {
-                      id: typeof mesaRaw.materia === 'object' ? mesaRaw.materia.id : mesaRaw.materia,
+                      id: mesa.materiaId,
                       nombre: mesa.materia
                     },
                     profesor: {
-                      id: typeof mesaRaw.profesor === 'object' ? mesaRaw.profesor.id : mesaRaw.profesor,
+                      id: mesa.profesorId,
                       nombre: mesa.profesorNombre.split(' ')[0],
                       apellido: mesa.profesorNombre.split(' ')[1] || ''
                     },
                     vocal: {
-                      id: typeof mesaRaw.vocal === 'object' ? mesaRaw.vocal.id : mesaRaw.vocal,
+                      id: mesa.vocalId,
                       nombre: mesa.vocalNombre.split(' ')[0],
                       apellido: mesa.vocalNombre.split(' ')[1] || ''
                     },

@@ -101,7 +101,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
         }
       ),
       fetch(
-        `${API_URL}/api/diaries/mesas/aceptaciones/profesor/${userId}`,
+        `${API_URL}/api/diaries/mesas/aceptacion/profesor/${userId}`,
         {
           headers: {
             "x-api-key": INTERNAL_API_KEY,
