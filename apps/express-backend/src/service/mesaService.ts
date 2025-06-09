@@ -210,7 +210,7 @@ class MesaService {
                 try {
                     const notificationData = {
                         title: 'Nueva mesa asignada',
-                        body: `Hola ${profesorData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada}`,
+                        body: `Hola ${profesorData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada} a las ${nuevaMesa.horaTexto}`,
                         recipient: data.profesor,
                         metadata: {
                             mesaId: nuevaMesa.id,

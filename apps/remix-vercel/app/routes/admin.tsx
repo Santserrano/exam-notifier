@@ -839,8 +839,8 @@ export const action = async (args: ActionFunctionArgs) => {
   // Crear la fecha en la zona horaria de Argentina
   const fechaLocal = new Date(year, month - 1, day, hours, minutes);
   
-  // Enviar la fecha directamente sin convertir
-  const fechaUTC = fechaLocal;
+  // Convertir a UTC manteniendo la hora local
+  const fechaUTC = new Date(fechaLocal.getTime() - fechaLocal.getTimezoneOffset() * 60000);
 
   const mesaData = {
     profesor: profesorId,
