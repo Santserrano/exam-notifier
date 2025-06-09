@@ -178,8 +178,8 @@ const useMesaForm = (initialMesa?: MesaRaw) => {
       // Establecer fecha
       if (initialMesa.fecha) {
         const fechaObj = new Date(initialMesa.fecha);
-        // Ajustar la fecha a la zona horaria de Argentina
-        const fechaArgentina = new Date(fechaObj.getTime() + (fechaObj.getTimezoneOffset() * 60000));
+        // Convertir a la zona horaria de Argentina
+        const fechaArgentina = new Date(fechaObj.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
         const year = fechaArgentina.getFullYear();
         const month = String(fechaArgentina.getMonth() + 1).padStart(2, '0');
         const day = String(fechaArgentina.getDate()).padStart(2, '0');
@@ -641,7 +641,10 @@ export default function AdminRoute() {
           <MesaModal
             open={true}
             onClose={() => setMesaAEditar(null)}
-            mesa={mesaAEditar}
+            mesa={{
+              ...mesaAEditar,
+              fecha: new Date(mesaAEditar.fecha).toISOString()
+            }}
             profesores={profesores}
             carreras={carreras}
           />
