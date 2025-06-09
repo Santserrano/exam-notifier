@@ -386,6 +386,108 @@ describe("MesaService", () => {
       expect(result.error).toBe("Error al enviar notificaciones al profesor:");
     });
 
+
+
+    it("should return error when vocal does not exist", async () => {
+  mockPrisma.profesor.findUnique
+    .mockResolvedValueOnce(mockProfesor) // Profesor existe
+    .mockResolvedValueOnce(null); // Vocal no existe
+
+  const result = await mesaService.createMesa(mockData);
+  expect(result.success).toBe(false);
+  expect(result.error).toBe("Vocal no encontrado");
+});
+
+it("should handle notification errors for vocal", async () => {
+  // Configuración para que falle solo las notificaciones del vocal
+  mockNotificacionService.getConfigByProfesor
+    .mockResolvedValueOnce({ webPushEnabled: true }) // Config profesor OK
+    .mockImplementationOnce(() => {
+      throw new Error("Error en notificación vocal");
+    });
+
+  const result = await mesaService.createMesa(mockData);
+  expect(result.success).toBe(false);
+  expect(result.error).toContain("Error al enviar notificaciones al vocal");
+});
+
+// Agregar al describe("updateMesa")
+it("should return error when update fails", async () => {
+  mockPrisma.mesaDeExamen.update.mockRejectedValue(new Error("Update error"));
+
+  const result = await mesaService.updateMesa(1, {
+    profesor: "prof1",
+    vocal: "prof2",
+    carrera: "carr1",
+    materia: "mat1",
+    fecha: "2023-01-01T10:00:00Z",
+  });
+
+  expect(result.success).toBe(false);
+  expect(result.error).toBe("Error al actualizar la mesa");
+});
+
+
+
+
+it("should validate vocal exists", async () => {
+  mockPrisma.profesor.findUnique
+    .mockResolvedValueOnce(mockProfesor) // Profesor existe
+    .mockResolvedValueOnce(null); // Vocal no existe
+
+  const result = await mesaService.createMesa(mockData);
+  expect(result.success).toBe(false);
+  expect(result.error).toBe("Vocal no encontrado");
+});
+
+
+
+// Agregar al describe("createMesa")
+it("should return error when vocal does not exist", async () => {
+  mockPrisma.profesor.findUnique
+    .mockResolvedValueOnce(mockProfesor) // Profesor existe
+    .mockResolvedValueOnce(null); // Vocal no existe
+
+  const result = await mesaService.createMesa(mockData);
+  expect(result.success).toBe(false);
+  expect(result.error).toBe("Vocal no encontrado");
+});
+
+it("should handle notification errors for vocal", async () => {
+  // Configuración para que falle solo las notificaciones del vocal
+  mockNotificacionService.getConfigByProfesor
+    .mockResolvedValueOnce({ webPushEnabled: true }) // Config profesor OK
+    .mockImplementationOnce(() => {
+      throw new Error("Error en notificación vocal");
+    });
+
+  const result = await mesaService.createMesa(mockData);
+  expect(result.success).toBe(false);
+  expect(result.error).toContain("Error al enviar notificaciones al vocal");
+});
+
+// Agregar al describe("updateMesa")
+it("should return error when update fails", async () => {
+  mockPrisma.mesaDeExamen.update.mockRejectedValue(new Error("Update error"));
+
+  const result = await mesaService.updateMesa(1, {
+    profesor: "prof1",
+    vocal: "prof2",
+    carrera: "carr1",
+    materia: "mat1",
+    fecha: "2023-01-01T10:00:00Z",
+  });
+
+  expect(result.success).toBe(false);
+  expect(result.error).toBe("Error al actualizar la mesa");
+});
+
+
+
+
+
+
+
     it("should handle email notification errors gracefully", async () => {
       mockNotificationFactory.createNotification
         .mockImplementationOnce(() => ({
