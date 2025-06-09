@@ -48,6 +48,7 @@ interface MesaRaw {
     apellido?: string;
   } | string;
   aula?: string;
+  horaTexto?: string;
 }
 
 interface MesaProcesada {
@@ -66,6 +67,7 @@ interface MesaProcesada {
   vocalNombre: string;
   aula: string;
   estadoAceptacion: "PENDIENTE" | "ACEPTADA" | "RECHAZADA";
+  horaTexto?: string;
 }
 
 interface PushEvent extends Event {
@@ -171,6 +173,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
           : typeof m.vocal === 'string' ? m.vocal : '',
         aula: m.aula || "Aula por confirmar",
         estadoAceptacion: aceptacion?.estado || "PENDIENTE",
+        horaTexto: m.horaTexto || undefined,
       };
     });
 
@@ -606,13 +609,6 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
     year: 'numeric'
   });
 
-  const hora = fechaObj.toLocaleTimeString('es-AR', {
-    timeZone: 'America/Argentina/Buenos_Aires',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
-
   return (
     <div className="flex flex-col gap-6 p-2">
       <div className="flex items-center gap-2">
@@ -650,7 +646,7 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
         <Calendar className="h-4 w-4" /> {fechaCompleta}
       </div>
       <div className="flex items-center gap-2 text-sm">
-        <Clock className="h-4 w-4" /> {hora} hs
+        <Clock className="h-4 w-4" /> {mesa.horaTexto || "Hora por confirmar"}
       </div>
       <div className="flex items-center gap-2 text-sm">
         <MapPin className="h-4 w-4" /> {mesa.modalidad}
