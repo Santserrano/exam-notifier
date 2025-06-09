@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
-import { PrismaClient } from '.prisma/client';
+
 import { prisma } from '../../lib/prisma';
+import { PrismaClient } from '.prisma/client';
 
 // Mock de PrismaClient
 jest.mock('.prisma/client', () => ({
@@ -18,8 +19,8 @@ describe('Prisma Singleton', () => {
     });
 
     it('should create a new PrismaClient instance when none exists', () => {
-        const instance = prisma;
-        expect(instance).toBeDefined();
+        prisma;
+        expect(prisma).toBeDefined();
         expect(PrismaClient).toHaveBeenCalledWith({
             log: ['query', 'error', 'warn']
         });
@@ -36,8 +37,8 @@ describe('Prisma Singleton', () => {
         const originalNodeEnv = process.env.NODE_ENV;
         process.env.NODE_ENV = 'development';
 
-        const instance = prisma;
-        expect(global.prisma).toBe(instance);
+        prisma;
+        expect(global.prisma).toBe(prisma);
 
         process.env.NODE_ENV = originalNodeEnv;
     });
@@ -46,7 +47,7 @@ describe('Prisma Singleton', () => {
         const originalNodeEnv = process.env.NODE_ENV;
         process.env.NODE_ENV = 'production';
 
-        const instance = prisma;
+        prisma;
         expect(global.prisma).toBeUndefined();
 
         process.env.NODE_ENV = originalNodeEnv;

@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
-import { ProfesorService } from '../../../src/service/profesorService';
 import { PrismaClient, Profesor } from '@prisma/client';
+
+import { ProfesorService } from '../../../src/service/profesorService';
 
 // Mock de PrismaClient
 jest.mock('@prisma/client', () => ({

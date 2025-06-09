@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
 import request from 'supertest';
-import { app } from '../index';
+
+import { app } from '../../src/app';
 import diaryRouter from '../routes/diaries.js';
 import notificationsRouter from '../routes/notifications.js';
 

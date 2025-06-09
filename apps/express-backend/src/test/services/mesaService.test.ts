@@ -1,8 +1,7 @@
 import { jest } from '@jest/globals';
+import { MesaDeExamen,PrismaClient } from '@prisma/client';
+
 import { MesaService } from '../../../src/service/mesaService';
-import { PrismaClient, MesaDeExamen } from '@prisma/client';
-import { notificationFactory } from '../../../src/core/notifications/NotificationFactory';
-import { notificacionService } from '../../../src/service/NotificationService';
 
 // Mock de PrismaClient
 jest.mock('@prisma/client', () => ({

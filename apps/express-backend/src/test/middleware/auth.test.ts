@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
-import { Request, Response, NextFunction } from 'express';
-import { validateApiKey } from '../../middleware/auth';
+import { NextFunction,Request, Response } from 'express';
+
+import { verifyToken } from '../../../src/middleware/auth';
 import { getServerEnv } from '../../utils/env';
 
 // Mock de getServerEnv
@@ -31,7 +32,7 @@ describe('Auth Middleware', () => {
             (getServerEnv as jest.Mock).mockReturnValue({ INTERNAL_API_KEY: validApiKey });
             mockRequest.headers = { 'x-api-key': validApiKey };
 
-            validateApiKey(mockRequest as Request, mockResponse as Response, nextFunction);
+            verifyToken(mockRequest as Request, mockResponse as Response, nextFunction);
 
             expect(nextFunction).toHaveBeenCalled();
             expect(mockResponse.status).not.toHaveBeenCalled();
@@ -42,7 +43,7 @@ describe('Auth Middleware', () => {
             (getServerEnv as jest.Mock).mockReturnValue({ INTERNAL_API_KEY: 'valid-api-key' });
             mockRequest.headers = {};
 
-            validateApiKey(mockRequest as Request, mockResponse as Response, nextFunction);
+            verifyToken(mockRequest as Request, mockResponse as Response, nextFunction);
 
             expect(nextFunction).not.toHaveBeenCalled();
             expect(mockResponse.status).toHaveBeenCalledWith(401);
@@ -53,7 +54,7 @@ describe('Auth Middleware', () => {
             (getServerEnv as jest.Mock).mockReturnValue({ INTERNAL_API_KEY: 'valid-api-key' });
             mockRequest.headers = { 'x-api-key': 'invalid-api-key' };
 
-            validateApiKey(mockRequest as Request, mockResponse as Response, nextFunction);
+            verifyToken(mockRequest as Request, mockResponse as Response, nextFunction);
 
             expect(nextFunction).not.toHaveBeenCalled();
             expect(mockResponse.status).toHaveBeenCalledWith(401);
@@ -65,7 +66,7 @@ describe('Auth Middleware', () => {
             (getServerEnv as jest.Mock).mockReturnValue({ INTERNAL_API_KEY: validApiKey });
             mockRequest.headers = { 'X-API-KEY': validApiKey };
 
-            validateApiKey(mockRequest as Request, mockResponse as Response, nextFunction);
+            verifyToken(mockRequest as Request, mockResponse as Response, nextFunction);
 
             expect(nextFunction).toHaveBeenCalled();
             expect(mockResponse.status).not.toHaveBeenCalled();
@@ -76,7 +77,7 @@ describe('Auth Middleware', () => {
             (getServerEnv as jest.Mock).mockReturnValue({ INTERNAL_API_KEY: undefined });
             mockRequest.headers = { 'x-api-key': 'any-key' };
 
-            validateApiKey(mockRequest as Request, mockResponse as Response, nextFunction);
+            verifyToken(mockRequest as Request, mockResponse as Response, nextFunction);
 
             expect(nextFunction).not.toHaveBeenCalled();
             expect(mockResponse.status).toHaveBeenCalledWith(401);
@@ -87,7 +88,7 @@ describe('Auth Middleware', () => {
             (getServerEnv as jest.Mock).mockReturnValue({ INTERNAL_API_KEY: null });
             mockRequest.headers = { 'x-api-key': 'any-key' };
 
-            validateApiKey(mockRequest as Request, mockResponse as Response, nextFunction);
+            verifyToken(mockRequest as Request, mockResponse as Response, nextFunction);
 
             expect(nextFunction).not.toHaveBeenCalled();
             expect(mockResponse.status).toHaveBeenCalledWith(401);

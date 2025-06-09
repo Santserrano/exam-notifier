@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
-import { enviarEmailNotificacion } from '../../../src/service/emailService';
+
+import { EmailService } from '../../../src/service/emailService';
 
 const mockSend = jest.fn();
 
@@ -20,7 +21,7 @@ describe('Email Service', () => {
     it('should send notification email successfully', async () => {
         mockSend.mockResolvedValueOnce({ id: 'test-id' });
 
-        await enviarEmailNotificacion('test@example.com', 'Test content');
+        await EmailService.enviarEmailNotificacion('test@example.com', 'Test content');
 
         expect(mockSend).toHaveBeenCalledWith({
             from: 'notificaciones@ucpmesas.site',
@@ -33,14 +34,14 @@ describe('Email Service', () => {
     it('should handle email sending errors', async () => {
         mockSend.mockRejectedValueOnce(new Error('Failed to send email'));
 
-        await expect(enviarEmailNotificacion('test@example.com', 'Test content'))
+        await expect(EmailService.enviarEmailNotificacion('test@example.com', 'Test content'))
             .rejects.toThrow('Failed to send email');
     });
 
     it('should throw error if RESEND_API_KEY is not set', async () => {
         delete process.env.RESEND_API_KEY;
 
-        await expect(enviarEmailNotificacion('test@example.com', 'Test content'))
+        await expect(EmailService.enviarEmailNotificacion('test@example.com', 'Test content'))
             .rejects.toThrow('RESEND_API_KEY is not defined');
     });
 }); 
