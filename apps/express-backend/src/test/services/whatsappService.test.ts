@@ -17,6 +17,7 @@ describe("WhatsApp Service", () => {
   afterEach(() => {
     delete process.env.VONAGE_API_KEY;
     delete process.env.VONAGE_API_SECRET;
+    jest.restoreAllMocks();
   });
 
   it("should send WhatsApp message successfully", async () => {
@@ -55,7 +56,6 @@ describe("WhatsApp Service", () => {
     const error = new Error("Failed to send WhatsApp");
     mockedAxios.post.mockRejectedValueOnce(error);
 
-    // No debería lanzar error ya que el servicio lo maneja silenciosamente
     await expect(enviarWhatsapp("1234567890", "Test message")).resolves.not.toThrow();
   });
 
@@ -108,7 +108,6 @@ describe("WhatsApp Service", () => {
     const networkError = new Error("Network Error");
     mockedAxios.post.mockRejectedValueOnce(networkError);
 
-    // No debería lanzar error ya que el servicio lo maneja silenciosamente
     await expect(enviarWhatsapp("1234567890", "Test message")).resolves.not.toThrow();
   });
 
@@ -119,7 +118,26 @@ describe("WhatsApp Service", () => {
     };
     mockedAxios.post.mockResolvedValueOnce(invalidResponse);
 
-    // No debería lanzar error ya que el servicio lo maneja silenciosamente
     await expect(enviarWhatsapp("1234567890", "Test message")).resolves.not.toThrow();
+  });
+
+  it("should log error when WhatsApp sending fails", async () => {
+    const error = new Error("Failed to send WhatsApp");
+    mockedAxios.post.mockRejectedValueOnce(error);
+    
+    const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    await enviarWhatsapp("1234567890", "Test message");
+
+    expect(consoleErrorMock).toHaveBeenCalledWith("Error al enviar WhatsApp:", error);
+  });
+
+  it("should throw error when environment variables are missing", async () => {
+    delete process.env.VONAGE_API_KEY;
+    delete process.env.VONAGE_API_SECRET;
+
+    await expect(enviarWhatsapp("1234567890", "Test message"))
+      .rejects
+      .toThrow("Las variables de entorno VONAGE_API_KEY y VONAGE_API_SECRET son requeridas");
   });
 });
