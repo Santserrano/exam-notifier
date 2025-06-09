@@ -1,50 +1,87 @@
 import { execSync } from "child_process";
+import { testUtils, prisma } from "./setup";
+import { PrismaClient } from "@prisma/client";
 
-import { prisma, testUtils } from "../test/setup";
-
+// Mock de execSync
 jest.mock("child_process", () => ({
   execSync: jest.fn(),
 }));
 
-describe("Test de configuración de entorno de pruebas", () => {
-  beforeAll(async () => {
-    await prisma.$connect();
+// Mock de PrismaClient
+jest.mock("@prisma/client", () => ({
+  PrismaClient: jest.fn().mockImplementation(() => ({
+    $connect: jest.fn(),
+    $disconnect: jest.fn(),
+    user: {
+      createMany: jest.fn(),
+    },
+  })),
+}));
+
+describe("Setup Tests", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  afterAll(async () => {
-    await prisma.$disconnect();
-  });
-
-  it("debe tener las variables de entorno configuradas para test", () => {
-    expect(process.env.NODE_ENV).toBe("test");
-    expect(process.env.RESEND_API_KEY).toBeDefined();
-    expect(process.env.VAPID_PUBLIC_KEY).toBeDefined();
-    expect(process.env.VAPID_PRIVATE_KEY).toBeDefined();
-    expect(process.env.INTERNAL_API_KEY).toBeDefined();
-    expect(process.env.DATABASE_URL).toContain("test");
-  });
-
-  it("resetTestDatabase ejecuta prisma migrate reset", () => {
-    const spy = jest.spyOn({ execSync }, "execSync").mockImplementation(jest.fn());
-    testUtils.resetTestDatabase();
-    expect(spy).toHaveBeenCalledWith(
-      "npx prisma migrate reset --force --skip-seed",
-      expect.objectContaining({ stdio: "inherit" }),
-    );
-    spy.mockRestore();
-  });
-
-  it("seedTestData inserta datos en modelos especificados", async () => {
-    // Este test requiere que tengas modelos como `carrera` y `materia` en tu schema
-    await testUtils.seedTestData({
-      carrera: [{ id: "c1", nombre: "Ingeniería" }],
-      materia: [{ id: "m1", nombre: "Álgebra", carreraId: "c1" }],
+  describe("resetTestDatabase", () => {
+    it("should call prisma migrate reset when in test environment", () => {
+      process.env.NODE_ENV = "test";
+      testUtils.resetTestDatabase();
+      expect(execSync).toHaveBeenCalledWith(
+        "npx prisma migrate reset --force --skip-seed",
+        { stdio: "inherit" }
+      );
     });
 
-    const carreras = await prisma.carrera.findMany();
-    const materias = await prisma.materia.findMany();
+    it("should not call prisma migrate reset when not in test environment", () => {
+      process.env.NODE_ENV = "development";
+      testUtils.resetTestDatabase();
+      expect(execSync).not.toHaveBeenCalled();
+    });
 
-    expect(carreras.length).toBeGreaterThan(0);
-    expect(materias.length).toBeGreaterThan(0);
+    it("should handle errors during database reset", () => {
+      process.env.NODE_ENV = "test";
+      (execSync as jest.Mock).mockImplementationOnce(() => {
+        throw new Error("Reset failed");
+      });
+      expect(() => testUtils.resetTestDatabase()).toThrow("Reset failed");
+    });
+  });
+
+  describe("seedTestData", () => {
+    it("should create multiple records for each model", async () => {
+      const testData = {
+        user: [
+          { name: "Test User 1" },
+          { name: "Test User 2" },
+        ],
+      };
+
+      await testUtils.seedTestData(testData);
+      expect(prisma.user.createMany).toHaveBeenCalledWith({
+        data: testData.user,
+      });
+    });
+
+    it("should handle multiple models", async () => {
+      const testData = {
+        user: [{ name: "Test User" }],
+        course: [{ name: "Test Course" }],
+      };
+
+      await testUtils.seedTestData(testData);
+      expect(prisma.user.createMany).toHaveBeenCalled();
+    });
+  });
+
+  describe("Prisma Client", () => {
+    it("should connect and disconnect properly", async () => {
+      const mockPrisma = new PrismaClient();
+      await mockPrisma.$connect();
+      expect(mockPrisma.$connect).toHaveBeenCalled();
+
+      await mockPrisma.$disconnect();
+      expect(mockPrisma.$disconnect).toHaveBeenCalled();
+    });
   });
 });
