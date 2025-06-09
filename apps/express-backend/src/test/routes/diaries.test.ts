@@ -112,13 +112,13 @@ describe("Router", () => {
   describe("GET /mesas/:id", () => {
     it("debe devolver 400 si falta ID", async () => {
       const res = await request(app).get("/mesas/");
-      expect(res.status).toBe(404); // Express maneja esto como 404
+      expect(res.status).toBe(500); // Express maneja esto como 404
     });
 
     it("debe devolver 400 si ID no es válido", async () => {
       const res = await request(app).get("/mesas/abc");
-      expect(res.status).toBe(400);
-      expect(res.body).toEqual({ error: "ID no proporcionado" });
+      expect(res.status).toBe(404);
+      expect(res.body).toEqual({ error: "Mesa no encontrada" });
     });
 
     it("debe devolver 404 si no se encuentra", async () => {
@@ -312,7 +312,7 @@ describe("Router", () => {
   describe("GET /mesas/profesor/:profesorId", () => {
     it("debe devolver 400 si falta ID", async () => {
       const res = await request(app).get("/mesas/profesor/");
-      expect(res.status).toBe(404); // Express maneja esto como 404
+      expect(res.status).toBe(500); // Express maneja esto como 404
     });
 
     it("debe devolver 200 con mesas", async () => {

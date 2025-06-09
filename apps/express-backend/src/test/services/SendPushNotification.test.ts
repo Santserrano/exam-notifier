@@ -121,7 +121,7 @@ describe("sendPushToProfesor", () => {
     ).mockRejectedValue(new Error("fail"));
     await expect(
       sendPushToProfesor("prof1", "titulo", "cuerpo"),
-    ).rejects.toThrow("fail");
+    ).rejects.toThrow("Error al enviar notificaciones push");
   });
 });
 

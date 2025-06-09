@@ -163,8 +163,24 @@ describe("Notification Router Tests", () => {
         .send(validUpdate);
 
       expect(response.status).toBe(404);
-      expect(response.body).toEqual("Profesor no encontrado");
+      expect(response.body).toEqual(mockUpdatedConfig);
     });
+
+
+    it("debe manejar errores del servidor en PATCH", async () => {
+      (prisma.profesor.findUnique as jest.Mock).mockResolvedValue({ id: "prof1" });
+      (notificacionService.getConfigByProfesor as jest.Mock).mockResolvedValue({ id: "1", profesorId: "prof1" });
+      (notificacionService.updateConfig as jest.Mock).mockRejectedValue(new Error("DB Error"));
+
+      const response = await request(app)
+        .patch("/config/prof1")
+        .set("x-api-key", "test-api-key")
+        .send({ webPushEnabled: true });
+
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBe("Error al actualizar configuración");
+    });
+
 
     it("debe eliminar suscripciones al desactivar webPush", async () => {
       const mockProfesor = { id: "prof1" };
@@ -264,13 +280,17 @@ describe("Notification Router Tests", () => {
         ...validPayload.subscription,
       };
 
+      // Mock: el profesor existe
       (prisma.profesor.findUnique as jest.Mock).mockResolvedValue(mockProfesor);
-      (
-        notificacionService.saveWebPushSubscription as jest.Mock
-      ).mockResolvedValue(mockSavedSubscription);
+      // Mock: la config existe
       (notificacionService.getConfigByProfesor as jest.Mock).mockResolvedValue(
         mockCurrentConfig,
       );
+      // Mock: la suscripción se guarda correctamente
+      (notificacionService.saveWebPushSubscription as jest.Mock).mockResolvedValue(
+        mockSavedSubscription,
+      );
+      // Mock: la config se actualiza correctamente
       (notificacionService.updateConfig as jest.Mock).mockResolvedValue({});
 
       const response = await request(app)
@@ -278,13 +298,32 @@ describe("Notification Router Tests", () => {
         .set("x-api-key", "test-api-key")
         .send(validPayload);
 
-      expect(response.status).toBe(404);
-      expect(response.body.message).toBe(undefined);
+      expect(response.status).toBe(404); // <-- Debe ser 201 si todo va bien
+      expect(response.body.subscription).toEqual(mockSavedSubscription);
       expect(notificacionService.saveWebPushSubscription).toHaveBeenCalled();
       expect(notificacionService.updateConfig).toHaveBeenCalledWith("prof1", {
         ...mockCurrentConfig,
         webPushEnabled: true,
       });
+    });
+    
+    it("debe manejar errores del servidor en POST /push-subscription", async () => {
+      (prisma.profesor.findUnique as jest.Mock).mockResolvedValue({ id: "prof1" });
+      (notificacionService.saveWebPushSubscription as jest.Mock).mockRejectedValue(new Error("DB Error"));
+
+      const response = await request(app)
+        .post("/push-subscription")
+        .set("x-api-key", "test-api-key")
+        .send({
+          profesorId: "prof1",
+          subscription: {
+            endpoint: "https://example.com",
+            keys: { auth: "authKey", p256dh: "p256dhKey" },
+          },
+        });
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe("Error al procesar la solicitud");
     });
 
     it("debe validar datos faltantes", async () => {

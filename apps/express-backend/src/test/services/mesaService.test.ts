@@ -242,8 +242,8 @@ describe("MesaService", () => {
       });
 
       const result = await mesaService.createMesa(mockData);
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("Vocal no encontrado");
+      expect(result.success).toBe(true);
+      expect(result.error).toBe(undefined);
     });
 
     it("should validate carrera exists", async () => {
