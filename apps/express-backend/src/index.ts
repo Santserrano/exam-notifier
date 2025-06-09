@@ -38,6 +38,20 @@ app.get('/health', (_req, res) => {
 app.use('/api/diaries', diaryRouter)
 app.use('/api/diaries/notificaciones', notificationsRouter)
 
+// Logging de rutas disponibles
+console.log("Rutas disponibles:");
+app._router.stack.forEach((r: any) => {
+  if (r.route && r.route.path) {
+    console.log(`${Object.keys(r.route.methods).join(', ').toUpperCase()} ${r.route.path}`);
+  } else if (r.name === 'router') {
+    r.handle.stack.forEach((h: any) => {
+      if (h.route) {
+        console.log(`${Object.keys(h.route.methods).join(', ').toUpperCase()} ${h.route.path}`);
+      }
+    });
+  }
+});
+
 if (process.env.NODE_ENV !== 'test') {
   app.listen(port, () => {
     console.log(`Servidor corriendo en http://localhost:${port}`)
