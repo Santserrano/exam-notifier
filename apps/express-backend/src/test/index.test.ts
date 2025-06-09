@@ -207,4 +207,62 @@ describe("Express App", () => {
       );
     });
   });
+
+  
+describe("CORS Configuration", () => {
+  it("should allow localhost in development", async () => {
+    process.env.NODE_ENV = "development";
+    process.env.PORT = "0";
+    const { app } = await import("../index");
+
+    const response = await request(app)
+      .get("/health")
+      .set("Origin", "http://localhost:3000");
+
+    expect(response.headers["access-control-allow-origin"]).toBe(
+      "http://localhost:3000",
+    );
+  });
+
+  it("should allow production URL in production", async () => {
+    process.env.NODE_ENV = "production";
+    process.env.FRONTEND_URL = "https://ucpmesas.site";
+    process.env.PORT = "0";
+    const { app } = await import("../index");
+
+    const response = await request(app)
+      .get("/health")
+      .set("Origin", "https://ucpmesas.site");
+
+    expect(response.headers["access-control-allow-origin"]).toBe(
+      "https://ucpmesas.site",
+    );
+  });
+
+it("should fall back to default URL when FRONTEND_URL is undefined in production", async () => {
+  process.env.NODE_ENV = "production";
+  delete process.env.FRONTEND_URL; // Esto lo establece como undefined
+  process.env.PORT = "0";
+  const { app } = await import("../index");
+
+  const response = await request(app)
+    .get("/health")
+    .set("Origin", "https://ucpmesas.site");
+
+  expect(response.headers["access-control-allow-origin"]).toBe(
+    "https://ucpmesas.site",
+  );
+});
+
+  it("should reject unauthorized origins", async () => {
+    process.env.PORT = "0";
+    const { app } = await import("../index");
+    const response = await request(app)
+      .get("/health")
+      .set("Origin", "https://malicious-site.com");
+
+    expect(response.headers["access-control-allow-origin"]).toBeUndefined();
+  });
+});
+
 });
