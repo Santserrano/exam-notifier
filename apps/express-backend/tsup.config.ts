@@ -1,8 +1,13 @@
 import { defineConfig } from 'tsup'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 export default defineConfig({
   entry: ['src/index.ts'],
-  format: ["cjs"],
+  format: ["esm"],
   dts: {
     resolve: true,
     entry: 'src/index.ts'
@@ -18,8 +23,9 @@ export default defineConfig({
   },
   platform: 'node',
   esbuildOptions(options) {
-    options.banner = {
-      js: 'import { createRequire } from "module"; const require = createRequire(import.meta.url);',
+    options.define = {
+      __dirname: JSON.stringify(__dirname),
+      __filename: JSON.stringify(__filename)
     }
   }
 }) 
