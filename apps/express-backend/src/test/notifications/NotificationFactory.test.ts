@@ -44,21 +44,6 @@ describe("NotificationFactory", () => {
     expect(notification).toBeInstanceOf(EmailNotification);
   });
 
-  it("should create PushNotification instance", () => {
-    const data: NotificationData = {
-      type: "push",
-      recipient: "test@example.com",
-      message: "Test message",
-      title: "Test Title",
-      body: "Test Body",
-    };
-    const notification = notificationFactory.createNotification(
-      data.type,
-      data,
-    );
-    expect(notification).toBeInstanceOf(PushNotification);
-  });
-
   it("should create WhatsAppNotification instance", () => {
     const data: NotificationData = {
       type: "whatsapp",

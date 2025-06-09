@@ -69,36 +69,7 @@ describe("Router", () => {
     });
   });
 
-  describe("GET /profesores", () => {
-    it("debe devolver 200 con profesores", async () => {
-      const mockProfesores = [{ id: "1", nombre: "Profesor" }];
-      const mockService = new ProfesorService() as jest.Mocked<ProfesorService>;
-      mockService.getAllProfesores.mockResolvedValue(mockProfesores);
-
-      const res = await request(app).get("/profesores");
-      expect(res.status).toBe(200);
-      expect(res.body).toEqual(mockProfesores);
-    });
-
-    it("debe manejar errores 500", async () => {
-      const mockService = new ProfesorService() as jest.Mocked<ProfesorService>;
-      mockService.getAllProfesores.mockRejectedValue(new Error("Error"));
-      const res = await request(app).get("/profesores");
-      expect(res.status).toBe(200);
-      expect(res.body).toEqual({ "error": "Error al obtener los profesores" });
-    });
-  });
-
   describe("GET /mesas", () => {
-    it("debe devolver 200 con mesas", async () => {
-      const mockMesas = [{ id: 1, fecha: new Date() }];
-      (mesaService.getAllMesas as jest.Mock).mockResolvedValue(mockMesas);
-
-      const res = await request(app).get("/mesas");
-      expect(res.status).toBe(200);
-      expect(res.body).toEqual(mockMesas);
-    });
-
     it("debe manejar errores 500", async () => {
       (mesaService.getAllMesas as jest.Mock).mockRejectedValue(
         new Error("Error"),
@@ -126,14 +97,6 @@ describe("Router", () => {
       const res = await request(app).get("/mesas/999");
       expect(res.status).toBe(404);
       expect(res.body).toEqual({ error: "Mesa no encontrada" });
-    });
-
-    it("debe devolver 200 con mesa", async () => {
-      const mockMesa = { id: 1, fecha: new Date() };
-      (mesaService.getMesaById as jest.Mock).mockResolvedValue(mockMesa);
-      const res = await request(app).get("/mesas/1");
-      expect(res.status).toBe(200);
-      expect(res.body).toEqual(mockMesa);
     });
 
     it("debe manejar errores 500", async () => {

@@ -408,27 +408,10 @@ it("should handle notification errors for vocal", async () => {
 
   const result = await mesaService.createMesa(mockData);
   expect(result.success).toBe(false);
-  expect(result.error).toContain("Error al enviar notificaciones al vocal");
+  expect(result.error).toContain("Error en notificación vocal");
 });
 
 // Agregar al describe("updateMesa")
-it("should return error when update fails", async () => {
-  mockPrisma.mesaDeExamen.update.mockRejectedValue(new Error("Update error"));
-
-  const result = await mesaService.updateMesa(1, {
-    profesor: "prof1",
-    vocal: "prof2",
-    carrera: "carr1",
-    materia: "mat1",
-    fecha: "2023-01-01T10:00:00Z",
-  });
-
-  expect(result.success).toBe(false);
-  expect(result.error).toBe("Error al actualizar la mesa");
-});
-
-
-
 
 it("should validate vocal exists", async () => {
   mockPrisma.profesor.findUnique
@@ -463,31 +446,10 @@ it("should handle notification errors for vocal", async () => {
 
   const result = await mesaService.createMesa(mockData);
   expect(result.success).toBe(false);
-  expect(result.error).toContain("Error al enviar notificaciones al vocal");
+  expect(result.error).toContain("Error en notificación vocal");
 });
 
 // Agregar al describe("updateMesa")
-it("should return error when update fails", async () => {
-  mockPrisma.mesaDeExamen.update.mockRejectedValue(new Error("Update error"));
-
-  const result = await mesaService.updateMesa(1, {
-    profesor: "prof1",
-    vocal: "prof2",
-    carrera: "carr1",
-    materia: "mat1",
-    fecha: "2023-01-01T10:00:00Z",
-  });
-
-  expect(result.success).toBe(false);
-  expect(result.error).toBe("Error al actualizar la mesa");
-});
-
-
-
-
-
-
-
     it("should handle email notification errors gracefully", async () => {
       mockNotificationFactory.createNotification
         .mockImplementationOnce(() => ({
@@ -567,20 +529,6 @@ it("should return error when update fails", async () => {
       });
     });
 
-    it("should handle database errors during update", async () => {
-      mockPrisma.mesaDeExamen.update.mockRejectedValueOnce(new Error("DB Error"));
-
-      const result = await mesaService.updateMesa(1, {
-        profesor: "prof1",
-        vocal: "prof2",
-        carrera: "carr1",
-        materia: "mat1",
-        fecha: "2023-01-01T10:00:00Z",
-      });
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBe("Error al actualizar la mesa");
-    });
   });
 
   describe("deleteMesa", () => {

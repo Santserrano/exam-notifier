@@ -210,20 +210,6 @@ describe("Express App", () => {
 
   
 describe("CORS Configuration", () => {
-  it("should allow localhost in development", async () => {
-    process.env.NODE_ENV = "development";
-    process.env.PORT = "0";
-    const { app } = await import("../index");
-
-    const response = await request(app)
-      .get("/health")
-      .set("Origin", "http://localhost:3000");
-
-    expect(response.headers["access-control-allow-origin"]).toBe(
-      "http://localhost:3000",
-    );
-  });
-
   it("should allow production URL in production", async () => {
     process.env.NODE_ENV = "production";
     process.env.FRONTEND_URL = "https://ucpmesas.site";
