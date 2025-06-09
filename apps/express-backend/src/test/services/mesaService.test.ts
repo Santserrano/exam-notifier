@@ -1,8 +1,5 @@
 // src/test/services/mesaService.test.ts
-import { MesaService } from '../../../src/service/mesaService';
-import { PrismaClient } from '@prisma/client';
-
-// Mocks
+// 1. Define los mocks primero
 const mockPrisma = {
   mesaDeExamen: {
     findMany: jest.fn(),
@@ -30,22 +27,24 @@ const mockNotificacionService = {
   getConfigByProfesor: jest.fn(),
 };
 
-jest.mock('../../../src/lib/prisma', () => ({
+// 2. Mockea los módulos ANTES de importar el código fuente
+jest.mock("../../../src/lib/prisma", () => ({
   __esModule: true,
   prisma: mockPrisma,
 }));
-
-jest.mock('../../../src/core/notifications/NotificationFactory', () => ({
+jest.mock("../../../src/core/notifications/NotificationFactory", () => ({
   __esModule: true,
   notificationFactory: mockNotificationFactory,
 }));
-
-jest.mock('../../../src/service/NotificationService', () => ({
+jest.mock("../../../src/service/NotificationService", () => ({
   __esModule: true,
   notificacionService: mockNotificacionService,
 }));
 
-describe('MesaService', () => {
+// 3. Ahora importa el código fuente
+import { MesaService } from "../../../src/service/mesaService";
+
+describe("MesaService", () => {
   let mesaService: MesaService;
 
   beforeEach(() => {
@@ -53,11 +52,11 @@ describe('MesaService', () => {
     mesaService = new MesaService();
   });
 
-  describe('getAllMesas', () => {
-    it('should return all mesas', async () => {
+  describe("getAllMesas", () => {
+    it("should return all mesas", async () => {
       const mockMesas = [
-        { id: 1, descripcion: 'Mesa 1' },
-        { id: 2, descripcion: 'Mesa 2' },
+        { id: 1, descripcion: "Mesa 1" },
+        { id: 2, descripcion: "Mesa 2" },
       ];
 
       mockPrisma.mesaDeExamen.findMany.mockResolvedValue(mockMesas);
@@ -74,29 +73,26 @@ describe('MesaService', () => {
       });
     });
 
-    it('should throw error when getting mesas fails', async () => {
-      mockPrisma.mesaDeExamen.findMany.mockRejectedValue(new Error('DB Error'));
+    it("should throw error when getting mesas fails", async () => {
+      mockPrisma.mesaDeExamen.findMany.mockRejectedValue(new Error("DB Error"));
 
-      await expect(mesaService.getAllMesas()).rejects.toThrow('Error al obtener las mesas');
+      await expect(mesaService.getAllMesas()).rejects.toThrow(
+        "Error al obtener las mesas",
+      );
     });
   });
 
-  describe('getMesasByProfesorId', () => {
-    it('should return mesas for profesor', async () => {
-      const mockMesas = [
-        { id: 1, profesorId: 'prof1', descripcion: 'Mesa 1' },
-      ];
+  describe("getMesasByProfesorId", () => {
+    it("should return mesas for profesor", async () => {
+      const mockMesas = [{ id: 1, profesorId: "prof1", descripcion: "Mesa 1" }];
 
       mockPrisma.mesaDeExamen.findMany.mockResolvedValue(mockMesas);
 
-      const result = await mesaService.getMesasByProfesorId('prof1');
+      const result = await mesaService.getMesasByProfesorId("prof1");
       expect(result).toEqual(mockMesas);
       expect(mockPrisma.mesaDeExamen.findMany).toHaveBeenCalledWith({
         where: {
-          OR: [
-            { profesorId: 'prof1' },
-            { vocalId: 'prof1' },
-          ],
+          OR: [{ profesorId: "prof1" }, { vocalId: "prof1" }],
         },
         include: {
           profesor: true,
@@ -107,17 +103,18 @@ describe('MesaService', () => {
       });
     });
 
-    it('should throw error when getting mesas fails', async () => {
-      mockPrisma.mesaDeExamen.findMany.mockRejectedValue(new Error('DB Error'));
+    it("should throw error when getting mesas fails", async () => {
+      mockPrisma.mesaDeExamen.findMany.mockRejectedValue(new Error("DB Error"));
 
-      await expect(mesaService.getMesasByProfesorId('prof1'))
-        .rejects.toThrow('Error al obtener las mesas del profesor');
+      await expect(mesaService.getMesasByProfesorId("prof1")).rejects.toThrow(
+        "Error al obtener las mesas del profesor",
+      );
     });
   });
 
-  describe('getMesaById', () => {
-    it('should return a mesa by id', async () => {
-      const mockMesa = { id: 1, descripcion: 'Mesa 1' };
+  describe("getMesaById", () => {
+    it("should return a mesa by id", async () => {
+      const mockMesa = { id: 1, descripcion: "Mesa 1" };
       mockPrisma.mesaDeExamen.findUnique.mockResolvedValue(mockMesa);
 
       const result = await mesaService.getMesaById(1);
@@ -132,7 +129,7 @@ describe('MesaService', () => {
       });
     });
 
-    it('should return null if mesa not found', async () => {
+    it("should return null if mesa not found", async () => {
       mockPrisma.mesaDeExamen.findUnique.mockResolvedValue(null);
 
       const result = await mesaService.getMesaById(999);
@@ -140,20 +137,34 @@ describe('MesaService', () => {
     });
   });
 
-  describe('createMesa', () => {
+  describe("createMesa", () => {
     const mockData = {
-      profesor: 'prof1',
-      vocal: 'prof2',
-      carrera: 'carr1',
-      materia: 'mat1',
-      fecha: '2023-01-01T10:00:00Z',
-      descripcion: 'Mesa de prueba',
+      profesor: "prof1",
+      vocal: "prof2",
+      carrera: "carr1",
+      materia: "mat1",
+      fecha: "2023-01-01T10:00:00Z",
+      descripcion: "Mesa de prueba",
     };
 
-    const mockProfesor = { id: 'prof1', nombre: 'Profesor 1', email: 'prof1@test.com', telefono: '+123456789' };
-    const mockVocal = { id: 'prof2', nombre: 'Vocal 1', email: 'prof2@test.com', telefono: '+987654321' };
-    const mockCarrera = { id: 'carr1', nombre: 'Carrera 1' };
-    const mockMateria = { id: 'mat1', nombre: 'Materia 1', carrera: mockCarrera };
+    const mockProfesor = {
+      id: "prof1",
+      nombre: "Profesor 1",
+      email: "prof1@test.com",
+      telefono: "+123456789",
+    };
+    const mockVocal = {
+      id: "prof2",
+      nombre: "Vocal 1",
+      email: "prof2@test.com",
+      telefono: "+987654321",
+    };
+    const mockCarrera = { id: "carr1", nombre: "Carrera 1" };
+    const mockMateria = {
+      id: "mat1",
+      nombre: "Materia 1",
+      carrera: mockCarrera,
+    };
 
     const mockNuevaMesa = {
       id: 1,
@@ -167,8 +178,8 @@ describe('MesaService', () => {
 
     beforeEach(() => {
       mockPrisma.profesor.findUnique.mockImplementation((args) => {
-        if (args.where.id === 'prof1') return Promise.resolve(mockProfesor);
-        if (args.where.id === 'prof2') return Promise.resolve(mockVocal);
+        if (args.where.id === "prof1") return Promise.resolve(mockProfesor);
+        if (args.where.id === "prof2") return Promise.resolve(mockVocal);
         return Promise.resolve(null);
       });
 
@@ -176,7 +187,9 @@ describe('MesaService', () => {
       mockPrisma.materia.findUnique.mockResolvedValue(mockMateria);
       mockPrisma.mesaDeExamen.create.mockResolvedValue(mockNuevaMesa);
 
-      (mockNotificacionService.getConfigByProfesor as jest.Mock).mockImplementation((id) => {
+      (
+        mockNotificacionService.getConfigByProfesor as jest.Mock
+      ).mockImplementation((id) => {
         return Promise.resolve({
           webPushEnabled: true,
           emailEnabled: true,
@@ -184,14 +197,16 @@ describe('MesaService', () => {
         });
       });
 
-      (mockNotificationFactory.createNotification as jest.Mock).mockImplementation((type) => {
+      (
+        mockNotificationFactory.createNotification as jest.Mock
+      ).mockImplementation((type) => {
         return {
           send: jest.fn().mockResolvedValue(true),
         };
       });
     });
 
-    it('should create a new mesa successfully', async () => {
+    it("should create a new mesa successfully", async () => {
       const result = await mesaService.createMesa(mockData);
 
       expect(result.success).toBe(true);
@@ -199,65 +214,71 @@ describe('MesaService', () => {
       expect(mockPrisma.mesaDeExamen.create).toHaveBeenCalled();
     });
 
-    it('should validate required fields', async () => {
+    it("should validate required fields", async () => {
       const result = await mesaService.createMesa({
-        profesor: '',
-        vocal: '',
-        carrera: '',
-        materia: '',
-        fecha: '',
+        profesor: "",
+        vocal: "",
+        carrera: "",
+        materia: "",
+        fecha: "",
       });
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Faltan datos requeridos');
+      expect(result.error).toBe("Faltan datos requeridos");
     });
 
-    it('should validate profesor exists', async () => {
+    it("should validate profesor exists", async () => {
       mockPrisma.profesor.findUnique.mockResolvedValueOnce(null);
 
       const result = await mesaService.createMesa(mockData);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Profesor no encontrado');
+      expect(result.error).toBe("Profesor no encontrado");
     });
 
-    it('should validate vocal exists', async () => {
+    it("should validate vocal exists", async () => {
       mockPrisma.profesor.findUnique.mockImplementationOnce((args) => {
-        if (args.where.id === 'prof1') return Promise.resolve(mockProfesor);
+        if (args.where.id === "prof1") return Promise.resolve(mockProfesor);
         return Promise.resolve(null);
       });
 
       const result = await mesaService.createMesa(mockData);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Vocal no encontrado');
+      expect(result.error).toBe("Vocal no encontrado");
     });
 
-    it('should validate carrera exists', async () => {
+    it("should validate carrera exists", async () => {
       mockPrisma.carrera.findUnique.mockResolvedValueOnce(null);
 
       const result = await mesaService.createMesa(mockData);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Carrera no encontrada');
+      expect(result.error).toBe("Carrera no encontrada");
     });
 
-    it('should validate materia exists', async () => {
+    it("should validate materia exists", async () => {
       mockPrisma.materia.findUnique.mockResolvedValueOnce(null);
 
       const result = await mesaService.createMesa(mockData);
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Materia no encontrada');
+      expect(result.error).toBe("Materia no encontrada");
     });
 
-    it('should send notifications to profesor and vocal', async () => {
+    it("should send notifications to profesor and vocal", async () => {
       await mesaService.createMesa(mockData);
 
       // Verificar que se crearon notificaciones
-      expect(mockNotificationFactory.createNotification).toHaveBeenCalledTimes(6); // 3 por profesor + 3 por vocal
-      expect(mockNotificacionService.getConfigByProfesor).toHaveBeenCalledTimes(2);
+      expect(mockNotificationFactory.createNotification).toHaveBeenCalledTimes(
+        6,
+      ); // 3 por profesor + 3 por vocal
+      expect(mockNotificacionService.getConfigByProfesor).toHaveBeenCalledTimes(
+        2,
+      );
     });
 
-    it('should handle notification errors gracefully', async () => {
-      (mockNotificationFactory.createNotification as jest.Mock).mockImplementationOnce(() => {
-        throw new Error('Notification error');
+    it("should handle notification errors gracefully", async () => {
+      (
+        mockNotificationFactory.createNotification as jest.Mock
+      ).mockImplementationOnce(() => {
+        throw new Error("Notification error");
       });
 
       const result = await mesaService.createMesa(mockData);
@@ -265,25 +286,25 @@ describe('MesaService', () => {
     });
   });
 
-  describe('updateMesa', () => {
-    it('should update a mesa successfully', async () => {
+  describe("updateMesa", () => {
+    it("should update a mesa successfully", async () => {
       const mockUpdatedMesa = {
         id: 1,
-        profesor: { id: 'prof1' },
-        vocal: { id: 'prof2' },
-        materia: { id: 'mat1', carrera: { id: 'carr1' } },
-        carrera: { id: 'carr1' },
-        fecha: new Date('2023-01-01T10:00:00Z'),
+        profesor: { id: "prof1" },
+        vocal: { id: "prof2" },
+        materia: { id: "mat1", carrera: { id: "carr1" } },
+        carrera: { id: "carr1" },
+        fecha: new Date("2023-01-01T10:00:00Z"),
       };
 
       mockPrisma.mesaDeExamen.update.mockResolvedValue(mockUpdatedMesa);
 
       const result = await mesaService.updateMesa(1, {
-        profesor: 'prof1',
-        vocal: 'prof2',
-        carrera: 'carr1',
-        materia: 'mat1',
-        fecha: '2023-01-01T10:00:00Z',
+        profesor: "prof1",
+        vocal: "prof2",
+        carrera: "carr1",
+        materia: "mat1",
+        fecha: "2023-01-01T10:00:00Z",
       });
 
       expect(result.success).toBe(true);
@@ -291,11 +312,11 @@ describe('MesaService', () => {
       expect(mockPrisma.mesaDeExamen.update).toHaveBeenCalledWith({
         where: { id: 1 },
         data: {
-          profesorId: 'prof1',
-          vocalId: 'prof2',
-          carreraId: 'carr1',
-          materiaId: 'mat1',
-          fecha: new Date('2023-01-01T10:00:00Z'),
+          profesorId: "prof1",
+          vocalId: "prof2",
+          carreraId: "carr1",
+          materiaId: "mat1",
+          fecha: new Date("2023-01-01T10:00:00Z"),
           descripcion: undefined,
           cargo: undefined,
           verification: undefined,
@@ -313,8 +334,8 @@ describe('MesaService', () => {
     });
   });
 
-  describe('deleteMesa', () => {
-    it('should delete a mesa successfully', async () => {
+  describe("deleteMesa", () => {
+    it("should delete a mesa successfully", async () => {
       const mockDeletedMesa = { id: 1 };
       mockPrisma.mesaDeExamen.delete.mockResolvedValue(mockDeletedMesa);
 
@@ -325,10 +346,12 @@ describe('MesaService', () => {
       });
     });
 
-    it('should throw error when deletion fails', async () => {
-      mockPrisma.mesaDeExamen.delete.mockRejectedValue(new Error('DB Error'));
+    it("should throw error when deletion fails", async () => {
+      mockPrisma.mesaDeExamen.delete.mockRejectedValue(new Error("DB Error"));
 
-      await expect(mesaService.deleteMesa(1)).rejects.toThrow('Error al eliminar la mesa');
+      await expect(mesaService.deleteMesa(1)).rejects.toThrow(
+        "Error al eliminar la mesa",
+      );
     });
   });
 });

@@ -1,156 +1,125 @@
-import request from 'supertest';
-import express from 'express';
-import diaryRouter from '../../routes/diary.routes.js';
+import express from "express";
+import request from "supertest";
+
+import {
+  crearAceptacionMesa,
+  getAceptaciones,
+  getAceptacionesProfesor,
+} from "../../controllers/diary.controller.js";
+import router from "../../routes/diary.routes.js"; // Ajusta la ruta según tu estructura
 
 // Mock de los controladores
-jest.mock('../controllers/diary.controller.js', () => ({
+jest.mock("../controllers/diary.controller.js", () => ({
   getAceptacionesProfesor: jest.fn(),
   getAceptaciones: jest.fn(),
   crearAceptacionMesa: jest.fn(),
 }));
 
-import {
-  getAceptacionesProfesor,
-  getAceptaciones,
-  crearAceptacionMesa,
-} from '../../controllers/diary.controller.js';
-
 const app = express();
 app.use(express.json());
-app.use(diaryRouter);
+app.use(router);
 
-describe('Diary Router Tests', () => {
+describe("Diary Router", () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  // Tests para GET /mesas/aceptaciones/profesor/:profesorId
-  describe('GET /mesas/aceptaciones/profesor/:profesorId', () => {
-    it('debe obtener aceptaciones de profesor exitosamente', async () => {
-      const mockAceptaciones = [
-        { id: 1, profesorId: 'prof1', mesaId: 1 },
-        { id: 2, profesorId: 'prof1', mesaId: 2 }
-      ];
-      
-      (getAceptacionesProfesor as jest.Mock).mockImplementation((req, res) => {
-        res.status(200).json(mockAceptaciones);
-      });
+  describe("GET /mesas/aceptaciones/profesor/:profesorId", () => {
+    it("debe devolver 200 con aceptaciones del profesor", async () => {
+      const mockAceptaciones = [{ id: 1 }];
+      (getAceptacionesProfesor as jest.Mock).mockResolvedValue(
+        mockAceptaciones,
+      );
 
-      const response = await request(app).get('/mesas/aceptaciones/profesor/prof1');
-      
-      expect(response.status).toBe(200);
-      expect(response.body).toEqual(mockAceptaciones);
-      expect(getAceptacionesProfesor).toHaveBeenCalled();
+      const res = await request(app).get(
+        "/mesas/aceptaciones/profesor/prof123",
+      );
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual(mockAceptaciones);
     });
 
-    it('debe manejar errores correctamente', async () => {
-      (getAceptacionesProfesor as jest.Mock).mockImplementation((req, res) => {
-        res.status(500).json({ error: 'Error del servidor' });
-      });
+    it("debe manejar errores 500", async () => {
+      (getAceptacionesProfesor as jest.Mock).mockRejectedValue(
+        new Error("DB error"),
+      );
 
-      const response = await request(app).get('/mesas/aceptaciones/profesor/prof1');
-      
-      expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Error del servidor' });
+      const res = await request(app).get(
+        "/mesas/aceptaciones/profesor/prof123",
+      );
+      expect(res.status).toBe(500);
+      expect(res.body).toEqual({
+        error: "Error al obtener aceptaciones del profesor",
+      });
     });
   });
 
-  // Tests para GET /mesas/aceptaciones
-  describe('GET /mesas/aceptaciones', () => {
-    it('debe obtener todas las aceptaciones exitosamente', async () => {
-      const mockAceptaciones = [
-        { id: 1, profesorId: 'prof1', mesaId: 1 },
-        { id: 2, profesorId: 'prof2', mesaId: 2 }
-      ];
-      
-      (getAceptaciones as jest.Mock).mockImplementation((req, res) => {
-        res.status(200).json(mockAceptaciones);
-      });
+  describe("GET /mesas/aceptaciones", () => {
+    it("debe devolver 200 con todas las aceptaciones", async () => {
+      const mockAceptaciones = [{ id: 1 }, { id: 2 }];
+      (getAceptaciones as jest.Mock).mockResolvedValue(mockAceptaciones);
 
-      const response = await request(app).get('/mesas/aceptaciones');
-      
-      expect(response.status).toBe(200);
-      expect(response.body).toEqual(mockAceptaciones);
-      expect(getAceptaciones).toHaveBeenCalled();
+      const res = await request(app).get("/mesas/aceptaciones");
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual(mockAceptaciones);
     });
 
-    it('debe manejar errores al obtener aceptaciones', async () => {
-      (getAceptaciones as jest.Mock).mockImplementation((req, res) => {
-        res.status(500).json({ error: 'Error al obtener aceptaciones' });
-      });
+    it("debe manejar errores 500", async () => {
+      (getAceptaciones as jest.Mock).mockRejectedValue(new Error("DB error"));
 
-      const response = await request(app).get('/mesas/aceptaciones');
-      
-      expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Error al obtener aceptaciones' });
+      const res = await request(app).get("/mesas/aceptaciones");
+      expect(res.status).toBe(500);
+      expect(res.body).toEqual({ error: "Error al obtener aceptaciones" });
     });
   });
 
-  // Tests para POST /mesas/:mesaId/aceptacion
-  describe('POST /mesas/:mesaId/aceptacion', () => {
-    const validPayload = {
-      profesorId: 'prof123',
-      cargo: 'Titular',
-      fechaAceptacion: '2023-06-15T12:00:00Z'
+  describe("POST /mesas/:mesaId/aceptacion", () => {
+    const validBody = {
+      profesorId: "prof123",
+      estado: "aceptada",
+      comentario: "Acepto la mesa",
     };
 
-    it('debe crear aceptación exitosamente', async () => {
-      const mockAceptacion = {
-        id: 1,
-        mesaId: 1,
-        ...validPayload
-      };
-      
-      (crearAceptacionMesa as jest.Mock).mockImplementation((req, res) => {
-        res.status(201).json(mockAceptacion);
-      });
+    it("debe crear aceptación exitosamente", async () => {
+      const mockAceptacion = { id: 1 };
+      (crearAceptacionMesa as jest.Mock).mockResolvedValue(mockAceptacion);
 
-      const response = await request(app)
-        .post('/mesas/1/aceptacion')
-        .send(validPayload);
-      
-      expect(response.status).toBe(201);
-      expect(response.body).toEqual(mockAceptacion);
-      expect(crearAceptacionMesa).toHaveBeenCalled();
+      const res = await request(app)
+        .post("/mesas/mesa123/aceptacion")
+        .send(validBody);
+
+      expect(res.status).toBe(201);
+      expect(res.body).toEqual(mockAceptacion);
     });
 
-    it('debe validar parámetros requeridos', async () => {
-      (crearAceptacionMesa as jest.Mock).mockImplementation((req, res) => {
-        res.status(400).json({ error: 'ProfesorId es requerido' });
-      });
+    it("debe devolver 400 si faltan campos requeridos", async () => {
+      const res = await request(app)
+        .post("/mesas/mesa123/aceptacion")
+        .send({ estado: "aceptada" }); // Falta profesorId
 
-      const response = await request(app)
-        .post('/mesas/1/aceptacion')
-        .send({ cargo: 'Titular' });
-      
-      expect(response.status).toBe(400);
-      expect(response.body).toEqual({ error: 'ProfesorId es requerido' });
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: "Faltan campos requeridos" });
     });
 
-    it('debe manejar mesa no encontrada', async () => {
-      (crearAceptacionMesa as jest.Mock).mockImplementation((req, res) => {
-        res.status(404).json({ error: 'Mesa no encontrada' });
-      });
+    it("debe devolver 400 si estado es inválido", async () => {
+      const res = await request(app)
+        .post("/mesas/mesa123/aceptacion")
+        .send({ ...validBody, estado: "invalido" });
 
-      const response = await request(app)
-        .post('/mesas/999/aceptacion')
-        .send(validPayload);
-      
-      expect(response.status).toBe(404);
-      expect(response.body).toEqual({ error: 'Mesa no encontrada' });
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: "Estado de aceptación inválido" });
     });
 
-    it('debe manejar errores internos', async () => {
-      (crearAceptacionMesa as jest.Mock).mockImplementation((req, res) => {
-        res.status(500).json({ error: 'Error al crear aceptación' });
-      });
+    it("debe manejar errores 500", async () => {
+      (crearAceptacionMesa as jest.Mock).mockRejectedValue(
+        new Error("DB error"),
+      );
 
-      const response = await request(app)
-        .post('/mesas/1/aceptacion')
-        .send(validPayload);
-      
-      expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Error al crear aceptación' });
+      const res = await request(app)
+        .post("/mesas/mesa123/aceptacion")
+        .send(validBody);
+
+      expect(res.status).toBe(500);
+      expect(res.body).toEqual({ error: "Error al crear aceptación" });
     });
   });
 });

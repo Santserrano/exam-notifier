@@ -24,11 +24,13 @@ Este es el backend de la aplicación Exam Notifier, construido con Express.js. P
 
 1. Clona el repositorio
 2. Instala las dependencias:
+
 ```bash
 pnpm install
 ```
 
 3. Configura las variables de entorno:
+
 ```bash
 cp .env.example .env
 ```

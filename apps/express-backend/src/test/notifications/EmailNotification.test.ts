@@ -1,8 +1,8 @@
-import { Resend } from 'resend';
+import { Resend } from "resend";
 
-import { EmailNotification } from '../../../src/core/notifications/EmailNotification';
+import { EmailNotification } from "../../../src/core/notifications/EmailNotification";
 
-jest.mock('resend', () => {
+jest.mock("resend", () => {
   return {
     Resend: jest.fn().mockImplementation(() => ({
       emails: {
@@ -12,40 +12,40 @@ jest.mock('resend', () => {
   };
 });
 
-describe('EmailNotification', () => {
+describe("EmailNotification", () => {
   const mockData = {
-    title: 'Test Email',
-    body: 'This is a test email',
-    recipient: 'test@example.com',
+    title: "Test Email",
+    body: "This is a test email",
+    recipient: "test@example.com",
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.RESEND_API_KEY = 'test-key';
+    process.env.RESEND_API_KEY = "test-key";
   });
 
-  it('Debe crear una instancia con los datos proporcionados', () => {
+  it("Debe crear una instancia con los datos proporcionados", () => {
     const notification = new EmailNotification(mockData);
     expect(notification).toBeInstanceOf(EmailNotification);
   });
 
-  it('Debería llamar a resend.emails.send con los parámetros correctos', async () => {
+  it("Debería llamar a resend.emails.send con los parámetros correctos", async () => {
     const notification = new EmailNotification(mockData);
     await notification.send();
 
-    expect(Resend).toHaveBeenCalledWith('test-key');
-    expect(notification['resend'].emails.send).toHaveBeenCalledWith({
-      from: 'notificaciones@ucpmesas.site',
+    expect(Resend).toHaveBeenCalledWith("test-key");
+    expect(notification["resend"].emails.send).toHaveBeenCalledWith({
+      from: "notificaciones@ucpmesas.site",
       to: mockData.recipient,
       subject: mockData.title,
       html: `<p>${mockData.body}</p>`,
     });
   });
 
-  it('No se debe lanzar cuando falla el reenvío', async () => {
-    const error = new Error('API Error');
+  it("No se debe lanzar cuando falla el reenvío", async () => {
+    const error = new Error("API Error");
     const notification = new EmailNotification(mockData);
-    (notification['resend'].emails.send as jest.Mock).mockRejectedValue(error);
+    (notification["resend"].emails.send as jest.Mock).mockRejectedValue(error);
     await expect(notification.send()).resolves.toBeUndefined();
   });
 });

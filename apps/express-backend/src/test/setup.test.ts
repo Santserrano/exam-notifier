@@ -1,11 +1,12 @@
-import { execSync } from 'child_process';
-import { testUtils, prisma } from '../test/setup'; 
+import { execSync } from "child_process";
 
-jest.mock('child_process', () => ({
-  execSync: jest.fn()
+import { prisma, testUtils } from "../test/setup";
+
+jest.mock("child_process", () => ({
+  execSync: jest.fn(),
 }));
 
-describe('Test de configuración de entorno de pruebas', () => {
+describe("Test de configuración de entorno de pruebas", () => {
   beforeAll(async () => {
     await prisma.$connect();
   });
@@ -14,28 +15,30 @@ describe('Test de configuración de entorno de pruebas', () => {
     await prisma.$disconnect();
   });
 
-  it('debe tener las variables de entorno configuradas para test', () => {
-    expect(process.env.NODE_ENV).toBe('test');
+  it("debe tener las variables de entorno configuradas para test", () => {
+    expect(process.env.NODE_ENV).toBe("test");
     expect(process.env.RESEND_API_KEY).toBeDefined();
     expect(process.env.VAPID_PUBLIC_KEY).toBeDefined();
     expect(process.env.VAPID_PRIVATE_KEY).toBeDefined();
     expect(process.env.INTERNAL_API_KEY).toBeDefined();
-    expect(process.env.DATABASE_URL).toContain('test');
+    expect(process.env.DATABASE_URL).toContain("test");
   });
 
-  it('resetTestDatabase ejecuta prisma migrate reset', () => {
+  it("resetTestDatabase ejecuta prisma migrate reset", () => {
+    const spy = jest.spyOn({ execSync }, "execSync").mockImplementation(jest.fn());
     testUtils.resetTestDatabase();
-    expect(execSync).toHaveBeenCalledWith(
-      'npx prisma migrate reset --force --skip-seed',
-      expect.objectContaining({ stdio: 'inherit' })
+    expect(spy).toHaveBeenCalledWith(
+      "npx prisma migrate reset --force --skip-seed",
+      expect.objectContaining({ stdio: "inherit" }),
     );
+    spy.mockRestore();
   });
 
-  it('seedTestData inserta datos en modelos especificados', async () => {
+  it("seedTestData inserta datos en modelos especificados", async () => {
     // Este test requiere que tengas modelos como `carrera` y `materia` en tu schema
     await testUtils.seedTestData({
-      carrera: [{ id: 'c1', nombre: 'Ingeniería' }],
-      materia: [{ id: 'm1', nombre: 'Álgebra', carreraId: 'c1' }]
+      carrera: [{ id: "c1", nombre: "Ingeniería" }],
+      materia: [{ id: "m1", nombre: "Álgebra", carreraId: "c1" }],
     });
 
     const carreras = await prisma.carrera.findMany();

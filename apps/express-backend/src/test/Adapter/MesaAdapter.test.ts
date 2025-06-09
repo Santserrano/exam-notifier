@@ -1,26 +1,26 @@
-import { MesaDeExamen } from '@prisma/client';
+import { MesaDeExamen } from "@prisma/client";
 
-import { MesaAdapter } from '../../../src/Adapters/MasaAdapter';
+import { MesaAdapter } from "../../../src/Adapters/MasaAdapter";
 
-describe('MesaAdapter', () => {
+describe("MesaAdapter", () => {
   const adapter = new MesaAdapter();
 
   // Mock completo
   const fullMock: MesaDeExamen = {
     id: 1,
-    profesorId: 'prof-123',
-    vocalId: 'vocal-456',
-    carreraId: 'carrera-789',
-    materiaId: 'materia-012',
-    fecha: new Date('2023-01-01T10:00:00Z'),
-    descripcion: 'Examen Final',
-    cargo: 'Titular',
+    profesorId: "prof-123",
+    vocalId: "vocal-456",
+    carreraId: "carrera-789",
+    materiaId: "materia-012",
+    fecha: new Date("2023-01-01T10:00:00Z"),
+    descripcion: "Examen Final",
+    cargo: "Titular",
     verification: true,
-    createdAt: new Date('2022-12-01T08:00:00Z'),
-    modalidad: 'Presencial',
-    aula: 'Aula 101',
-    webexLink: 'https://webex.com/exam-room',
-    updatedAt: new Date('2022-12-01T08:00:00Z'),
+    createdAt: new Date("2022-12-01T08:00:00Z"),
+    modalidad: "Presencial",
+    aula: "Aula 101",
+    webexLink: "https://webex.com/exam-room",
+    updatedAt: new Date("2022-12-01T08:00:00Z"),
   };
 
   // Mock con campos opcionales nulos
@@ -28,90 +28,90 @@ describe('MesaAdapter', () => {
     ...fullMock,
     modalidad: null,
     aula: null,
-    webexLink: null
+    webexLink: null,
   };
 
   // Mock sin campos opcionales
   const minimalMock = {
     id: 2,
-    profesorId: 'prof-456',
-    vocalId: 'vocal-789',
-    carreraId: 'carrera-012',
-    materiaId: 'materia-345',
-    fecha: new Date('2023-02-01T10:00:00Z'),
-    descripcion: 'Examen Parcial',
-    cargo: 'Suplente',
+    profesorId: "prof-456",
+    vocalId: "vocal-789",
+    carreraId: "carrera-012",
+    materiaId: "materia-345",
+    fecha: new Date("2023-02-01T10:00:00Z"),
+    descripcion: "Examen Parcial",
+    cargo: "Suplente",
     verification: false,
-    createdAt: new Date('2022-12-15T08:00:00Z')
+    createdAt: new Date("2022-12-15T08:00:00Z"),
   } as MesaDeExamen;
 
-  it('Debería adaptar correctamente MesaDeExamen completo a MesaData', () => {
+  it("Debería adaptar correctamente MesaDeExamen completo a MesaData", () => {
     const result = adapter.adapt(fullMock);
 
     expect(result).toEqual({
       id: 1,
-      profesor: 'prof-123',
-      vocal: 'vocal-456',
-      carrera: 'carrera-789',
-      materia: 'materia-012',
-      fecha: new Date('2023-01-01T10:00:00Z'),
-      descripcion: 'Examen Final',
-      cargo: 'Titular',
+      profesor: "prof-123",
+      vocal: "vocal-456",
+      carrera: "carrera-789",
+      materia: "materia-012",
+      fecha: new Date("2023-01-01T10:00:00Z"),
+      descripcion: "Examen Final",
+      cargo: "Titular",
       verification: true,
-      createdAt: new Date('2022-12-01T08:00:00Z'),
-      modalidad: 'Presencial',
-      aula: 'Aula 101',
-      webexLink: 'https://webex.com/exam-room'
+      createdAt: new Date("2022-12-01T08:00:00Z"),
+      modalidad: "Presencial",
+      aula: "Aula 101",
+      webexLink: "https://webex.com/exam-room",
     });
   });
 
-  it('debe manejar campos opcionales nulos', () => {
+  it("debe manejar campos opcionales nulos", () => {
     const result = adapter.adapt(nullMock);
 
     expect(result).toEqual({
       id: 1,
-      profesor: 'prof-123',
-      vocal: 'vocal-456',
-      carrera: 'carrera-789',
-      materia: 'materia-012',
-      fecha: new Date('2023-01-01T10:00:00Z'),
-      descripcion: 'Examen Final',
-      cargo: 'Titular',
+      profesor: "prof-123",
+      vocal: "vocal-456",
+      carrera: "carrera-789",
+      materia: "materia-012",
+      fecha: new Date("2023-01-01T10:00:00Z"),
+      descripcion: "Examen Final",
+      cargo: "Titular",
       verification: true,
-      createdAt: new Date('2022-12-01T08:00:00Z'),
+      createdAt: new Date("2022-12-01T08:00:00Z"),
       modalidad: null,
       aula: null,
-      webexLink: null
+      webexLink: null,
     });
   });
 
-  it('Debería gestionar los campos opcionales faltantes', () => {
+  it("Debería gestionar los campos opcionales faltantes", () => {
     const result = adapter.adapt(minimalMock);
 
     expect(result).toEqual({
       id: 2,
-      profesor: 'prof-456',
-      vocal: 'vocal-789',
-      carrera: 'carrera-012',
-      materia: 'materia-345',
-      fecha: new Date('2023-02-01T10:00:00Z'),
-      descripcion: 'Examen Parcial',
-      cargo: 'Suplente',
+      profesor: "prof-456",
+      vocal: "vocal-789",
+      carrera: "carrera-012",
+      materia: "materia-345",
+      fecha: new Date("2023-02-01T10:00:00Z"),
+      descripcion: "Examen Parcial",
+      cargo: "Suplente",
       verification: false,
-      createdAt: new Date('2022-12-15T08:00:00Z'),
+      createdAt: new Date("2022-12-15T08:00:00Z"),
       modalidad: null,
       aula: null,
-      webexLink: null
+      webexLink: null,
     });
   });
 
-  it('debe mantener la integridad de los datos', () => {
+  it("debe mantener la integridad de los datos", () => {
     const result = adapter.adapt(fullMock);
 
     // Verificamos que los tipos sean correctos
-    expect(typeof result.id).toBe('number');
-    expect(typeof result.profesor).toBe('string');
+    expect(typeof result.id).toBe("number");
+    expect(typeof result.profesor).toBe("string");
     expect(result.fecha instanceof Date).toBe(true);
-    expect(typeof result.verification).toBe('boolean');
+    expect(typeof result.verification).toBe("boolean");
   });
 });
