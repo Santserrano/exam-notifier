@@ -607,27 +607,27 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
   const fetcher = useFetcher();
   const { user } = useUser();
   const esProfesorAsignado = user?.id === mesa.profesorId || user?.id === mesa.vocalId;
-  const [estadoLocal, setEstadoLocal] = useState<"PENDIENTE" | "ACEPTADA" | "RECHAZADA">(mesa.estadoAceptacion);
+  
+  // Inicializar el estado local con el valor de la base de datos o el localStorage
+  const [estadoLocal, setEstadoLocal] = useState<"PENDIENTE" | "ACEPTADA" | "RECHAZADA">(() => {
+    // Primero intentar obtener del localStorage
+    const estadoGuardado = localStorage.getItem(`mesa-${mesa.id}-estado`);
+    if (estadoGuardado && ["ACEPTADA", "RECHAZADA"].includes(estadoGuardado)) {
+      return estadoGuardado as "ACEPTADA" | "RECHAZADA";
+    }
+    // Si no hay en localStorage, usar el estado de la base de datos
+    return mesa.estadoAceptacion;
+  });
 
   // Efecto para actualizar el estado local cuando cambia el estado de la mesa
   useEffect(() => {
-    setEstadoLocal(mesa.estadoAceptacion);
-  }, [mesa.estadoAceptacion]);
-
-  // Efecto para guardar el estado en localStorage
-  useEffect(() => {
-    if (estadoLocal !== "PENDIENTE") {
-      localStorage.setItem(`mesa-${mesa.id}-estado`, estadoLocal);
+    // Solo actualizar si el estado de la base de datos es diferente y no es PENDIENTE
+    if (mesa.estadoAceptacion !== estadoLocal && mesa.estadoAceptacion !== "PENDIENTE") {
+      setEstadoLocal(mesa.estadoAceptacion);
+      // Actualizar también el localStorage
+      localStorage.setItem(`mesa-${mesa.id}-estado`, mesa.estadoAceptacion);
     }
-  }, [estadoLocal, mesa.id]);
-
-  // Efecto para cargar el estado desde localStorage al montar el componente
-  useEffect(() => {
-    const estadoGuardado = localStorage.getItem(`mesa-${mesa.id}-estado`);
-    if (estadoGuardado && ["ACEPTADA", "RECHAZADA"].includes(estadoGuardado)) {
-      setEstadoLocal(estadoGuardado as "ACEPTADA" | "RECHAZADA");
-    }
-  }, [mesa.id]);
+  }, [mesa.estadoAceptacion, mesa.id]);
 
   const handleAceptacion = (estado: "ACEPTADA" | "RECHAZADA") => {
     const formData = new FormData();
@@ -636,6 +636,8 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
     formData.append("estado", estado);
     fetcher.submit(formData, { method: "post" });
     setEstadoLocal(estado);
+    // Guardar en localStorage inmediatamente
+    localStorage.setItem(`mesa-${mesa.id}-estado`, estado);
   };
 
   const fechaObj = new Date(mesa.fechaOriginal);

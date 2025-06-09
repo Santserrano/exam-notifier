@@ -67,8 +67,10 @@ export const MesaCardAdmin: React.FC<MesaCardProps> = ({
   };
 
   // Resumen de aceptaciones
-  const total = aceptaciones.length;
+  const total = 2; // Siempre son 2 profesores (titular y vocal)
   const aceptadas = aceptaciones.filter(a => a.estado === "ACEPTADA").length;
+  const rechazadas = aceptaciones.filter(a => a.estado === "RECHAZADA").length;
+  const pendientes = total - aceptadas - rechazadas;
 
   return (
     <div
@@ -111,6 +113,13 @@ export const MesaCardAdmin: React.FC<MesaCardProps> = ({
         <div className="text-xs text-gray-500">
           {aceptadas}/{total} aceptadas
         </div>
+        {(rechazadas > 0 || pendientes > 0) && (
+          <div className="text-xs text-gray-500">
+            {rechazadas > 0 && <span className="text-red-600">{rechazadas} rechazadas</span>}
+            {rechazadas > 0 && pendientes > 0 && <span className="mx-1">•</span>}
+            {pendientes > 0 && <span className="text-yellow-600">{pendientes} pendientes</span>}
+          </div>
+        )}
       </div>
     </div>
   );
