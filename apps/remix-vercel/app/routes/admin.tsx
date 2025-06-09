@@ -641,7 +641,21 @@ export default function AdminRoute() {
               onClick={() => {
                 // Buscar la mesa original por ID y pasarla al modal
                 const mesaRaw = mesas.find((m: MesaRaw) => m.id?.toString() === mesa.id);
-                setMesaAEditar(mesaRaw || null);
+                if (mesaRaw) {
+                  // Asegurarse de que la mesa tenga todos los campos necesarios
+                  const mesaCompleta = {
+                    ...mesaRaw,
+                    modalidad: mesa.modalidad,
+                    carrera: mesaRaw.carrera || { id: '', nombre: mesa.carrera },
+                    materia: mesaRaw.materia || { id: '', nombre: mesa.materia },
+                    profesor: mesaRaw.profesor || { id: '', nombre: mesa.profesorNombre },
+                    vocal: mesaRaw.vocal || { id: '', nombre: mesa.vocalNombre },
+                    aula: mesaRaw.aula || mesa.aula,
+                    webexLink: mesaRaw.webexLink || mesa.webexLink,
+                    hora: mesaRaw.hora || mesa.hora,
+                  };
+                  setMesaAEditar(mesaCompleta);
+                }
               }}
             />
           ))}
