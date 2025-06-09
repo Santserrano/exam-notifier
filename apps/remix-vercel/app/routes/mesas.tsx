@@ -173,7 +173,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
           : typeof m.vocal === 'string' ? m.vocal : '',
         aula: m.aula || "Aula por confirmar",
         estadoAceptacion: aceptacion?.estado || "PENDIENTE",
-        horaTexto: m.horaTexto || undefined,
+        horaTexto: m.horaTexto,
       };
     });
 
@@ -215,7 +215,7 @@ export const action = async (args: ActionFunctionArgs) => {
     // Manejar aceptación de mesa
     if (type === "aceptacion" && mesaId && estado) {
       try {
-        const url = `${API_URL}/api/diaries/mesas/${mesaId}/aceptaciones`;
+        const url = `${API_URL}/api/diaries/mesas/${mesaId}/aceptacion`;
         const body = {
           profesorId: userId,
           estado,
@@ -408,11 +408,19 @@ export default function MesasRoute() {
     const futura = new Date(m.fechaOriginal) > new Date();
     const fechaMesa = m.fecha.toLowerCase();
     const fechaFiltro = fecha.toLowerCase();
+    
+    // Obtener el mes de la fecha original para comparar
+    const fechaObj = new Date(m.fechaOriginal);
+    const mesMesa = fechaObj.toLocaleDateString('es-AR', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+      month: 'short'
+    }).replace('.', '').toLowerCase();
+
     return (
       (searchParams.get("tab") === "pasadas" ? !futura : futura) &&
       (!search || m.materia.toLowerCase().includes(search.toLowerCase())) &&
       (!carrera || m.carrera === carrera) &&
-      (!fecha || fechaMesa.includes(fechaFiltro)) &&
+      (!fecha || mesMesa === fechaFiltro) &&
       (!sede || m.sede === sede)
     );
   });
