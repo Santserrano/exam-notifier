@@ -311,18 +311,18 @@ const carreras = [
 ];
 
 const fechas = [
-  "ene.",
-  "feb.",
-  "mar.",
-  "abr.",
-  "may.",
-  "jun.",
-  "jul.",
-  "ago.",
-  "sep.",
-  "oct.",
-  "nov.",
-  "dic."
+  "ene",
+  "feb",
+  "mar",
+  "abr",
+  "may",
+  "jun",
+  "jul",
+  "ago",
+  "sep",
+  "oct",
+  "nov",
+  "dic"
 ];
 const sedes = ["Corrientes", "Sáenz Peña", "Posadas", "Resistencia"];
 const alumnosMock = [
@@ -406,8 +406,6 @@ export default function MesasRoute() {
 
   const mesasFiltradas = mesas.filter((m: MesaProcesada) => {
     const futura = new Date(m.fechaOriginal) > new Date();
-    const fechaMesa = m.fecha.toLowerCase();
-    const fechaFiltro = fecha.toLowerCase();
     
     // Obtener el mes de la fecha original para comparar
     const fechaObj = new Date(m.fechaOriginal);
@@ -420,7 +418,7 @@ export default function MesasRoute() {
       (searchParams.get("tab") === "pasadas" ? !futura : futura) &&
       (!search || m.materia.toLowerCase().includes(search.toLowerCase())) &&
       (!carrera || m.carrera === carrera) &&
-      (!fecha || mesMesa === fechaFiltro) &&
+      (!fecha || mesMesa === fecha.toLowerCase()) &&
       (!sede || m.sede === sede)
     );
   });
