@@ -608,26 +608,13 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
   const { user } = useUser();
   const esProfesorAsignado = user?.id === mesa.profesorId || user?.id === mesa.vocalId;
   
-  // Inicializar el estado local con el valor de la base de datos o el localStorage
-  const [estadoLocal, setEstadoLocal] = useState<"PENDIENTE" | "ACEPTADA" | "RECHAZADA">(() => {
-    // Primero intentar obtener del localStorage
-    const estadoGuardado = localStorage.getItem(`mesa-${mesa.id}-estado`);
-    if (estadoGuardado && ["ACEPTADA", "RECHAZADA"].includes(estadoGuardado)) {
-      return estadoGuardado as "ACEPTADA" | "RECHAZADA";
-    }
-    // Si no hay en localStorage, usar el estado de la base de datos
-    return mesa.estadoAceptacion;
-  });
+  // Inicializar el estado local con el valor de la base de datos
+  const [estadoLocal, setEstadoLocal] = useState<"PENDIENTE" | "ACEPTADA" | "RECHAZADA">(mesa.estadoAceptacion);
 
   // Efecto para actualizar el estado local cuando cambia el estado de la mesa
   useEffect(() => {
-    // Solo actualizar si el estado de la base de datos es diferente y no es PENDIENTE
-    if (mesa.estadoAceptacion !== estadoLocal && mesa.estadoAceptacion !== "PENDIENTE") {
-      setEstadoLocal(mesa.estadoAceptacion);
-      // Actualizar también el localStorage
-      localStorage.setItem(`mesa-${mesa.id}-estado`, mesa.estadoAceptacion);
-    }
-  }, [mesa.estadoAceptacion, mesa.id]);
+    setEstadoLocal(mesa.estadoAceptacion);
+  }, [mesa.estadoAceptacion]);
 
   const handleAceptacion = (estado: "ACEPTADA" | "RECHAZADA") => {
     const formData = new FormData();
@@ -636,8 +623,6 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
     formData.append("estado", estado);
     fetcher.submit(formData, { method: "post" });
     setEstadoLocal(estado);
-    // Guardar en localStorage inmediatamente
-    localStorage.setItem(`mesa-${mesa.id}-estado`, estado);
   };
 
   const fechaObj = new Date(mesa.fechaOriginal);

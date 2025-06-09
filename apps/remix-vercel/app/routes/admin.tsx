@@ -105,7 +105,7 @@ interface MesaProcesada {
   descripcion?: string;
   cargo?: string;
   verification?: boolean;
-  aceptaciones: Array<{
+  aceptaciones?: Array<{
     profesor: {
       id: string;
       nombre: string;
@@ -865,15 +865,49 @@ export const action = async (args: ActionFunctionArgs) => {
   const hora = formData.get("hora") as string;
   const aula = formData.get("aula") as string;
   const webexLink = formData.get("webexLink") as string;
+  const type = formData.get("type") as string;
 
-  // Combinar fecha y hora correctamente
+  // Si es una actualización de aceptación
+  if (type === "aceptacion") {
+    const estado = formData.get("estado") as "PENDIENTE" | "ACEPTADA" | "RECHAZADA";
+    const profesorId = formData.get("profesorId") as string;
+
+    try {
+      const response = await fetch(`${API_URL}/api/diaries/mesas/${mesaId}/aceptacion`, {
+        method: "POST",
+        headers: {
+          "x-api-key": INTERNAL_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          profesorId,
+          estado,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        return json(
+          { error: errorData.error || "Error al actualizar la aceptación" },
+          { status: response.status }
+        );
+      }
+
+      return json({ success: true });
+    } catch (error) {
+      console.error("Error en el action de aceptación:", error);
+      return json(
+        { error: "Error al actualizar la aceptación" },
+        { status: 500 }
+      );
+    }
+  }
+
+  // Si es una actualización de mesa
   const [year, month, day] = fecha.split('-').map(Number);
   const [hours, minutes] = hora.split(':').map(Number);
   
-  // Crear la fecha en la zona horaria de Argentina
   const fechaLocal = new Date(year, month - 1, day, hours, minutes);
-  
-  // Convertir a UTC manteniendo la hora local
   const fechaUTC = new Date(fechaLocal.getTime() - fechaLocal.getTimezoneOffset() * 60000);
 
   const mesaData = {
