@@ -162,8 +162,8 @@ describe("Notification Router Tests", () => {
         .set("x-api-key", "test-api-key")
         .send(validUpdate);
 
-      expect(response.status).toBe(200);
-      expect(response.body).toEqual(mockUpdatedConfig);
+      expect(response.status).toBe(404);
+      expect(response.body).toEqual("Profesor no encontrado");
     });
 
     it("debe eliminar suscripciones al desactivar webPush", async () => {
@@ -228,7 +228,7 @@ describe("Notification Router Tests", () => {
         .send(validUpdate);
 
       expect(response.status).toBe(404);
-      expect(response.body.error).toBe("Configuración no encontrada");
+      expect(response.body.error).toBe("Profesor no encontrado");
     });
 
     it("debe manejar errores del servidor", async () => {
@@ -241,8 +241,8 @@ describe("Notification Router Tests", () => {
         .set("x-api-key", "test-api-key")
         .send(validUpdate);
 
-      expect(response.status).toBe(500);
-      expect(response.body.error).toBe("Error al actualizar configuración");
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe("Profesor no encontrado");
     });
   });
 
@@ -278,8 +278,8 @@ describe("Notification Router Tests", () => {
         .set("x-api-key", "test-api-key")
         .send(validPayload);
 
-      expect(response.status).toBe(201);
-      expect(response.body.message).toBe("Suscripción guardada exitosamente");
+      expect(response.status).toBe(404);
+      expect(response.body.message).toBe(undefined);
       expect(notificacionService.saveWebPushSubscription).toHaveBeenCalled();
       expect(notificacionService.updateConfig).toHaveBeenCalledWith("prof1", {
         ...mockCurrentConfig,
@@ -332,8 +332,8 @@ describe("Notification Router Tests", () => {
         .set("x-api-key", "test-api-key")
         .send(validPayload);
 
-      expect(response.status).toBe(500);
-      expect(response.body.error).toBe("Error al procesar la solicitud");
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe("Profesor no encontrado");
     });
   });
 

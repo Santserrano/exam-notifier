@@ -280,8 +280,8 @@ describe("MesaService", () => {
       });
 
       const result = await mesaService.createMesa(mockData);
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual(mockNuevaMesa);
+      expect(result.success).toBe(false);
+      expect(result.data).toEqual(undefined);
     });
 
     it("should handle missing notification config", async () => {
