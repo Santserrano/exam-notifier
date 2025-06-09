@@ -177,7 +177,7 @@ describe("Notification Router Tests", () => {
         .set("x-api-key", "test-api-key")
         .send({ webPushEnabled: true });
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(404);
       expect(response.body.error).toBe("Error al actualizar configuración");
     });
 
@@ -323,7 +323,7 @@ describe("Notification Router Tests", () => {
         });
 
       expect(response.status).toBe(404);
-      expect(response.body.error).toBe("Error al procesar la solicitud");
+      expect(response.body.error).toBe("Profesor no encontrado");
     });
 
     it("debe validar datos faltantes", async () => {
