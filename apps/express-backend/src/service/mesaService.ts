@@ -30,9 +30,7 @@ type MesaWithRelations = Prisma.MesaDeExamenGetPayload<{
         };
         carrera: true;
     };
-}> & {
-    horaTexto?: string;
-};
+}>;
 
 interface MesaResponse {
     success: boolean;
@@ -247,12 +245,13 @@ class MesaService {
                 try {
                     const notificationData = {
                         title: 'Nueva mesa asignada',
-                        body: `Hola ${vocalData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada}`,
+                        body: `Hola ${vocalData.nombre}, se te ha asignado una nueva mesa: ${nuevaMesa.materia.nombre} el ${fechaFormateada} a las ${nuevaMesa.horaTexto}`,
                         recipient: data.vocal,
                         metadata: {
                             mesaId: nuevaMesa.id,
                             materia: nuevaMesa.materia.nombre,
-                            fecha: fechaObj.toISOString()
+                            fecha: fechaObj.toISOString(),
+                            horaTexto: nuevaMesa.horaTexto
                         }
                     };
 

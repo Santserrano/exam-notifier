@@ -679,7 +679,8 @@ export default function AdminRoute() {
                     },
                     aula: mesa.aula,
                     webexLink: mesa.webexLink,
-                    hora: mesa.hora
+                    hora: mesa.hora,
+                    fecha: mesa.fechaOriginal
                   };
                   setMesaAEditar(mesaCompleta);
                 }
