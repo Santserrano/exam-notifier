@@ -10,6 +10,7 @@ type MesaCreateInput = {
     carrera: string;
     materia: string;
     fecha: string;
+    horaTexto?: string;
     descripcion?: string;
     cargo?: string;
     verification?: boolean;
