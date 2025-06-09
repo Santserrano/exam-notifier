@@ -85,7 +85,7 @@ describe("Router", () => {
       mockService.getAllProfesores.mockRejectedValue(new Error("Error"));
       const res = await request(app).get("/profesores");
       expect(res.status).toBe(200);
-      expect(res.body).toEqual({ error: "Error al obtener los profesores" });
+      expect(res.body).toEqual({ "error": "Error al obtener los profesores" });
     });
   });
 
