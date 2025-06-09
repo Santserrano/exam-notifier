@@ -7,7 +7,7 @@ import { mesaService } from "../../service/mesaService.js";
 import { ProfesorService } from "../../service/profesorService.js";
 
 // Mocks globales
-jest.mock("../lib/prisma.js", () => ({
+jest.mock("../../lib/prisma.js", () => ({
   prisma: {
     carrera: {
       findMany: jest.fn(),
@@ -19,13 +19,13 @@ jest.mock("../lib/prisma.js", () => ({
   },
 }));
 
-jest.mock("../service/profesorService.js", () => ({
+jest.mock("../../service/profesorService.js", () => ({
   ProfesorService: jest.fn().mockImplementation(() => ({
     getAllProfesores: jest.fn(),
   })),
 }));
 
-jest.mock("../service/mesaService.js", () => ({
+jest.mock("../../service/mesaService.js", () => ({
   mesaService: {
     getAllMesas: jest.fn(),
     getMesaById: jest.fn(),
@@ -36,7 +36,7 @@ jest.mock("../service/mesaService.js", () => ({
   },
 }));
 
-jest.mock("../middleware/auth.js", () => ({
+jest.mock("../../middleware/auth.js", () => ({
   validateApiKey: jest.fn((_req, _res, next) => next()),
 }));
 
@@ -72,7 +72,7 @@ describe("Router", () => {
   describe("GET /profesores", () => {
     it("debe devolver 200 con profesores", async () => {
       const mockProfesores = [{ id: "1", nombre: "Profesor" }];
-      const mockService = new ProfesorService() as any;
+      const mockService = new ProfesorService() as jest.Mocked<ProfesorService>;
       mockService.getAllProfesores.mockResolvedValue(mockProfesores);
 
       const res = await request(app).get("/profesores");
@@ -81,7 +81,7 @@ describe("Router", () => {
     });
 
     it("debe manejar errores 500", async () => {
-      const mockService = new ProfesorService() as any;
+      const mockService = new ProfesorService() as jest.Mocked<ProfesorService>;
       mockService.getAllProfesores.mockRejectedValue(new Error("Error"));
       const res = await request(app).get("/profesores");
       expect(res.status).toBe(500);
