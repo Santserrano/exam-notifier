@@ -1,5 +1,5 @@
 import { jest } from "@jest/globals";
-import type { NextFunction,Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import http from "http";
 import request from "supertest";
 
@@ -13,15 +13,6 @@ jest.mock("../routes/notifications.js", () => ({
   __esModule: true,
   default: jest.fn((_req: Request, _res: Response, next: NextFunction) => next()),
 }));
-
-// Mock del módulo index.ts para controlar cuándo se inicia el servidor
-jest.mock("../index", () => {
-  const actualModule = jest.requireActual("../index") as Record<string, unknown>;
-  return {
-    ...actualModule,
-    __esModule: true,
-  };
-});
 
 describe("Express App", () => {
   let originalEnv: NodeJS.ProcessEnv;
@@ -41,17 +32,8 @@ describe("Express App", () => {
   afterEach(async () => {
     jest.clearAllMocks();
     consoleSpy.mockRestore();
-    if (server && server.close) {
-      await new Promise<void>((resolve, reject) => {
-        server.close((err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      });
-    }
+    const { stopServer } = await import("../index");
+    await stopServer();
   });
 
   afterAll(() => {
@@ -163,20 +145,19 @@ describe("Express App", () => {
       const { startServer } = await import("../index");
       server = await startServer();
 
-      // Esperar a que el servidor esté listo
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Verificaciones inmediatas
+      expect(server).toBeDefined();
+      expect(server.listening).toBe(true);
+
+      const address = server.address();
+      expect(address).toBeDefined();
+      expect(typeof address).toBe("object");
+      expect(address).toHaveProperty("port");
 
       expect(consoleSpy).toHaveBeenCalledWith("🟢 Iniciando servidor...");
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("Servidor corriendo en http://localhost"),
       );
-      expect(server).toBeDefined();
-      expect(server.listening).toBe(true);
-
-      // Cerrar el servidor explícitamente
-      await new Promise<void>((resolve) => {
-        server.close(() => resolve());
-      });
     }, 15000);
 
     it("should not start server in test environment", async () => {

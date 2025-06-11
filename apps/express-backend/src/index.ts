@@ -25,7 +25,7 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
-// Aplicar CORS antes de cualquier middleware
+// Aplicar middlewares
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(morgan("dev"));
@@ -42,15 +42,14 @@ app.use("/api/diaries/notificaciones", notificationsRouter);
 
 let server: import("http").Server | undefined;
 
-export const startServer = () => {
-  return new Promise<import("http").Server>((resolve) => {
+export const startServer = (): Promise<import("http").Server> => {
+  return new Promise((resolve) => {
     if (process.env.NODE_ENV === "test") {
       resolve(undefined as any);
       return;
     }
 
     const port = process.env.PORT || 3005;
-    console.log("🟢 Iniciando servidor...");
 
     server = app.listen(port, () => {
       console.log(`Servidor corriendo en http://localhost:${port}`);
@@ -59,9 +58,22 @@ export const startServer = () => {
   });
 };
 
-// Iniciar el servidor solo si no estamos en modo test
-if (process.env.NODE_ENV !== "test") {
-  startServer();
-}
+export const stopServer = async (): Promise<void> => {
+  if (server) {
+    return new Promise((resolve, reject) => {
+      server!.close((err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve();
+      });
+    });
+  }
+};
 
 export { app };
+
+if (require.main === module && process.env.NODE_ENV !== "test") {
+  startServer();
+}

@@ -252,6 +252,7 @@ class MesaService {
             await whatsappNotification.send();
           }
         } catch (error) {
+          console.error("Error al enviar notificaciones al profesor:", error);
           throw new Error("Error al enviar notificaciones al profesor:");
         }
       }
@@ -301,6 +302,7 @@ class MesaService {
             await whatsappNotification.send();
           }
         } catch (error) {
+          console.error("Error al enviar notificaciones al vocal:", error);
           throw new Error("Error al enviar notificaciones al vocal:");
         }
       }
@@ -366,5 +368,5 @@ class MesaService {
   }
 }
 export const mesaService = new MesaService();
-export type { MesaCreateInput, MesaResponse,MesaWithRelations };
+export type { MesaCreateInput, MesaResponse, MesaWithRelations };
 export { MesaService };
