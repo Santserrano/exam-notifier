@@ -13,10 +13,12 @@ export class MesaAdapter implements Adapter<MesaDeExamen, MesaData> {
             carrera: mesa.carreraId,
             materia: mesa.materiaId,
             fecha: mesa.fecha,
+            horaTexto: mesa.horaTexto,
             descripcion: mesa.descripcion,
             cargo: mesa.cargo,
             verification: mesa.verification,
             createdAt: mesa.createdAt,
+            updatedAt: mesa.updatedAt,
             modalidad: mesa.modalidad || null,
             aula: mesa.aula || null,
             webexLink: mesa.webexLink || null

@@ -1,9 +1,8 @@
 import { defineConfig } from 'tsup'
-import { fileURLToPath } from 'url'
 import { dirname } from 'path'
+import { fileURLToPath } from 'url'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   entry: ['src/index.ts'],
@@ -24,8 +23,7 @@ export default defineConfig({
   platform: 'node',
   esbuildOptions(options) {
     options.define = {
-      __dirname: JSON.stringify(__dirname),
-      __filename: JSON.stringify(__filename)
+      __dirname: JSON.stringify(__dirname)
     }
   }
 }) 

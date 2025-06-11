@@ -13,6 +13,7 @@ describe('MesaAdapter', () => {
     carreraId: 'carrera-789',
     materiaId: 'materia-012',
     fecha: new Date('2023-01-01T10:00:00Z'),
+    horaTexto: '10:00',
     descripcion: 'Examen Final',
     cargo: 'Titular',
     verification: true,
@@ -28,7 +29,8 @@ describe('MesaAdapter', () => {
     ...fullMock,
     modalidad: null,
     aula: null,
-    webexLink: null
+    webexLink: null,
+    horaTexto: null
   };
 
   // Mock sin campos opcionales
@@ -39,10 +41,12 @@ describe('MesaAdapter', () => {
     carreraId: 'carrera-012',
     materiaId: 'materia-345',
     fecha: new Date('2023-02-01T10:00:00Z'),
+    horaTexto: null,
     descripcion: 'Examen Parcial',
     cargo: 'Suplente',
     verification: false,
-    createdAt: new Date('2022-12-15T08:00:00Z')
+    createdAt: new Date('2022-12-15T08:00:00Z'),
+    updatedAt: new Date('2022-12-15T08:00:00Z')
   } as MesaDeExamen;
 
   it('should correctly adapt full MesaDeExamen to MesaData', () => {
@@ -55,10 +59,12 @@ describe('MesaAdapter', () => {
       carrera: 'carrera-789',
       materia: 'materia-012',
       fecha: new Date('2023-01-01T10:00:00Z'),
+      horaTexto: '10:00',
       descripcion: 'Examen Final',
       cargo: 'Titular',
       verification: true,
       createdAt: new Date('2022-12-01T08:00:00Z'),
+      updatedAt: new Date('2022-12-01T08:00:00Z'),
       modalidad: 'Presencial',
       aula: 'Aula 101',
       webexLink: 'https://webex.com/exam-room'
@@ -75,10 +81,12 @@ describe('MesaAdapter', () => {
       carrera: 'carrera-789',
       materia: 'materia-012',
       fecha: new Date('2023-01-01T10:00:00Z'),
+      horaTexto: null,
       descripcion: 'Examen Final',
       cargo: 'Titular',
       verification: true,
       createdAt: new Date('2022-12-01T08:00:00Z'),
+      updatedAt: new Date('2022-12-01T08:00:00Z'),
       modalidad: null,
       aula: null,
       webexLink: null
@@ -95,10 +103,12 @@ describe('MesaAdapter', () => {
       carrera: 'carrera-012',
       materia: 'materia-345',
       fecha: new Date('2023-02-01T10:00:00Z'),
+      horaTexto: null,
       descripcion: 'Examen Parcial',
       cargo: 'Suplente',
       verification: false,
       createdAt: new Date('2022-12-15T08:00:00Z'),
+      updatedAt: new Date('2022-12-15T08:00:00Z'),
       modalidad: null,
       aula: null,
       webexLink: null
