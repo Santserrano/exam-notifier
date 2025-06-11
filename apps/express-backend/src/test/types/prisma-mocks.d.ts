@@ -1,4 +1,3 @@
-
 declare global {
     namespace jest {
         interface Mocked<T> {
@@ -12,6 +11,12 @@ declare global {
 }
 
 declare module "@prisma/client" {
+    export type MesaDeExamen = any;
+
+    export namespace Prisma {
+        type MesaDeExamenGetPayload<T> = any;
+    }
+
     interface PrismaClient {
         mesaDeExamen: {
             findMany: jest.Mock;

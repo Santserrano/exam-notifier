@@ -1,14 +1,20 @@
 import { PrismaClient } from "@prisma/client";
 
-import { clearDatabase,createTestMesa } from "./test-utils";
+import { clearDatabase, createTestMesa } from "./test-utils";
 
 // Mock de PrismaClient
 jest.mock("@prisma/client", () => {
     const mockPrisma = {
         mesaDeExamen: {
             create: jest.fn(),
+            deleteMany: jest.fn(),
         },
-        deleteMany: jest.fn(),
+        profesor: {
+            deleteMany: jest.fn(),
+        },
+        materia: {
+            deleteMany: jest.fn(),
+        },
     };
     return {
         PrismaClient: jest.fn(() => mockPrisma),

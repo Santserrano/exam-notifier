@@ -59,7 +59,7 @@ describe("CarreraService", () => {
     it("should log error and rethrow when getAllCarreras fails", async () => {
       const error = new Error("fail");
       prisma.carrera.findMany.mockRejectedValue(error);
-      const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+      const spy = jest.spyOn(console, "error").mockImplementation(() => { });
       await expect(carreraService.getAllCarreras()).rejects.toThrow("fail");
       expect(spy).toHaveBeenCalledWith("Error al obtener carreras:", error);
       spy.mockRestore();
@@ -68,7 +68,7 @@ describe("CarreraService", () => {
     it("should log error and rethrow when getCarreraById fails", async () => {
       const error = new Error("fail");
       prisma.carrera.findUnique.mockRejectedValue(error);
-      const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+      const spy = jest.spyOn(console, "error").mockImplementation(() => { });
       await expect(carreraService.getCarreraById("id")).rejects.toThrow("fail");
       expect(spy).toHaveBeenCalledWith("Error al obtener carrera:", error);
       spy.mockRestore();

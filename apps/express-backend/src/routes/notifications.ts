@@ -1,9 +1,9 @@
-import { PrismaClient } from "@prisma/client";
 import express from "express";
 
 import { notificationFactory } from "../core/notifications/NotificationFactory.js";
 import { NotificationType } from "../core/notifications/types.js";
 import { notificacionService } from "../service/NotificationService.js";
+import { PrismaClient } from "@prisma/client";
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -57,18 +57,22 @@ router.patch("/config/:profesorId", async (req, res) => {
     }
 
     // Obtener la configuración actual
-    const currentConfig =
-      await notificacionService.getConfigByProfesor(profesorId);
+    const currentConfig = await notificacionService.getConfigByProfesor(profesorId);
     if (!currentConfig) {
       return res.status(404).json({ error: "Configuración no encontrada" });
     }
 
     // Si se está desactivando webPush, eliminar la suscripción
     if (updates.webPushEnabled === false && currentConfig.webPushEnabled) {
-      const subscriptions =
-        await notificacionService.getWebPushSubscriptions(profesorId);
-      for (const sub of subscriptions) {
-        await notificacionService.deleteWebPushSubscription(sub.id);
+      try {
+        const subscriptions = await notificacionService.getWebPushSubscriptions(profesorId);
+        for (const sub of subscriptions) {
+          await notificacionService.deleteWebPushSubscription(sub.id);
+        }
+      } catch (error) {
+        return res.status(500).json({
+          error: "Error al actualizar configuración",
+        });
       }
     }
 
@@ -114,28 +118,33 @@ router.post("/push-subscription", async (req, res) => {
       });
     }
 
-    // Guardar la suscripción
-    const saved = await notificacionService.saveWebPushSubscription(
-      profesorId,
-      subscription,
-    );
+    try {
+      // Guardar la suscripción
+      const saved = await notificacionService.saveWebPushSubscription(
+        profesorId,
+        subscription,
+      );
 
-    // Actualizar la configuración del profesor
-    const currentConfig =
-      await notificacionService.getConfigByProfesor(profesorId);
-    await notificacionService.updateConfig(profesorId, {
-      ...currentConfig,
-      webPushEnabled: true,
-    });
-
-    return res.status(201).json({
-      message: "Suscripción guardada exitosamente",
-      subscription: saved,
-      config: {
+      // Actualizar la configuración del profesor
+      const currentConfig = await notificacionService.getConfigByProfesor(profesorId);
+      await notificacionService.updateConfig(profesorId, {
         ...currentConfig,
         webPushEnabled: true,
-      },
-    });
+      });
+
+      return res.status(201).json({
+        message: "Suscripción guardada exitosamente",
+        subscription: saved,
+        config: {
+          ...currentConfig,
+          webPushEnabled: true,
+        },
+      });
+    } catch (error) {
+      return res.status(500).json({
+        error: "Error al procesar la solicitud",
+      });
+    }
   } catch (error) {
     return res.status(500).json({
       error: "Error al procesar la solicitud",

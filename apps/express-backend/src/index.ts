@@ -43,29 +43,55 @@ app.use("/api/diaries/notificaciones", notificationsRouter);
 let server: import("http").Server | undefined;
 
 export const startServer = (): Promise<import("http").Server> => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     if (process.env.NODE_ENV === "test") {
       resolve(undefined as any);
       return;
     }
 
-    const port = process.env.PORT || 3005;
+    // Si ya hay un servidor corriendo, lo detenemos primero
+    if (server) {
+      server.close();
+      server = undefined;
+    }
 
-    server = app.listen(port, () => {
-      console.log(`Servidor corriendo en http://localhost:${port}`);
-      resolve(server!);
-    });
+    const port = process.env.PORT || 3005;
+    const timeout = setTimeout(() => {
+      reject(new Error("Timeout al iniciar el servidor"));
+    }, 10000); // 10 segundos de timeout
+
+    try {
+      server = app.listen(port, () => {
+        clearTimeout(timeout);
+        console.log(`Servidor corriendo en http://localhost:${port}`);
+        resolve(server!);
+      });
+
+      server.on("error", (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+    } catch (error) {
+      clearTimeout(timeout);
+      reject(error);
+    }
   });
 };
 
 export const stopServer = async (): Promise<void> => {
   if (server) {
     return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Timeout al detener el servidor"));
+      }, 5000); // 5 segundos de timeout
+
       server!.close((err) => {
+        clearTimeout(timeout);
         if (err) {
           reject(err);
           return;
         }
+        server = undefined;
         resolve();
       });
     });

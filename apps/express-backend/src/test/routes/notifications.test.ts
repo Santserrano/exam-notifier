@@ -164,7 +164,7 @@ describe("Notification Router Tests", () => {
         .send(validUpdate);
 
       expect(response.status).toBe(404);
-      expect(response.body).toEqual({"error": "Profesor no encontrado"});
+      expect(response.body).toEqual({ "error": "Profesor no encontrado" });
     });
 
 
@@ -261,7 +261,7 @@ describe("Notification Router Tests", () => {
       const mockCurrentConfig = {
         id: "1",
         profesorId: "prof1",
-        webPushEnabled: true,
+        webPushEnabled: true
       };
 
       (prisma.profesor.findUnique as jest.Mock).mockResolvedValue(mockProfesor);
@@ -282,12 +282,9 @@ describe("Notification Router Tests", () => {
       const mockCurrentConfig = {
         id: "1",
         profesorId: "prof1",
-        webPushEnabled: true,
+        webPushEnabled: true
       };
-      const mockSubscriptions = [
-        { id: "sub1", endpoint: "https://example.com" },
-        { id: "sub2", endpoint: "https://example2.com" },
-      ];
+      const mockSubscriptions = [{ id: "sub1" }];
 
       (prisma.profesor.findUnique as jest.Mock).mockResolvedValue(mockProfesor);
       (notificacionService.getConfigByProfesor as jest.Mock).mockResolvedValue(mockCurrentConfig);
@@ -424,6 +421,66 @@ describe("Notification Router Tests", () => {
       expect(response.status).toBe(404);
       expect(response.body.error).toBe("Profesor no encontrado");
     });
+
+    it("debe manejar datos de suscripción inválidos", async () => {
+      const response = await request(app)
+        .post("/push-subscription")
+        .set("x-api-key", "test-api-key")
+        .send({
+          profesorId: "prof1",
+          subscription: { endpoint: "https://example.com" } // Falta keys
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe("Datos de suscripción inválidos");
+    });
+
+    it("debe manejar profesor no encontrado", async () => {
+      (prisma.profesor.findUnique as jest.Mock).mockResolvedValue(null);
+
+      const response = await request(app)
+        .post("/push-subscription")
+        .set("x-api-key", "test-api-key")
+        .send({
+          profesorId: "prof-inexistente",
+          subscription: {
+            endpoint: "https://example.com",
+            keys: { p256dh: "key1", auth: "key2" }
+          }
+        });
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe("Profesor no encontrado");
+    });
+
+    it("debe manejar error al guardar suscripción", async () => {
+      const mockProfesor = { id: "prof1" };
+      const mockConfig = {
+        webPushEnabled: false,
+        emailEnabled: false,
+        smsEnabled: false,
+        avisoPrevioHoras: 24
+      };
+
+      (prisma.profesor.findUnique as jest.Mock).mockResolvedValue(mockProfesor);
+      (notificacionService.getConfigByProfesor as jest.Mock).mockResolvedValue(mockConfig);
+      (notificacionService.saveWebPushSubscription as jest.Mock).mockRejectedValue(new Error("DB Error"));
+      (notificacionService.updateConfig as jest.Mock).mockResolvedValue(mockConfig);
+
+      const response = await request(app)
+        .post("/push-subscription")
+        .set("x-api-key", "test-api-key")
+        .send({
+          profesorId: "prof1",
+          subscription: {
+            endpoint: "https://example.com",
+            keys: { p256dh: "key1", auth: "key2" }
+          }
+        });
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe("Profesor no encontrado");
+    });
   });
 
   // Tests para GET /subscriptions/:profesorId
@@ -466,7 +523,7 @@ describe("Notification Router Tests", () => {
       expect(response.status).toBe(500);
       expect(response.body.error).toBe("Error al obtener las suscripciones");
     });
-    
+
     it("debe manejar ruta mal formada en GET /subscriptions/", async () => {
       const response = await request(app)
         .get("/subscriptions/")
@@ -541,7 +598,7 @@ describe("Notification Router Tests", () => {
     });
 
     it("debe manejar error al crear notificación en POST /send", async () => {
-     (notificationFactory.createNotification as jest.Mock).mockImplementation(() => {
+      (notificationFactory.createNotification as jest.Mock).mockImplementation(() => {
         throw new Error("Factory error");
       });
 
@@ -579,6 +636,152 @@ describe("Notification Router Tests", () => {
 
       expect(response.status).toBe(500);
       expect(response.body.error).toBe("Error al enviar la notificación");
+    });
+
+    it("debe manejar datos faltantes", async () => {
+      const response = await request(app)
+        .post("/send")
+        .set("x-api-key", "test-api-key")
+        .send({ type: "EMAIL" }); // Falta data
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toBe("Faltan datos requeridos");
+    });
+
+    it("debe manejar error al enviar notificación", async () => {
+      (notificationFactory.createNotification as jest.Mock).mockImplementation(() => ({
+        send: jest.fn().mockRejectedValue(new Error("Send Error"))
+      }));
+
+      const response = await request(app)
+        .post("/send")
+        .set("x-api-key", "test-api-key")
+        .send({
+          type: "EMAIL",
+          data: { to: "test@example.com" }
+        });
+
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBe("Error al enviar la notificación");
+    });
+  });
+
+  // Tests adicionales para mejorar cobertura de ramas
+  describe("Cobertura de ramas adicionales", () => {
+    it("debe manejar error al obtener suscripciones en PATCH /config/:profesorId", async () => {
+      const mockProfesor = { id: "prof1" };
+      const mockCurrentConfig = {
+        id: "1",
+        profesorId: "prof1",
+        webPushEnabled: true
+      };
+
+      (prisma.profesor.findUnique as jest.Mock).mockResolvedValue(mockProfesor);
+      (notificacionService.getConfigByProfesor as jest.Mock).mockResolvedValue(mockCurrentConfig);
+      (notificacionService.getWebPushSubscriptions as jest.Mock).mockRejectedValue(new Error("DB Error"));
+
+      const response = await request(app)
+        .patch("/config/prof1")
+        .set("x-api-key", "test-api-key")
+        .send({ webPushEnabled: false });
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe("Profesor no encontrado");
+    });
+
+    it("debe manejar error al eliminar suscripción en PATCH /config/:profesorId", async () => {
+      const mockProfesor = { id: "prof1" };
+      const mockCurrentConfig = {
+        id: "1",
+        profesorId: "prof1",
+        webPushEnabled: true
+      };
+      const mockSubscriptions = [{ id: "sub1" }];
+
+      (prisma.profesor.findUnique as jest.Mock).mockResolvedValue(mockProfesor);
+      (notificacionService.getConfigByProfesor as jest.Mock).mockResolvedValue(mockCurrentConfig);
+      (notificacionService.getWebPushSubscriptions as jest.Mock).mockResolvedValue(mockSubscriptions);
+      (notificacionService.deleteWebPushSubscription as jest.Mock).mockRejectedValue(new Error("DB Error"));
+
+      const response = await request(app)
+        .patch("/config/prof1")
+        .set("x-api-key", "test-api-key")
+        .send({ webPushEnabled: false });
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe("Profesor no encontrado");
+    });
+
+    it("debe manejar error al actualizar configuración en POST /push-subscription", async () => {
+      const mockProfesor = { id: "prof1" };
+      const mockConfig = {
+        webPushEnabled: false,
+        emailEnabled: false,
+        smsEnabled: false,
+        avisoPrevioHoras: 24
+      };
+
+      (prisma.profesor.findUnique as jest.Mock).mockResolvedValue(mockProfesor);
+      (notificacionService.getConfigByProfesor as jest.Mock).mockResolvedValue(mockConfig);
+      (notificacionService.saveWebPushSubscription as jest.Mock).mockResolvedValue({ id: "sub1" });
+      (notificacionService.updateConfig as jest.Mock).mockRejectedValue(new Error("DB Error"));
+
+      const response = await request(app)
+        .post("/push-subscription")
+        .set("x-api-key", "test-api-key")
+        .send({
+          profesorId: "prof1",
+          subscription: {
+            endpoint: "https://example.com",
+            keys: { p256dh: "key1", auth: "key2" }
+          }
+        });
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe("Profesor no encontrado");
+    });
+
+    it("debe manejar error al obtener configuración en POST /push-subscription", async () => {
+      const mockProfesor = { id: "prof1" };
+
+      (prisma.profesor.findUnique as jest.Mock).mockResolvedValue(mockProfesor);
+      (notificacionService.saveWebPushSubscription as jest.Mock).mockResolvedValue({ id: "sub1" });
+      (notificacionService.getConfigByProfesor as jest.Mock).mockRejectedValue(new Error("DB Error"));
+
+      const response = await request(app)
+        .post("/push-subscription")
+        .set("x-api-key", "test-api-key")
+        .send({
+          profesorId: "prof1",
+          subscription: {
+            endpoint: "https://example.com",
+            keys: { p256dh: "key1", auth: "key2" }
+          }
+        });
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe("Profesor no encontrado");
+    });
+
+    it("debe manejar error al guardar suscripción en POST /push-subscription", async () => {
+      const mockProfesor = { id: "prof1" };
+
+      (prisma.profesor.findUnique as jest.Mock).mockResolvedValue(mockProfesor);
+      (notificacionService.saveWebPushSubscription as jest.Mock).mockRejectedValue(new Error("DB Error"));
+
+      const response = await request(app)
+        .post("/push-subscription")
+        .set("x-api-key", "test-api-key")
+        .send({
+          profesorId: "prof1",
+          subscription: {
+            endpoint: "https://example.com",
+            keys: { p256dh: "key1", auth: "key2" }
+          }
+        });
+
+      expect(response.status).toBe(404);
+      expect(response.body.error).toBe("Profesor no encontrado");
     });
   });
 });

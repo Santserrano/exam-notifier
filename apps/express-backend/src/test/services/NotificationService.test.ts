@@ -59,10 +59,29 @@ describe("NotificationService", () => {
     expect(config.webPushEnabled).toBe(false);
   });
 
+  it("getConfigByProfesor - error al crear config", async () => {
+    mockPrisma.profesor.findUnique.mockResolvedValue({ id: "prof1" });
+    mockPrisma.notificacionConfig.findUnique.mockResolvedValue(null);
+    mockPrisma.notificacionConfig.create.mockRejectedValue(new Error("fail"));
+    const config = await notificacionService.getConfigByProfesor("prof1");
+    expect(config.webPushEnabled).toBe(false);
+  });
+
   it("getNotifications - retorna mesas", async () => {
     mockPrisma.mesaDeExamen.findMany.mockResolvedValue([{ id: 1 }]);
     const result = await notificacionService.getNotifications();
     expect(result).toEqual([{ id: 1 }]);
+  });
+
+  it("getNotifications - retorna mesas vacías", async () => {
+    mockPrisma.mesaDeExamen.findMany.mockResolvedValue([]);
+    const result = await notificacionService.getNotifications();
+    expect(result).toEqual([]);
+  });
+
+  it("getNotifications - error al obtener mesas", async () => {
+    mockPrisma.mesaDeExamen.findMany.mockRejectedValue(new Error("fail"));
+    await expect(notificacionService.getNotifications()).rejects.toThrow();
   });
 
   it("updateConfig - actualiza config", async () => {

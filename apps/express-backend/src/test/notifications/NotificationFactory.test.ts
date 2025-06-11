@@ -148,7 +148,7 @@ describe("NotificationFactory", () => {
   it("Debe pasar datos correctos a EmailNotification", () => {
     const emailNotificationSpy = jest
       .spyOn(EmailNotification.prototype, "send")
-      .mockImplementation(async () => {});
+      .mockImplementation(async () => { });
     const factory = new NotificationFactory();
     const notification = factory.createNotification("email", mockData);
     notification.send();
@@ -159,7 +159,7 @@ describe("NotificationFactory", () => {
   it("Debe pasar datos correctos a WhatsAppNotification", () => {
     const sendSpy = jest
       .spyOn(WhatsAppNotification.prototype, "send")
-      .mockImplementation(async () => {});
+      .mockImplementation(async () => { });
     const factory = new NotificationFactory();
     const notification = factory.createNotification("whatsapp", mockData);
     notification.send();
