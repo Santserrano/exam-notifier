@@ -156,24 +156,24 @@ export const loader = async (args: LoaderFunctionArgs) => {
     }, index: number) => {
       const fechaObj = new Date(m.fecha);
       const fechaFormateada = `${fechaObj.getDate()} ${meses[fechaObj.getMonth()]}`;
-      const modalidad = m.modalidad || "Presencial";
+      const modalidad = m.modalidad ?? "Presencial";
       
-      const materiaNombre = typeof m.materia === 'string' ? m.materia : m.materia?.nombre || '';
-      const carreraNombre = typeof m.carrera === 'string' ? m.carrera : m.carrera?.nombre || m.carrera?.id || '';
-      const materiaCarreraNombre = typeof m.materia === 'object' && m.materia?.carrera?.nombre ? m.materia.carrera.nombre : '';
+      const materiaNombre = typeof m.materia === 'string' ? m.materia : m.materia?.nombre ?? '';
+      const carreraNombre = typeof m.carrera === 'string' ? m.carrera : (m.carrera?.nombre ?? m.carrera?.id) || '';
+      const materiaCarreraNombre = typeof m.materia === 'object' && m.materia.carrera?.nombre ? m.materia.carrera.nombre : '';
       
       return {
-        id: m.id || `mesa-${index}`,
+        id: m.id ?? `mesa-${index}`,
         materia: materiaNombre,
         carrera: materiaCarreraNombre || carreraNombre,
         fecha: fechaFormateada,
         fechaOriginal: m.fecha,
         modalidad,
         color: modalidad === "Virtual" ? "blue" : "green",
-        sede: m.sede || "Central",
+        sede: m.sede ?? "Central",
         profesorNombre: typeof m.profesor === 'string' ? m.profesor : m.profesor?.nombre ? `${m.profesor.nombre} ${m.profesor.apellido}` : '',
         vocalNombre: typeof m.vocal === 'string' ? m.vocal : m.vocal?.nombre ? `${m.vocal.nombre} ${m.vocal.apellido}` : '',
-        aula: m.aula || "Aula por confirmar",
+        aula: m.aula ?? "Aula por confirmar",
         webexLink: m.webexLink
       };
     });
@@ -182,8 +182,8 @@ export const loader = async (args: LoaderFunctionArgs) => {
       id: string; 
       nombre: string; 
       apellido: string; 
-      carreras?: Array<{ id: string; nombre: string }>; 
-      materias?: Array<{ id: string; nombre: string; carreraId: string }> 
+      carreras?: { id: string; nombre: string }[]; 
+      materias?: { id: string; nombre: string; carreraId: string }[] 
     }) => ({
       id: profesor.id,
       nombre: profesor.nombre,
@@ -199,7 +199,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
       })) : []
     })) : [];
 
-    const carrerasProcesadas = Array.isArray(carreras) ? carreras.map((carrera: { id: string; nombre: string; materias?: Array<{ id: string; nombre: string }> }) => ({
+    const carrerasProcesadas = Array.isArray(carreras) ? carreras.map((carrera: { id: string; nombre: string; materias?: { id: string; nombre: string }[] }) => ({
       id: carrera.id,
       nombre: carrera.nombre,
       materias: Array.isArray(carrera.materias) ? carrera.materias.map((m: { id: string; nombre: string }) => ({
@@ -348,11 +348,11 @@ export default function AdminRoute() {
     const isEdit = !!mesa;
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
-    const [modalidad, setModalidad] = useState<Modalidad>(mesa?.modalidad || "Presencial");
-    const [carreraSeleccionada, setCarreraSeleccionada] = useState(mesa?.carrera || "");
-    const [materiaSeleccionada, setMateriaSeleccionada] = useState(mesa?.materia || "");
-    const [aula, setAula] = useState(mesa?.aula || "");
-    const [webexLink, setWebexLink] = useState(mesa?.webexLink || "");
+    const [modalidad, setModalidad] = useState<Modalidad>(mesa?.modalidad ?? "Presencial");
+    const [carreraSeleccionada, setCarreraSeleccionada] = useState(mesa?.carrera ?? "");
+    const [materiaSeleccionada, setMateriaSeleccionada] = useState(mesa?.materia ?? "");
+    const [aula, setAula] = useState(mesa?.aula ?? "");
+    const [webexLink, setWebexLink] = useState(mesa?.webexLink ?? "");
 
     // Resetear materia cuando cambia la carrera
     React.useEffect(() => {
@@ -396,7 +396,7 @@ export default function AdminRoute() {
             type="date"
             name="fecha"
             required
-            defaultValue={mesa?.fecha || ""}
+            defaultValue={mesa?.fecha ?? ""}
           />
           <label className="text-sm font-semibold text-green-900">
             Carrera
@@ -406,7 +406,7 @@ export default function AdminRoute() {
             className="rounded border px-2 py-2"
             required
             value={carreraSeleccionada}
-            onChange={(e) => setCarreraSeleccionada(e.target.value)}
+            onChange={(e) => { setCarreraSeleccionada(e.target.value); }}
           >
             <option value="">Seleccionar</option>
             {carreras.map((c: CarreraProcesada) => (
@@ -423,7 +423,7 @@ export default function AdminRoute() {
             className="rounded border px-2 py-2"
             required
             value={materiaSeleccionada}
-            onChange={(e) => setMateriaSeleccionada(e.target.value)}
+            onChange={(e) => { setMateriaSeleccionada(e.target.value); }}
             disabled={!carreraSeleccionada}
           >
             <option value="">Seleccionar</option>
@@ -442,7 +442,7 @@ export default function AdminRoute() {
             name="docenteTitular"
             className="rounded border px-2 py-2"
             required
-            defaultValue={mesa?.profesor || ""}
+            defaultValue={mesa?.profesor ?? ""}
             disabled={!materiaSeleccionada}
           >
             <option value="">Seleccionar</option>
@@ -459,7 +459,7 @@ export default function AdminRoute() {
             name="docenteVocal"
             className="rounded border px-2 py-2"
             required
-            defaultValue={mesa?.vocal || ""}
+            defaultValue={mesa?.vocal ?? ""}
             disabled={!materiaSeleccionada}
           >
             <option value="">Seleccionar</option>
@@ -474,7 +474,7 @@ export default function AdminRoute() {
             name="hora"
             className="rounded border px-2 py-2"
             required
-            defaultValue={mesa?.hora || ""}
+            defaultValue={mesa?.hora ?? ""}
           >
             <option value="">Seleccionar</option>
             {horas.map((h) => (
@@ -493,7 +493,7 @@ export default function AdminRoute() {
                 name="modalidad"
                 value="Presencial"
                 checked={modalidad === "Presencial"}
-                onChange={() => setModalidad("Presencial")}
+                onChange={() => { setModalidad("Presencial"); }}
               />
               Presencial
             </label>
@@ -503,7 +503,7 @@ export default function AdminRoute() {
                 name="modalidad"
                 value="Virtual"
                 checked={modalidad === "Virtual"}
-                onChange={() => setModalidad("Virtual")}
+                onChange={() => { setModalidad("Virtual"); }}
               />
               Virtual
             </label>

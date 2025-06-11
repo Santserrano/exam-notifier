@@ -84,6 +84,7 @@ router.post('/mesas', async (req, res) => {
       modalidad,
       aula,
       webexLink,
+      horaTexto
     } = req.body;
 
     // Validar datos requeridos
@@ -100,9 +101,6 @@ router.post('/mesas', async (req, res) => {
     console.log('Fecha original:', fecha);
     console.log('Fecha como Date:', fechaObj.toISOString());
 
-    // Usar la fecha directamente sin convertir
-    const fechaFinal = fechaObj;
-
     // Validar modalidad
     if (modalidad && !['Presencial', 'Virtual'].includes(modalidad)) {
       return res.status(400).json({ error: 'Modalidad inválida' });
@@ -117,21 +115,22 @@ router.post('/mesas', async (req, res) => {
       return res.status(400).json({ error: 'El campo webexLink es requerido para modalidad virtual' });
     }
 
-    const mesa = await mesaService.createMesa({
-      profesor,
-      vocal,
-      carrera,
-      materia,
-      fecha: fechaFinal.toISOString(),
-      horaTexto: req.body.hora || req.body.horaTexto,
-      descripcion,
-      cargo,
+    const mesaData = {
+      profesorId: profesor,
+      vocalId: vocal,
+      carreraId: carrera,
+      materiaId: materia,
+      fecha: fechaObj,
+      horaTexto: horaTexto || null,
+      descripcion: descripcion || '',
+      cargo: cargo || '',
       verification: verification ?? false,
-      modalidad,
-      aula,
-      webexLink,
-    });
+      modalidad: modalidad || 'Presencial',
+      aula: aula || null,
+      webexLink: webexLink || null
+    };
 
+    const mesa = await mesaService.createMesa(mesaData);
     res.status(201).json(mesa);
   } catch (error) {
     console.error('Error al crear mesa:', error);
@@ -159,11 +158,8 @@ router.put('/mesas/:id', async (req, res) => {
 router.delete('/mesas/:id', async (req, res) => {
   try {
     const id = parseInt(req.params.id)
-    const mesa = await mesaService.deleteMesa(id)
-    if (!mesa) {
-      return res.status(404).json({ error: 'Mesa no encontrada' })
-    }
-    return res.json(mesa)
+    await mesaService.deleteMesa(id)
+    return res.status(204).send()
   } catch (error) {
     return res.status(500).json({ error: 'Error al eliminar la mesa' })
   }
@@ -198,41 +194,17 @@ router.put('/profesores/:profesorId/config', async (req, res) => {
       where: { id: profesorId },
       data: {
         carreras: {
-          set: carreras.map((id: string) => ({ id }))
+          connect: carreras.map((id: string) => ({ id }))
         },
         materias: {
-          set: materias.map((id: string) => ({ id }))
+          connect: materias.map((id: string) => ({ id }))
         }
       }
     });
 
-    // Obtener el profesor actualizado con sus relaciones
-    const profesorActualizado = await prisma.profesor.findUnique({
-      where: { id: profesorId },
-      include: {
-        carreras: {
-          select: {
-            id: true,
-            nombre: true
-          }
-        },
-        materias: {
-          select: {
-            id: true,
-            nombre: true,
-            carreraId: true
-          }
-        }
-      }
-    });
-
-    res.json(profesorActualizado);
+    res.json({ message: 'Configuración actualizada correctamente' });
   } catch (error) {
-    console.error('Error al actualizar configuración:', error);
-    res.status(500).json({
-      error: 'Error al actualizar la configuración',
-      details: error instanceof Error ? error.message : 'Error desconocido'
-    });
+    res.status(500).json({ error: 'Error al actualizar la configuración' });
   }
 });
 

@@ -94,7 +94,7 @@ export function ActivarNotificaciones() {
     setToastMessage(message);
     setToastType(type);
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 5000);
+    setTimeout(() => { setShowToast(false); }, 5000);
   };
 
   const activarNotificaciones = async () => {
