@@ -102,7 +102,6 @@ class MesaService {
 
     async createMesa(data: MesaCreateInput): Promise<MesaResponse> {
         try {
-            // Validar datos requeridos
             if (!data.profesor || !data.vocal || !data.carrera || !data.materia || !data.fecha) {
                 throw new Error("Faltan datos requeridos");
             }
@@ -110,7 +109,6 @@ class MesaService {
             console.log('Fecha recibida en createMesa:', data.fecha);
             console.log('Fecha como Date:', new Date(data.fecha).toISOString());
 
-            // Verificar que el profesor existe
             const profesor = await prisma.profesor.findUnique({
                 where: { id: data.profesor },
             });
@@ -118,7 +116,6 @@ class MesaService {
                 throw new Error("Profesor no encontrado");
             }
 
-            // Verificar que el vocal existe
             const vocal = await prisma.profesor.findUnique({
                 where: { id: data.vocal },
             });
@@ -126,7 +123,6 @@ class MesaService {
                 throw new Error("Vocal no encontrado");
             }
 
-            // Verificar que la carrera existe
             const carrera = await prisma.carrera.findUnique({
                 where: { id: data.carrera },
             });
@@ -134,7 +130,6 @@ class MesaService {
                 throw new Error("Carrera no encontrada");
             }
 
-            // Verificar que la materia existe
             const materia = await prisma.materia.findUnique({
                 where: { id: data.materia },
                 include: { carrera: true },
@@ -172,7 +167,6 @@ class MesaService {
 
             console.log('Fecha guardada en la mesa:', nuevaMesa.fecha.toISOString());
 
-            // Obtener datos del profesor y vocal
             const [profesorData, vocalData] = await Promise.all([
                 prisma.profesor.findUnique({ where: { id: data.profesor } }),
                 prisma.profesor.findUnique({ where: { id: data.vocal } })
@@ -182,7 +176,6 @@ class MesaService {
                 throw new Error('Profesor o vocal no encontrado');
             }
 
-            // Preparar datos comunes para las notificaciones
             const fechaObj = new Date(data.fecha);
             console.log('Fecha para notificaciones:', fechaObj.toISOString());
 
@@ -193,13 +186,11 @@ class MesaService {
                 year: 'numeric'
             });
 
-            // Obtener configuraciones de notificaciones
             const [configProfesor, configVocal] = await Promise.all([
                 notificacionService.getConfigByProfesor(data.profesor),
                 notificacionService.getConfigByProfesor(data.vocal)
             ]);
 
-            // Enviar notificaciones al profesor
             if (configProfesor) {
                 try {
                     const notificationData = {
@@ -214,7 +205,6 @@ class MesaService {
                         }
                     };
 
-                    // Enviar notificaciones según la configuración
                     if (configProfesor.webPushEnabled) {
                         const pushNotification = notificationFactory.createNotification('push', notificationData);
                         await pushNotification.send();
@@ -240,7 +230,6 @@ class MesaService {
                 }
             }
 
-            // Enviar notificaciones al vocal
             if (configVocal) {
                 try {
                     const notificationData = {
@@ -255,7 +244,6 @@ class MesaService {
                         }
                     };
 
-                    // Enviar notificaciones según la configuración
                     if (configVocal.webPushEnabled) {
                         const pushNotification = notificationFactory.createNotification('push', notificationData);
                         await pushNotification.send();
@@ -338,4 +326,6 @@ class MesaService {
     }
 }
 
-export const mesaService = new MesaService(); 
+export const mesaService = new MesaService();
+export type { MesaCreateInput, MesaResponse, MesaWithRelations };
+export { MesaService }; 
