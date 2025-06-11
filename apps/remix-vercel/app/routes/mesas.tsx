@@ -22,10 +22,20 @@ import HeaderClerk from "../components/HeaderClerk";
 import { getServerEnv } from "~/utils/env.server";
 import { getNotificationConfig } from "~/utils/notification.server";
 
+interface Aceptacion {
+  mesaId: string;
+  profesor: {
+    id: string;
+    nombre: string;
+    apellido: string;
+  };
+  estado: "PENDIENTE" | "ACEPTADA" | "RECHAZADA";
+}
+
 interface MesaRaw {
   id: string | number;
   fecha: string;
-  modalidad?: string;
+  modalidad?: "Presencial" | "Virtual";
   materia?: {
     id?: string;
     nombre?: string;
@@ -57,6 +67,15 @@ interface MesaRaw {
   verification?: boolean;
 }
 
+interface AceptacionMesa {
+  profesor: {
+    id: string;
+    nombre: string;
+    apellido: string;
+  };
+  estado: "PENDIENTE" | "ACEPTADA" | "RECHAZADA";
+}
+
 interface MesaProcesada {
   id: string;
   materia: string;
@@ -80,14 +99,7 @@ interface MesaProcesada {
   cargo?: string;
   verification?: boolean;
   estadoAceptacion: "PENDIENTE" | "ACEPTADA" | "RECHAZADA";
-  aceptaciones?: Array<{
-    profesor: {
-      id: string;
-      nombre: string;
-      apellido: string;
-    };
-    estado: "PENDIENTE" | "ACEPTADA" | "RECHAZADA";
-  }>;
+  aceptaciones: AceptacionMesa[];
   horaTexto?: string;
 }
 
@@ -96,141 +108,99 @@ interface PushEvent extends Event {
 }
 
 interface PushMessageData {
-  json(): any;
+  json(): unknown;
 }
 
-export const loader = async (args: LoaderFunctionArgs) => {
-  const { userId } = await getAuth(args);
+type ViewType = 'list' | 'calendar' | 'students' | 'detail';
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const url = new URL(request.url);
+  const searchParams = new URLSearchParams(url.search);
+  const userId = searchParams.get('userId');
 
   if (!userId) {
-    return redirect("/sign-in");
+    throw new Error('Se requiere el ID del usuario');
   }
 
-  const user = await clerkClient.users.getUser(userId);
-  const role = user.publicMetadata.role;
+  const response = await fetch(`${process.env.API_URL}/mesas?userId=${userId}`);
+  const data = await response.json() as { mesas: MesaRaw[], aceptaciones: Aceptacion[] };
 
-  if (role !== "profesor") {
-    return redirect("/");
-  }
+  const mesasProcesadas = data.mesas.map((m: MesaRaw, index: number) => {
+    const fechaObj = new Date(m.fecha);
+    const fechaFormateada = fechaObj.toLocaleDateString('es-AR', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+      day: 'numeric',
+      month: 'short'
+    }).replace('.', '');
+    const modalidad = m.modalidad === "Virtual" ? "Virtual" : "Presencial";
 
-  const { API_URL, INTERNAL_API_KEY, VAPID_PUBLIC_KEY } = getServerEnv();
-  const notificationConfig = await getNotificationConfig(args);
+    // Asegurarse de que materia y carrera sean objetos con id y nombre
+    const materiaObj = typeof m.materia === 'object' ? m.materia : { id: m.materia, nombre: m.materia };
+    const carreraObj = typeof m.carrera === 'object' ? m.carrera : { id: m.carrera, nombre: m.carrera };
+    
+    // Asegurarse de que profesor y vocal sean objetos con id, nombre y apellido
+    const profesorObj = typeof m.profesor === 'object' ? m.profesor : { 
+      id: m.profesor, 
+      nombre: m.profesor?.toString().split(' ')[0] ?? '', 
+      apellido: m.profesor?.toString().split(' ')[1] ?? '' 
+    };
+    const vocalObj = typeof m.vocal === 'object' ? m.vocal : { 
+      id: m.vocal, 
+      nombre: m.vocal?.toString().split(' ')[0] ?? '', 
+      apellido: m.vocal?.toString().split(' ')[1] ?? '' 
+    };
 
-  try {
-    // Obtener las mesas y aceptaciones del backend
-    const [mesasResponse, aceptacionesResponse] = await Promise.all([
-      fetch(`${API_URL}/api/diaries/mesas`, {
-        headers: {
-          "x-api-key": INTERNAL_API_KEY,
-          "Content-Type": "application/json",
-        },
-      }).catch((error: unknown) => {
-        console.error("Error al obtener mesas:", error);
-        return { ok: false, status: 500, json: () => [] };
-      }),
-      fetch(`${API_URL}/api/diaries/mesas/aceptaciones`, {
-        headers: {
-          "x-api-key": INTERNAL_API_KEY,
-          "Content-Type": "application/json",
-        },
-      }).catch((error: unknown) => {
-        console.error("Error al obtener aceptaciones:", error);
-        return { ok: false, status: 500, json: () => [] };
-      }),
-    ]);
+    // Filtrar aceptaciones para esta mesa
+    const aceptacionesMesa = data.aceptaciones
+      .filter((a: Aceptacion) => a.mesaId === m.id.toString())
+      .map((a: Aceptacion): AceptacionMesa => ({
+        profesor: a.profesor,
+        estado: a.estado
+      }));
 
-    const [mesas, aceptaciones] = await Promise.all([
-      mesasResponse.ok ? mesasResponse.json() : [],
-      aceptacionesResponse.ok ? aceptacionesResponse.json() : [],
-    ]);
+    // Determinar el estado de aceptación para el profesor actual
+    const aceptacionProfesor = aceptacionesMesa.find(a => a.profesor.id === userId);
+    const estadoAceptacion = aceptacionProfesor?.estado || "PENDIENTE";
 
-    const mesasProcesadas = mesas.map((m: MesaRaw, index: number) => {
-      const fechaObj = new Date(m.fecha);
-      const fechaFormateada = fechaObj.toLocaleDateString('es-AR', {
-        timeZone: 'America/Argentina/Buenos_Aires',
-        day: 'numeric',
-        month: 'short'
-      }).replace('.', '');
-      const modalidad = m.modalidad === "Virtual" ? "Virtual" : "Presencial";
+    return {
+      id: m.id.toString() || `mesa-${index}`,
+      materia: materiaObj.nombre ?? '',
+      materiaId: materiaObj.id ?? '',
+      carrera: carreraObj.nombre ?? '',
+      carreraId: carreraObj.id ?? '',
+      fecha: fechaFormateada,
+      fechaOriginal: m.fecha,
+      futura: new Date(m.fecha) > new Date(),
+      modalidad,
+      color: modalidad === "Virtual" ? "blue" : "green",
+      sede: m.sede ?? "Central",
+      profesorId: profesorObj.id ?? '',
+      vocalId: vocalObj.id ?? '',
+      profesorNombre: `${profesorObj.nombre} ${profesorObj.apellido}`.trim(),
+      vocalNombre: `${vocalObj.nombre} ${vocalObj.apellido}`.trim(),
+      aula: m.aula ?? '',
+      hora: m.hora,
+      webexLink: m.webexLink,
+      descripcion: m.descripcion,
+      cargo: m.cargo,
+      verification: m.verification,
+      estadoAceptacion,
+      aceptaciones: aceptacionesMesa
+    } as MesaProcesada;
+  });
 
-      // Asegurarse de que materia y carrera sean objetos con id y nombre
-      const materiaObj = typeof m.materia === 'object' ? m.materia : { id: m.materia, nombre: m.materia };
-      const carreraObj = typeof m.carrera === 'object' ? m.carrera : { id: m.carrera, nombre: m.carrera };
-      
-      // Asegurarse de que profesor y vocal sean objetos con id, nombre y apellido
-      const profesorObj = typeof m.profesor === 'object' ? m.profesor : { 
-        id: m.profesor, 
-        nombre: m.profesor?.toString().split(' ')[0] || '', 
-        apellido: m.profesor?.toString().split(' ')[1] || '' 
-      };
-      const vocalObj = typeof m.vocal === 'object' ? m.vocal : { 
-        id: m.vocal, 
-        nombre: m.vocal?.toString().split(' ')[0] || '', 
-        apellido: m.vocal?.toString().split(' ')[1] || '' 
-      };
+  const env = {
+    VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY ?? '',
+    API_URL: process.env.API_URL ?? '',
+    INTERNAL_API_KEY: process.env.INTERNAL_API_KEY ?? ''
+  };
 
-      // Filtrar aceptaciones para esta mesa
-      const aceptacionesMesa = aceptaciones.filter((a: any) => a.mesaId === m.id);
-
-      // Determinar el estado de aceptación para el profesor actual
-      const aceptacionProfesor = aceptacionesMesa.find((a: any) => a.profesor.id === userId);
-      const estadoAceptacion = aceptacionProfesor?.estado || "PENDIENTE";
-
-      return {
-        id: m.id?.toString() || `mesa-${index}`,
-        materia: materiaObj.nombre || '',
-        materiaId: materiaObj.id || '',
-        carrera: carreraObj.nombre || '',
-        carreraId: carreraObj.id || '',
-        fecha: fechaFormateada,
-        fechaOriginal: m.fecha,
-        modalidad,
-        color: modalidad === "Virtual" ? "blue" : "green",
-        sede: m.sede || "Central",
-        profesorId: profesorObj.id || '',
-        vocalId: vocalObj.id || '',
-        profesorNombre: `${profesorObj.nombre || ''} ${profesorObj.apellido || ''}`.trim(),
-        vocalNombre: `${vocalObj.nombre || ''} ${vocalObj.apellido || ''}`.trim(),
-        aula: m.aula || "Aula por confirmar",
-        webexLink: m.webexLink,
-        hora: m.hora,
-        estadoAceptacion,
-        aceptaciones: aceptacionesMesa.map((a: any) => ({
-          profesor: {
-            id: a.profesor.id,
-            nombre: a.profesor.nombre,
-            apellido: a.profesor.apellido,
-          },
-          estado: a.estado,
-        })),
-      };
-    });
-
-    return json({
-      userId,
-      role,
-      mesas: mesasProcesadas,
-      notificationConfig,
-      env: {
-        VAPID_PUBLIC_KEY,
-        API_URL,
-        INTERNAL_API_KEY,
-      },
-    });
-  } catch (error) {
-    console.error("Error en el loader:", error);
-    return json({
-      userId,
-      role,
-      mesas: [],
-      notificationConfig,
-      env: {
-        VAPID_PUBLIC_KEY,
-        API_URL,
-        INTERNAL_API_KEY,
-      },
-    });
-  }
+  return json({ 
+    mesas: mesasProcesadas, 
+    userId,
+    notificationConfig: {},
+    env
+  });
 };
 
 export const action = async (args: ActionFunctionArgs) => {
@@ -368,64 +338,12 @@ const alumnosMock = [
   { nombre: "Gilda R. Romero" },
 ];
 
-export default function MesasRoute() {
+export default function Mesas() {
   const { mesas, userId, notificationConfig, env } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const fetcher = useFetcher();
-  const navigate = useNavigate();
-
-  // Estado local para manejar la vista actual
-  const [currentView, setCurrentView] = useState<'list' | 'detail' | 'students'>(() => {
-    if (searchParams.get("alumnos")) return 'students';
-    if (searchParams.get("detalle")) return 'detail';
-    return 'list';
-  });
-
-  const [selectedMesa, setSelectedMesa] = useState<MesaProcesada | null>(() => {
-    const detalleId = searchParams.get("detalle");
-    const alumnosId = searchParams.get("alumnos");
-    return mesas.find((m: MesaProcesada) => m.id === detalleId || m.id === alumnosId) || null;
-  });
-
-  // Configurar el service worker al cargar el componente
-  useEffect(() => {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      navigator.serviceWorker.ready.then(registration => {
-        registration.addEventListener('push', ((event: Event) => {
-          const pushEvent = event as PushEvent;
-          if (pushEvent.data) {
-            const data = pushEvent.data.json();
-            if (data.data?.mesaId) {
-              // Si estamos en una vista detallada o de alumnos, volver a la vista principal
-              if (currentView !== 'list') {
-                navigate('/mesas');
-              }
-              // Forzar la recarga de la página
-              window.location.reload();
-            }
-          }
-        }) as EventListener);
-      });
-    }
-  }, [currentView, navigate]);
-
-  // Efecto para recargar los datos cuando se crea una nueva mesa
-  useEffect(() => {
-    if (searchParams.get("refresh") === "true") {
-      fetcher.load(`/api/mesas?userId=${userId}`);
-      searchParams.delete("refresh");
-      setSearchParams(searchParams);
-    }
-  }, [searchParams, fetcher, userId]);
-
-  // Efecto para recargar los datos periódicamente
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetcher.load(`/api/mesas?userId=${userId}`);
-    }, 30000); // Recargar cada 30 segundos
-
-    return () => clearInterval(interval);
-  }, [userId, fetcher]);
+  const [selectedMesa, setSelectedMesa] = useState<MesaProcesada | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [view, setView] = useState<ViewType>('list');
 
   const search = searchParams.get("search") ?? "";
   const carrera = searchParams.get("carrera") ?? "";
@@ -458,53 +376,83 @@ export default function MesasRoute() {
     );
   });
 
-  // Función optimizada para manejar la navegación
-  const handleNavigation = (type: 'detalle' | 'alumnos' | 'back', mesaId?: string) => {
-    const mesa = mesaId ? mesas.find((m: MesaProcesada) => m.id === mesaId) : null;
-    
-    switch (type) {
-      case 'detalle':
-        setCurrentView('detail');
-        setSelectedMesa(mesa);
-        break;
-      case 'alumnos':
-        setCurrentView('students');
-        setSelectedMesa(mesa);
-        break;
-      case 'back':
-        if (currentView === 'students') {
-          setCurrentView('detail');
-        } else {
-          setCurrentView('list');
-          setSelectedMesa(null);
-        }
-        break;
+  const handleAceptar = async (mesa: MesaProcesada) => {
+    try {
+      const response = await fetch(`${process.env.API_URL}/aceptaciones`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          mesaId: mesa.id,
+          profesorId: userId,
+          estado: 'ACEPTADA'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al aceptar la mesa');
+      }
+
+      const data = await response.json() as MesaProcesada;
+      setSelectedMesa(data);
+      setShowModal(false);
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error al aceptar la mesa');
+    }
+  };
+
+  const handleRechazar = async (mesa: MesaProcesada) => {
+    try {
+      const response = await fetch(`${process.env.API_URL}/aceptaciones`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          mesaId: mesa.id,
+          profesorId: userId,
+          estado: 'RECHAZADA'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al rechazar la mesa');
+      }
+
+      const data = await response.json() as MesaProcesada;
+      setSelectedMesa(data);
+      setShowModal(false);
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error al rechazar la mesa');
     }
   };
 
   // Renderizado condicional basado en la vista actual
-  if (currentView === 'students' && selectedMesa) {
+  if (view === 'students' && selectedMesa) {
     return (
       <div className="mx-auto max-w-md pb-8">
         <HeaderClerk notificationConfig={notificationConfig} userRole="profesor" env={env} />
         <ListaAlumnos 
           mesa={selectedMesa} 
           filtroAlumno={filtroAlumno}
-          onFiltroChange={(valor) => actualizarFiltro("filtroAlumno", valor)}
-          onVolver={() => handleNavigation('back')}
+          onFiltroChange={(valor) => { actualizarFiltro("filtroAlumno", valor); }}
+          onVolver={() => { setView('list'); setSelectedMesa(null); }}
         />
       </div>
     );
   }
 
-  if (currentView === 'detail' && selectedMesa) {
+  if (view === 'detail' && selectedMesa) {
     return (
       <div className="mx-auto max-w-md pb-8">
         <HeaderClerk notificationConfig={notificationConfig} userRole="profesor" env={env} />
         <DetalleMesa 
           mesa={selectedMesa} 
-          onVerAlumnos={() => handleNavigation('alumnos', selectedMesa.id)}
-          onVolver={() => handleNavigation('back')}
+          onVerAlumnos={() => { setView('students'); setSelectedMesa(null); }}
+          onVolver={() => { setView('list'); setSelectedMesa(null); }}
         />
       </div>
     );
@@ -576,7 +524,7 @@ export default function MesasRoute() {
                 color={mesa.color}
                 mesaId={mesa.id}
                 userId={userId}
-                onClick={() => handleNavigation('detalle', mesa.id)}
+                onClick={() => { setView('detail'); setSelectedMesa(mesa); }}
               />
             ))
           )}
@@ -720,7 +668,7 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
         <Calendar className="h-4 w-4" /> {fechaCompleta}
       </div>
       <div className="flex items-center gap-2 text-sm">
-        <Clock className="h-4 w-4" /> {mesa.horaTexto || "Hora por confirmar"}
+        <Clock className="h-4 w-4" /> {mesa.horaTexto ?? "Hora por confirmar"}
       </div>
       <div className="flex items-center gap-2 text-sm">
         <MapPin className="h-4 w-4" /> {mesa.modalidad}
@@ -739,18 +687,18 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
             <div className="flex items-center justify-between rounded-lg border p-3">
               <span className="text-sm font-medium">Titular</span>
               <div className="flex items-center gap-2">
-                {getEstadoIcon(mesa.aceptaciones?.find(a => a.profesor.id === mesa.profesorId)?.estado || "PENDIENTE")}
-                <span className="text-sm">
-                  {getEstadoText(mesa.aceptaciones?.find(a => a.profesor.id === mesa.profesorId)?.estado || "PENDIENTE")}
+                {getEstadoIcon(mesa.aceptaciones?.find((a: AceptacionMesa) => a.profesor.id === mesa.profesorId)?.estado ?? "PENDIENTE")}
+                <span className="ml-2">
+                  {getEstadoText(mesa.aceptaciones?.find((a: AceptacionMesa) => a.profesor.id === mesa.profesorId)?.estado ?? "PENDIENTE")}
                 </span>
               </div>
             </div>
             <div className="flex items-center justify-between rounded-lg border p-3">
               <span className="text-sm font-medium">Vocal</span>
               <div className="flex items-center gap-2">
-                {getEstadoIcon(mesa.aceptaciones?.find(a => a.profesor.id === mesa.vocalId)?.estado || "PENDIENTE")}
-                <span className="text-sm">
-                  {getEstadoText(mesa.aceptaciones?.find(a => a.profesor.id === mesa.vocalId)?.estado || "PENDIENTE")}
+                {getEstadoIcon(mesa.aceptaciones?.find((a: AceptacionMesa) => a.profesor.id === mesa.vocalId)?.estado ?? "PENDIENTE")}
+                <span className="ml-2">
+                  {getEstadoText(mesa.aceptaciones?.find((a: AceptacionMesa) => a.profesor.id === mesa.vocalId)?.estado ?? "PENDIENTE")}
                 </span>
               </div>
             </div>
@@ -763,14 +711,14 @@ function DetalleMesa({ mesa, onVerAlumnos, onVolver }: DetalleMesaProps) {
               </div>
               <div className="flex gap-4">
                 <Button
-                  onClick={() => handleAceptacion("ACEPTADA")}
+                  onClick={() => { handleAceptacion("ACEPTADA"); }}
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                   disabled={fetcher.state === "submitting"}
                 >
                   {fetcher.state === "submitting" ? "Procesando..." : "Aceptar Mesa"}
                 </Button>
                 <Button
-                  onClick={() => handleAceptacion("RECHAZADA")}
+                  onClick={() => { handleAceptacion("RECHAZADA"); }}
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                   disabled={fetcher.state === "submitting"}
                 >
@@ -820,7 +768,7 @@ function ListaAlumnos({ mesa, filtroAlumno, onFiltroChange, onVolver }: ListaAlu
         type="text"
         placeholder="Buscar alumno por nombre"
         value={filtroAlumno}
-        onChange={(e) => onFiltroChange(e.target.value)}
+        onChange={(e) => { onFiltroChange(e.target.value); }}
         className="rounded border px-2 py-2"
       />
       <div className="flex flex-col gap-1">
@@ -867,7 +815,7 @@ export function ErrorBoundary() {
           </div>
         </div>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => { window.location.reload(); }}
           className="mt-4 inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           Intentar nuevamente

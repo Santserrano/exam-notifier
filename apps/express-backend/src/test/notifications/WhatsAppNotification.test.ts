@@ -1,61 +1,66 @@
-import axios from 'axios';
+import { WhatsAppNotification } from '../../notifications/WhatsAppNotification';
+import { Profesor } from '@prisma/client';
+import { NotificationService } from '../../notifications/NotificationService';
 
-import { NotificationData } from "../../../src/core/notifications/Notification";
-import { WhatsAppNotification } from '../../../src/core/notifications/WhatsAppNotification';
-
-jest.mock('axios');
+jest.mock('../../notifications/NotificationService');
 
 describe('WhatsAppNotification', () => {
-    const mockData: NotificationData = {
-        title: 'Test WhatsApp',
-        body: 'This is a test WhatsApp message',
-        recipient: '5491123456789'
-    };
+    let whatsAppNotification: WhatsAppNotification;
+    let mockProfesor: Profesor;
+    let mockNotificationService: jest.Mocked<NotificationService>;
 
     beforeEach(() => {
-        jest.clearAllMocks();
-        process.env.VONAGE_API_KEY = 'test_api_key';
+        mockNotificationService = {
+            sendWhatsApp: jest.fn().mockResolvedValue(undefined)
+        } as unknown as jest.Mocked<NotificationService>;
+
+        (NotificationService as jest.Mock).mockImplementation(() => mockNotificationService);
+
+        whatsAppNotification = new WhatsAppNotification();
+        mockProfesor = {
+            id: '1',
+            nombre: 'Juan',
+            apellido: 'Pérez',
+            email: 'juan@example.com',
+            telefono: '1234567890',
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
     });
 
-    it('should send a WhatsApp message successfully', async () => {
-        (axios.post as jest.Mock).mockResolvedValue({ status: 200 });
+    describe('formatPhoneNumber', () => {
+        it('should format phone number with country code', () => {
+            const result = whatsAppNotification.formatPhoneNumber('1234567890');
+            expect(result).toBe('541234567890');
+        });
 
-        const notification = new WhatsAppNotification(mockData);
-        await notification.send();
+        it('should keep existing country code', () => {
+            const result = whatsAppNotification.formatPhoneNumber('541234567890');
+            expect(result).toBe('541234567890');
+        });
 
-        expect(axios.post).toHaveBeenCalledWith(
-            'https://messages-sandbox.nexmo.com/v1/messages',
-            {
-                from: '14157386102',
-                to: mockData.recipient,
-                message_type: 'text',
-                text: mockData.body,
-                channel: 'whatsapp'
-            },
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Authorization': 'Basic dGVzdF9hcGlfa2V5'
-                }
-            }
-        );
+        it('should handle phone number starting with 9', () => {
+            const result = whatsAppNotification.formatPhoneNumber('91234567890');
+            expect(result).toBe('5491234567890');
+        });
+
+        it('should handle phone number starting with 0', () => {
+            const result = whatsAppNotification.formatPhoneNumber('091234567890');
+            expect(result).toBe('5491234567890');
+        });
     });
 
-    it('should format phone numbers correctly', async () => {
-        const notification = new WhatsAppNotification(mockData);
+    describe('sendNotification', () => {
+        it('should throw error if profesor has no phone number', async () => {
+            const profesorSinTelefono = { ...mockProfesor, telefono: null };
+            await expect(whatsAppNotification.sendNotification(profesorSinTelefono, 'Test message'))
+                .rejects
+                .toThrow('El profesor no tiene un número de teléfono registrado');
+        });
 
-        // Test with different phone formats
-        expect(notification['formatPhoneNumber']('11 2345-6789')).toBe('541123456789');
-        expect(notification['formatPhoneNumber']('+54 9 11 2345 6789')).toBe('5491123456789');
-        expect(notification['formatPhoneNumber']('5491123456789')).toBe('5491123456789');
-    });
-
-    it('should throw error when sending fails', async () => {
-        const mockError = new Error('Failed to send WhatsApp');
-        (axios.post as jest.Mock).mockRejectedValue(mockError);
-
-        const notification = new WhatsAppNotification(mockData);
-        await expect(notification.send()).rejects.toThrow(mockError);
+        it('should send notification with formatted phone number', async () => {
+            await whatsAppNotification.sendNotification(mockProfesor, 'Test message');
+            expect(mockNotificationService.sendWhatsApp).toHaveBeenCalledWith('541234567890', 'Test message');
+        });
     });
 });

@@ -1,6 +1,6 @@
 import { MesaDeExamen } from '@prisma/client';
 
-import { MesaAdapter } from '../../../src/Adapters/MasaAdapter';
+import { MesaAdapter } from '../../Adapters/MasaAdapter';
 
 describe('MesaAdapter', () => {
   const adapter = new MesaAdapter();
@@ -123,5 +123,92 @@ describe('MesaAdapter', () => {
     expect(typeof result.profesor).toBe('string');
     expect(result.fecha instanceof Date).toBe(true);
     expect(typeof result.verification).toBe('boolean');
+  });
+
+  it('should convert mesa to DTO', () => {
+    const mockMesa = {
+      id: 1,
+      fecha: new Date(),
+      horaTexto: '14:00',
+      descripcion: 'Mesa de examen',
+      cargo: 'Titular',
+      verification: false,
+      createdAt: new Date(),
+      modalidad: 'Presencial',
+      updatedAt: new Date(),
+      profesorId: '1',
+      vocalId: '2',
+      aula: 'Aula 1',
+      webexLink: null,
+      carreraId: '1',
+      materiaId: '1',
+      profesor: {
+        id: '1',
+        nombre: 'Juan',
+        apellido: 'Pérez',
+        email: 'juan@example.com',
+        telefono: '1234567890',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      vocal: {
+        id: '2',
+        nombre: 'María',
+        apellido: 'González',
+        email: 'maria@example.com',
+        telefono: '0987654321',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      materia: {
+        id: '1',
+        nombre: 'Matemática',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      carrera: {
+        id: '1',
+        nombre: 'Ingeniería',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    };
+
+    const dto = MesaAdapter.toDTO(mockMesa);
+    expect(dto).toEqual({
+      id: mockMesa.id,
+      fecha: mockMesa.fecha,
+      horaTexto: mockMesa.horaTexto,
+      descripcion: mockMesa.descripcion,
+      cargo: mockMesa.cargo,
+      verification: mockMesa.verification,
+      createdAt: mockMesa.createdAt,
+      modalidad: mockMesa.modalidad,
+      updatedAt: mockMesa.updatedAt,
+      profesor: {
+        id: mockMesa.profesor.id,
+        nombre: mockMesa.profesor.nombre,
+        apellido: mockMesa.profesor.apellido,
+        email: mockMesa.profesor.email,
+        telefono: mockMesa.profesor.telefono
+      },
+      vocal: {
+        id: mockMesa.vocal.id,
+        nombre: mockMesa.vocal.nombre,
+        apellido: mockMesa.vocal.apellido,
+        email: mockMesa.vocal.email,
+        telefono: mockMesa.vocal.telefono
+      },
+      materia: {
+        id: mockMesa.materia.id,
+        nombre: mockMesa.materia.nombre
+      },
+      carrera: {
+        id: mockMesa.carrera.id,
+        nombre: mockMesa.carrera.nombre
+      },
+      aula: mockMesa.aula,
+      webexLink: mockMesa.webexLink
+    });
   });
 });

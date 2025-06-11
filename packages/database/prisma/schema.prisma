@@ -52,7 +52,7 @@ model Profesor {
 model MesaDeExamen {
   id           Int              @id @default(autoincrement())
   fecha        DateTime
-  horaTexto String?
+  horaTexto    String?
   descripcion  String
   cargo        String
   verification Boolean          @default(false)
