@@ -1,8 +1,9 @@
 import express from "express";
+import { PrismaClient } from "@prisma/client";
 import { notificationFactory } from "../core/notifications/NotificationFactory.js";
 import { NotificationType } from "../core/notifications/types.js";
 import { notificacionService } from "../service/NotificationService.js";
-import { PrismaClient } from "@prisma/client";
+
 const router = express.Router();
 const prisma = new PrismaClient();
 
