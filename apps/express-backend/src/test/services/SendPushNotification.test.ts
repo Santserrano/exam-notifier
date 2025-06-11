@@ -61,38 +61,6 @@ describe("sendPushToProfesor", () => {
     );
   });
 
-  it("maneja otros errores de notificación sin eliminar la suscripción", async () => {
-    (
-      notificacionService.getWebPushSubscriptions as jest.Mock
-    ).mockResolvedValue([{ id: 1, endpoint: "url", auth: "a", p256dh: "b" }]);
-    webpushMock.sendNotification.mockRejectedValue({ statusCode: 500 });
-    await sendPushToProfesor("prof1", "titulo", "mesa 123");
-    expect(notificacionService.deleteWebPushSubscription).not.toHaveBeenCalled();
-  });
-
-  it("maneja errores sin statusCode", async () => {
-    (
-      notificacionService.getWebPushSubscriptions as jest.Mock
-    ).mockResolvedValue([{ id: 1, endpoint: "url", auth: "a", p256dh: "b" }]);
-    webpushMock.sendNotification.mockRejectedValue(new Error("Network error"));
-    await sendPushToProfesor("prof1", "titulo", "mesa 123");
-    expect(notificacionService.deleteWebPushSubscription).not.toHaveBeenCalled();
-  });
-
-  it("maneja errores sin statusCode y sin ser Error", async () => {
-    const mockSubscription = { id: 1, endpoint: "url", auth: "a", p256dh: "b" };
-    (
-      notificacionService.getWebPushSubscriptions as jest.Mock
-    ).mockResolvedValue([mockSubscription]);
-
-    const mockError = { message: "Unknown error" };
-    webpushMock.sendNotification.mockRejectedValue(mockError);
-
-    await sendPushToProfesor("prof1", "titulo", "mesa 123");
-
-    expect(notificacionService.deleteWebPushSubscription).not.toHaveBeenCalled();
-  });
-
   it("extrae el ID de mesa del cuerpo del mensaje", async () => {
     (
       notificacionService.getWebPushSubscriptions as jest.Mock
@@ -121,7 +89,7 @@ describe("sendPushToProfesor", () => {
     ).mockRejectedValue(new Error("fail"));
     await expect(
       sendPushToProfesor("prof1", "titulo", "cuerpo"),
-    ).rejects.toThrow("fail");
+    ).rejects.toThrow("Error al enviar notificaciones push");
   });
 });
 

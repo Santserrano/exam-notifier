@@ -53,17 +53,16 @@ export async function sendPushToProfesor(
           payload,
         )
         .catch((error) => {
-          // Si la suscripción ya no es válida, eliminarla
           if (error.statusCode === 410) {
             return notificacionService.deleteWebPushSubscription(sub.id);
           }
-          return null;
+          throw new Error("Error al enviar la notificación push");
         });
     });
 
     await Promise.all(notifications);
   } catch (error) {
     console.error("Error al enviar notificaciones push:", error);
-    throw error;
+    throw new Error("Error al enviar notificaciones push");
   }
 }

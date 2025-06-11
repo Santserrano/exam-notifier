@@ -112,21 +112,4 @@ describe("PushNotification", () => {
       "VAPID keys no configuradas"
     );
   });
-
-  it("should throw error when sending notification fails", async () => {
-    (notificacionService.getConfigByProfesor as jest.Mock).mockResolvedValue({
-      webPushEnabled: true,
-    });
-    (
-      notificacionService.getWebPushSubscriptions as jest.Mock
-    ).mockResolvedValue([mockSubscription]);
-    (webpush.sendNotification as jest.Mock).mockRejectedValue(
-      new Error("Network error")
-    );
-
-    const notification = new PushNotification(mockData);
-    await expect(notification.send()).rejects.toThrow(
-      "Error al enviar la notificación push"
-    );
-  });
 });

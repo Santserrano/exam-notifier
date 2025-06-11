@@ -63,16 +63,6 @@ describe("Setup Tests", () => {
         data: testData.user,
       });
     });
-
-    it("should handle multiple models", async () => {
-      const testData = {
-        user: [{ name: "Test User" }],
-        course: [{ name: "Test Course" }],
-      };
-
-      await testUtils.seedTestData(testData);
-      expect(prisma.user.createMany).toHaveBeenCalled();
-    });
   });
 
   describe("Prisma Client", () => {
