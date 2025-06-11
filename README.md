@@ -174,3 +174,5 @@ Check the `turbo.json` file to see the available pipelines.
   or
   pnpm run test:dev
   ```
+
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/53f9e5c151a34b5ead84c239b2fe3a6b)](https://app.codacy.com/gh/Santserrano/exam-notifier/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
