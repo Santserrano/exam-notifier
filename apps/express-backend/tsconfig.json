@@ -2,11 +2,10 @@
     "extends": "@exam-notifier/tsconfig/base.json",
     "compilerOptions": {
         "outDir": "dist",
-        "rootDir": "src",
-        "module": "CommonJS",
+        "rootDir": ".",
+        "module": "ESNext",
         "target": "ESNext",
         "moduleResolution": "node",
-        "allowImportingTsExtensions": true,
         "resolveJsonModule": true,
         "isolatedModules": true,
         "strict": true,
@@ -16,16 +15,16 @@
         "skipLibCheck": true,
         "incremental": true,
         "tsBuildInfoFile": "./dist/.tsbuildinfo",
-        "declaration": true
+        "declaration": true,
+        "noEmit": false
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "test/**/*",
+        "**/*.ts"
     ],
     "exclude": [
         "node_modules",
-        "dist",
-        "test",
-        "**/*.test.ts",
-        "**/*.spec.ts"
+        "dist"
     ]
 }
