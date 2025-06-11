@@ -24,5 +24,8 @@ exclude_paths:
   - "**/tests/**"
   - "packages/**"
   - "remix-app/**"
+  - "remix.init"
+  - "apps/remix-app/**"
+
 include_paths:
   - "**/tests/integration/**"
